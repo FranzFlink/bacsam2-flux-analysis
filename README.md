@@ -33,12 +33,17 @@ from the shipped segment-level inputs in a few minutes on a laptop.
 | `data/model_output/` | Precompute outputs (reference + sensitivity sweep) and derived diagnostics |
 | `data/reanalysis/era5/ERA5_model_levels/era5_ml_along_track_P6.nc` | ERA5 model-level along-track extract |
 
-**Tier 2 — not shipped (raw archives, ~300 GB):** 100 Hz noseboom data, full ERA5
-model-level fields, CARRA rasters, MODIS L3 granules, unified radiation/SIC files.
-These are only needed for the preprocessing/extraction stages (`--pregame`,
-`--extract-only`) and for the map/case-study figure notebooks
-(`figure01_meteo`, `figure02`, `figure04`, `figure06`, `figure07`,
-`figure_meteo_alongtrack`); those steps skip cleanly when the data are absent.
+**Tier 1b — campaign-region subsets (also shipped, ~230 MB):** written by
+`scripts/make_reviewer_subsets.py` on the raw-data host to the SAME relative
+paths as the raw archives (flux-leg time windows for the 100 Hz noseboom and
+radiation series; campaign region/period crops of ERA5, CARRA skt/sp, MODIS L3
+IST, and merged SIC). With these, **every** figure and table notebook runs from
+this repository alone.
+
+**Tier 2 — not shipped (full raw archives, ~300 GB):** 100 Hz noseboom archive,
+full ERA5 model-level fields, CARRA rasters, MODIS granules. Only needed for the
+preprocessing/extraction stages (`--pregame`, `--extract-only`,
+`make_reviewer_subsets.py`); those steps skip cleanly when the data are absent.
 Raw data are available from the authors on request and will be archived with a DOI
 at submission.
 
