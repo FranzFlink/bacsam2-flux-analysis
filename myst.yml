@@ -1,0 +1,66 @@
+# MyST (Jupyter Book 2) project configuration — BACSAM-II
+# build:  pixi run docs        (generates API pages, then myst build --html)
+# serve:  pixi run docs-serve  (live preview)
+# The TOC mirrors run_full_analysis.py: every notebook listed here is
+# executed by the pipeline, in this order. Exploratory and archived
+# notebooks stay in the repository but are not part of the book.
+version: 1
+project:
+  id: bacsam-ii-campaign-book
+  title: BACSAM-II Campaign Analysis & Science Book
+  description: >-
+    Airborne eddy-covariance and bulk sensible heat flux over Arctic sea ice
+    during BACSAM-II (Svalbard, April 2024) — data processing, publication
+    figures/tables and sensitivity analyses for Müller et al. (AMT).
+  authors:
+    - name: Joshua J. Müller
+      affiliation: Leipzig Institute for Meteorology (LIM), Leipzig University
+  github: https://github.com/uni-leipzig/BACSAM-II
+  toc:
+    - file: book/notebooks/intro.md
+    - title: Preprocessing
+      children:
+        - file: book/notebooks/processing/preprocess_polar6_noseboom.ipynb
+    - title: Sensitivity Sweeps
+      children:
+        - file: book/notebooks/data_analysis/essential_sensitivity_ec_leg_length.ipynb
+        - file: book/notebooks/data_analysis/essential_sensitivity_ec_leg_position.ipynb
+        - file: book/notebooks/data_analysis/essential_christof_diagnostics.ipynb
+    - title: Publication Figures
+      children:
+        - file: book/notebooks/figures/figure01_meteo.ipynb
+        - file: book/notebooks/figures/figure02.ipynb
+        - file: book/notebooks/figures/figure03.ipynb
+        - file: book/notebooks/figures/figure04.ipynb
+        - file: book/notebooks/figures/figure05.ipynb
+        - file: book/notebooks/figures/figure06.ipynb
+        - file: book/notebooks/figures/figure07.ipynb
+        - file: book/notebooks/figures/figure_tornado_chart.ipynb
+        - file: book/notebooks/figures/figure_meteo_alongtrack.ipynb
+        - file: book/notebooks/figures/figure05_ae.ipynb
+    - title: Publication Tables
+      children:
+        - file: book/notebooks/tables/table01_roughness_parameters.ipynb
+        - file: book/notebooks/tables/table02_instrument_uncertainties.ipynb
+        - file: book/notebooks/tables/table03_sensitivity_summary.ipynb
+        - file: book/notebooks/tables/table04_flight_leg_overview.ipynb
+        - file: book/notebooks/tables/table05_qc_statistics.ipynb
+        - file: book/notebooks/tables/table07_ec_leg_length_sensitivity.ipynb
+        - file: book/notebooks/tables/tableA1_full_sensitivity_matrix.ipynb
+        - file: book/notebooks/tables/tableA2_flux_comparison_statistics.ipynb
+    - title: API reference
+      children:
+        - file: book/api/index.md
+        - file: book/api/naming.md
+        - file: book/api/util.md
+        - file: book/api/stability.md
+        - file: book/api/ec.md
+        - file: book/api/bulk.md
+        - file: book/api/qc.md
+        - file: book/api/aggregate.md
+        - file: book/api/sensitivity.md
+    - file: book/references.md
+site:
+  template: book-theme
+  options:
+    folders: true

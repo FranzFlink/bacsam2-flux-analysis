@@ -1,0 +1,53 @@
+[workspace]
+name = "bacsam-ii"
+version = "1.0.0"
+description = "BACSAM-II campaign analysis: airborne EC + bulk SHF over Arctic sea ice (Müller et al., AMT)"
+channels = ["conda-forge"]
+platforms = ["linux-64", "win-64"]
+
+[dependencies]
+python = "3.12.*"
+numpy = "*"
+pandas = "*"
+xarray = "*"
+netcdf4 = "*"
+h5netcdf = "*"
+dask = "*"
+bottleneck = "*"
+scipy = "*"
+matplotlib = "*"
+cartopy = "*"
+cmocean = "*"
+seaborn = "*"
+statsmodels = "*"
+pyresample = "*"
+rioxarray = "*"
+pyyaml = "*"
+tqdm = "*"
+pillow = "*"
+jupyter = "*"
+nbconvert = "*"
+nbformat = "*"
+ipykernel = "*"
+ipywidgets = "*"
+hvplot = "*"
+holoviews = "*"
+panel = "*"
+pytest = "*"
+mystmd = "*"
+pypdf = "*"
+cmcrameri = "*"
+owslib = "*"
+
+[tasks]
+# ── science pipeline ─────────────────────────────────────────────────────────
+precompute = "python scripts/calc_bulk_and_ec_fluxes.py"
+pipeline = "python run_full_analysis.py"
+pipeline-all = "python run_full_analysis.py --all"
+figures = "python run_full_analysis.py --figures"
+test = "pytest tests -q"
+# ── documentation (MyST v2, like panArcticTurbulentFlux) ─────────────────────
+docs-api = "python scripts/gen_api_docs.py"
+docs-build = { cmd = "myst build --html", depends-on = ["docs-api"] }
+docs = { cmd = "echo Static site written to _build/html - for interactive viewing run: pixi run docs-serve", depends-on = ["docs-build"] }
+docs-serve = { cmd = "myst start", depends-on = ["docs-api"] }
