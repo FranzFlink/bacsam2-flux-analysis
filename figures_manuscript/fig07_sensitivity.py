@@ -1,9 +1,15 @@
 """Manuscript Fig. 7 (fig:sensitivity_summary) — sensitivity in the slope/r framework.
 
-(a) amplitude skill: regression slope b on the EC reference (ideal b = 1);
-(b) variability skill: correlation r.
-Representative configurations only (full matrix: Table C1); the model-diagnosed
-reanalysis fluxes are grey-diamond benchmarks.
+Tornado-chart layout: three shared-y panels, (a) regression slope b on the EC
+reference (ideal 1), (b) correlation r, (c) bias (ideal 0). Each configuration
+row shows the three offline bulk estimates as dots (T-Bird green, ERA5-MODIS
+orange, ERA5-only blue) joined by a grey connector; the model-diagnosed
+ERA5/CARRA fluxes are the dashed vertical benchmark lines. Representative
+configurations only (full matrix: Table C1).
+
+Data: obs_*/rs_* metrics from sensitivity_summary_table.csv; the ERA5-only
+bulk is the rs_* pathway of the matching '<label>_era5only' run; diag metrics
+are computed from sensitivity_figure_data.nc against the EC reference.
 
 Run:  pixi run python figures_manuscript/fig07_sensitivity.py
 """
@@ -27,71 +33,91 @@ EC = np.asarray(FIG["H_obs_ec"])
 
 
 def diag_metrics(key):
-    """Slope and r of a model-diagnosed flux against the EC reference."""
+    """(slope, r, bias) of a model-diagnosed flux against the EC reference."""
     h = np.asarray(FIG[key])
     m = np.isfinite(h) & np.isfinite(EC)
-    return float(np.polyfit(EC[m], h[m], 1)[0]), float(np.corrcoef(EC[m], h[m])[0, 1])
+    return (float(np.polyfit(EC[m], h[m], 1)[0]),
+            float(np.corrcoef(EC[m], h[m])[0, 1]),
+            float(np.mean(h[m] - EC[m])))
 
 
-# Essential rows only; None = italic section header, "DIAG:" = benchmark diamond.
+# ("header", text) rows get no tick and a thin separator line above them.
 ROWS = [
-    ("Reference ($\\alpha_T = 10^{-1}$)", "GLGS20_ref"),
-    ("Amplitude-matched ($\\alpha_T = 10^{-4}$)", "GLGS20_ztr1e-04"),
-    ("Stability scheme", None),
-    ("Businger–Dyer", "BD_ref"),
-    ("SHEBA (GAFGP07)", "GAFGP07_ref"),
-    ("Zilitinkevich (ZE07-I)", "ZE07-I_ref"),
-    ("Momentum roughness", None),
-    ("MOSAiC set", "GLGS20_mosaic"),
-    ("Schnierstein set", "GLGS20_nschnier"),
-    ("$z_{0,m} = 4{\\times}10^{-4}$ m (uniform)", "GLGS20_z0c4e-04"),
-    ("Model-diagnosed benchmark", None),
-    ("ERA5", "DIAG:H_era_diag"),
-    ("CARRA$^{*}$", "DIAG:H_car_diag"),
+    ("row", "Reference ($\\alpha_T = 10^{-1}$)", "GLGS20_ref"),
+    ("row", "$\\alpha_T = 10^{-4}$", "GLGS20_ztr1e-04"),
+    ("header", "Stability scheme"),
+    ("row", "Businger–Dyer", "BD_ref"),
+    ("row", "SHEBA (GAFGP07)", "GAFGP07_ref"),
+    ("row", "ZE07-I", "ZE07-I_ref"),
+    ("header", "Momentum roughness"),
+    ("row", "MOSAiC set", "GLGS20_mosaic"),
+    ("row", "Schnierstein set", "GLGS20_nschnier"),
+    ("row", "$4{\\times}10^{-4}$ m uniform", "GLGS20_z0c4e-04"),
 ]
 
-C_DIAG = "0.30"
-fig, (ax_a, ax_b) = fs.figure(width=fs.FULL_W, aspect=0.50, ncols=2, sharey=True)
-ypos = [-float(i) for i in range(len(ROWS))]
+PANELS = [("slope", "Slope $b$", (0.0, 2.4), [0, 1, 2], 1.0),
+          ("r", "Corr. $r$", (0.25, 0.80), [0.3, 0.7], None),
+          ("bias", "Bias\n(W$\\,$m$^{-2}$)", (-4.6, 4.6), [-3, 0, 3], 0.0)]
+DIAG = {k: dict(zip(("slope", "r", "bias"), diag_metrics(k)))
+        for k in ("H_era_diag", "H_car_diag")}
 
-for ax, (co, cr, xlab) in [(ax_a, ("obs_slope", "rs_slope", "Regression slope $b$")),
-                           (ax_b, ("obs_r", "rs_r", "Correlation $r$"))]:
-    ax.axvline(1.0, color="0.35", lw=1.0, ls="--", zorder=1)
-    for yy, (lbl, key) in zip(ypos, ROWS):
-        if key is None:
-            continue
-        if key.startswith("DIAG:"):
-            sl, r = diag_metrics(key.split(":")[1])
-            ax.plot(sl if ax is ax_a else r, yy, "D", ms=4.5, color=C_DIAG,
-                    mfc=C_DIAG, mec="white", mew=0.6, zorder=3)
-            continue
-        if key in ("GLGS20_ref", "GLGS20_ztr1e-04"):
-            ax.axhspan(yy - 0.5, yy + 0.5, color="0.92", zorder=0)
-        vo, vr = df.loc[key, co], df.loc[key, cr]
-        ax.plot([vo, vr], [yy, yy], color="0.75", lw=1.0, zorder=2)
-        ax.plot(vo, yy, "o", ms=5, color=fs.C["H_obs_bulk"], mec="white", mew=0.6, zorder=3)
-        ax.plot(vr, yy, "o", ms=5, color=fs.C["H_rs_bulk"], mec="white", mew=0.6, zorder=3)
+
+def row_values(label, metric):
+    """(T-Bird, ERA5-MODIS, ERA5-only) value triple for one configuration."""
+    return (df.loc[label, f"obs_{metric}"],
+            df.loc[label, f"rs_{metric}"],
+            df.loc[f"{label}_era5only", f"rs_{metric}"])
+
+
+fig, axes = fs.figure(width=fs.COL_W, aspect=0.80, ncols=3, sharey=True)
+ypos = {}                      # y position of every entry, top to bottom
+for i, entry in enumerate(ROWS):
+    ypos[i] = -float(i)
+data_rows = [(ypos[i], e[1], e[2]) for i, e in enumerate(ROWS) if e[0] == "row"]
+headers = [(ypos[i], e[1]) for i, e in enumerate(ROWS) if e[0] == "header"]
+
+for ax, (metric, xlab, xlim, ticks, ideal) in zip(axes, PANELS):
+    for j, (yy, _, label) in enumerate(data_rows):        # zebra banding
+        if j % 2 == 0:
+            ax.axhspan(yy - 0.5, yy + 0.5, color="0.94", zorder=0)
+    for yy, _ in headers:                                 # thin section separators
+        ax.axhline(yy + 0.5, color="0.75", lw=0.5, zorder=1)
+    if ideal is not None:
+        ax.axvline(ideal, color="0.35", lw=0.8, ls="--", zorder=1)
+    for k in ("H_era_diag", "H_car_diag"):                # diag benchmark lines
+        ax.axvline(DIAG[k][metric], color=fs.C[k], lw=2.0, ls=(0, (4, 2)),
+                   alpha=0.9, zorder=2)
+    for yy, _, label in data_rows:
+        vo, vr, ve = row_values(label, metric)
+        ax.plot([min(vo, vr, ve), max(vo, vr, ve)], [yy, yy],
+                color="0.75", lw=1.0, zorder=3)
+        for v, key in [(vo, "H_obs_bulk"), (vr, "H_rs_bulk"), (ve, "H_era_bulk")]:
+            ax.plot(v, yy, "o", ms=4.5, color=fs.C[key], mec="white", mew=0.5, zorder=4)
+    ax.set_xlim(xlim)
+    ax.set_xticks(ticks)
     ax.set_xlabel(xlab)
-    ax.grid(axis="x", lw=0.4, alpha=0.5)
-    ax.set_ylim(min(ypos) - 0.7, max(ypos) + 0.7)
+    ax.set_ylim(min(ypos.values()) - 0.6, 0.6)
+    ax.tick_params(axis="y", length=0)
 
-ax_a.set_yticks(ypos)
-ax_a.set_yticklabels([lbl for lbl, _ in ROWS])
-for tick, (_, key) in zip(ax_a.get_yticklabels(), ROWS):
-    if key is None:
-        tick.set_fontstyle("italic")
-        tick.set_color("0.35")
-ax_b.set_xlim(0.0, 1.05)
+axes[0].set_yticks([yy for yy, _, _ in data_rows])
+axes[0].set_yticklabels([lbl for _, lbl, _ in data_rows])
+axes[0].get_yticklabels()[0].set_fontweight("bold")
+for yy, text in headers:                                  # tickless header labels
+    axes[0].text(-0.06, yy, text, transform=axes[0].get_yaxis_transform(),
+                 ha="right", va="center", fontstyle="italic", color="0.35")
 
 fig.legend(handles=[
-    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_obs_bulk"], ms=5,
-           label=fs.L["H_obs_bulk"] + " (T-Bird)"),
-    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_rs_bulk"], ms=5,
-           label=fs.L["H_rs_bulk"] + " (ERA5$-$MODIS)"),
-    Line2D([0], [0], marker="D", lw=0, color=C_DIAG, ms=4.5,
-           label="model-diagnosed")],
-    loc="outside upper center", ncol=3)
+    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_obs_bulk"], ms=4.5,
+           mec="white", mew=0.5, label=fs.L["H_obs_bulk"]),
+    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_rs_bulk"], ms=4.5,
+           mec="white", mew=0.5, label=fs.L["H_rs_bulk"]),
+    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_era_bulk"], ms=4.5,
+           mec="white", mew=0.5, label=fs.L["H_era_bulk"]),
+    Line2D([0], [0], lw=2.0, ls=(0, (4, 2)), color=fs.C["H_era_diag"],
+           label=fs.L["H_era_diag"]),
+    Line2D([0], [0], lw=2.0, ls=(0, (4, 2)), color=fs.C["H_car_diag"],
+           label=fs.L["H_car_diag"])],
+    loc="outside upper center", ncol=3, columnspacing=0.8, handlelength=1.2,
+    handletextpad=0.4)
 
-fs.panel_label(ax_a, "(a)")
-fs.panel_label(ax_b, "(b)")
 fs.save(fig, "fig07_sensitivity")

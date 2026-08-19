@@ -82,6 +82,7 @@ H_obs_bulk_full = ds_sens_ref["H_obs_bulk"].values.astype(float)
 # H_rs_bulk = ERA5-MODIS forcing. NOT H_era_bulk (the ERA5-only bulk) — a
 # mix-up here once plotted the ERA5-only flux under the ERA5-MODIS label.
 H_rs_bulk_full = ds_sens_ref["H_rs_bulk"].values.astype(float)
+H_era_bulk_full = ds_sens_ref["H_era_bulk"].values.astype(float)
 # H_era_diag / H_car_diag are stored positive-upward (sign flipped ONCE in the
 # precompute, see calc_bulk_and_ec_fluxes.py) — do NOT negate here.
 H_era_diag_full = ds_sens_ref["H_era_diag"].values.astype(float)
@@ -96,6 +97,7 @@ starts, end_times, mid_times = starts_full[keep], ends_full.values[keep], mids_f
 H_obs_ec = H_obs_ec_full[keep]
 H_obs_bulk = H_obs_bulk_full[keep]
 H_rs_bulk = H_rs_bulk_full[keep]
+H_era_bulk = H_era_bulk_full[keep]
 H_era_diag = H_era_diag_full[keep]
 H_car_diag = H_car_diag_full[keep]
 
@@ -242,8 +244,9 @@ def _plot_flux_row(ax, window, title, legend=False):
     t = mid_times[mask]
     _plot_with_gaps(ax, t, H_obs_bulk[mask], color=fs.C["H_obs_bulk"], lw=1.2, label="T-Bird bulk")
     _plot_with_gaps(ax, t, H_rs_bulk[mask], color=fs.C["H_rs_bulk"], lw=1.2, label="ERA5-MODIS")
-    _plot_with_gaps(ax, t, H_era_diag[mask], color=fs.C["H_era_diag"], lw=1.0, ls="--", label="ERA5")
-    _plot_with_gaps(ax, t, H_car_diag[mask], color=fs.C["H_car_diag"], lw=1.0, ls="--", label="CARRA")
+    _plot_with_gaps(ax, t, H_era_bulk[mask], color=fs.C["H_era_bulk"], lw=1.2, label="ERA5 bulk")
+    _plot_with_gaps(ax, t, H_era_diag[mask], color=fs.C["H_era_diag"], lw=1.0, ls="--", label="ERA5 diag.")
+    _plot_with_gaps(ax, t, H_car_diag[mask], color=fs.C["H_car_diag"], lw=1.0, ls="--", label="CARRA diag.")
     _plot_with_gaps(ax, t, H_obs_ec[mask], color=fs.C["H_obs_ec"], lw=1.5, label="EC")
     ax.axhline(0, color=fs.GRID, lw=0.6, ls=":")
     ax.set_ylabel(fs.FLUX_AXIS)
@@ -254,8 +257,7 @@ def _plot_flux_row(ax, window, title, legend=False):
     ax.xaxis.set_minor_locator(mdates.MinuteLocator(interval=5))
     ax.set_xlim(tw0 - XPAD, tw1 + XPAD)
     if legend:
-        ax.legend(loc="upper right", ncols=3)
-        ax.set_ylim(-5, 15)
+        ax.set_ylim(-5, 15)   # clip the off-scale T-Bird spikes in row (a)
 
 
 def _map_panel(ax, image, ext, window):
@@ -336,4 +338,7 @@ for i, row in enumerate(ROWS):
                             ticklabels=["-10", "-5", "0", "5", "10"], fontcolor="0.1")
 
 fig.align_ylabels(ts_axes)
+handles, labels = ts_axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="outside upper center", ncol=6,
+           columnspacing=1.0, handlelength=1.2, handletextpad=0.4)
 fs.save(fig, "fig05_flux_timeseries")

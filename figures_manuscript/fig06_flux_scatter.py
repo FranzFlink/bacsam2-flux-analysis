@@ -29,7 +29,8 @@ fs.apply()
 ds = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")
 ref = ds.sel(run="GLGS20_ref", dT=0, dRi=0, dU=0)
 H = {k: ref[k].values.astype(float)
-     for k in ["H_obs_ec", "H_obs_bulk", "H_rs_bulk", "H_era_diag", "H_car_diag"]}
+     for k in ["H_obs_ec", "H_obs_bulk", "H_rs_bulk", "H_era_bulk",
+               "H_era_diag", "H_car_diag"]}
 RI = ds["Ri_obs"].values.astype(float)
 ec = H["H_obs_ec"]
 ec_valid = np.isfinite(ec)
@@ -129,7 +130,7 @@ def hist_panel(ax, keys):
 
 
 hist_panel(axes[0, 1], ["H_obs_ec", "H_obs_bulk", "H_rs_bulk"])
-hist_panel(axes[1, 1], ["H_obs_ec", "H_era_diag", "H_car_diag"])
+hist_panel(axes[1, 1], ["H_obs_ec", "H_era_bulk", "H_era_diag", "H_car_diag"])
 axes[0, 1].tick_params(labelbottom=False)
 axes[1, 1].set_xlabel("Sensible heat flux " + fs.FLUX_UNIT)
 
