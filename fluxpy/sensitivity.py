@@ -171,14 +171,92 @@ def skill_metrics(
     n = int(np.sum(mask))
     if n < 3:
         log.warning("%s: only %d valid pairs – metrics unreliable", label, n)
-        return {"rmse": np.nan, "bias": np.nan, "r": np.nan, "n": n}
+        return {"rmse": np.nan, "bias": np.nan, "crmse": np.nan, "r": np.nan,
+                "slope": np.nan, "intercept": np.nan, "slope_deming": np.nan,
+                "slope_tls": np.nan, "std_ratio": np.nan, "n": n}
     x, y  = H_ref[mask], H_pred[mask]
     rmse  = float(np.sqrt(np.mean((y - x) ** 2)))
     bias  = float(np.mean(y - x))
+    crmse = float(np.sqrt(np.mean(((y - y.mean()) - (x - x.mean())) ** 2)))
     r     = float(np.corrcoef(x, y)[0, 1])
-    log.info("%s%s: RMSE=%.2f  bias=%.2f  R=%.3f  N=%d",
-             label, " [sign-agree]" if sign_agreement else "", rmse, bias, r, n)
-    return {"rmse": rmse, "bias": bias, "r": r, "n": n}
+    amp   = amplitude_metrics(x, y)
+    log.info("%s%s: slope=%.2f (Deming %.2f)  R=%.3f  bias=%+.2f  RMSE=%.2f  N=%d",
+             label, " [sign-agree]" if sign_agreement else "",
+             amp["slope"], amp["slope_deming"], r, bias, rmse, n)
+    return {"rmse": rmse, "bias": bias, "crmse": crmse, "r": r, "n": n, **amp}
+
+
+#: Default error-variance ratio for the Deming slope, lambda = sigma_bulk^2 /
+#: sigma_EC^2, from the manuscript uncertainty budget (bulk ~3.2 W m-2 vs EC
+#: ~1.1 W m-2). lambda >> 1 means the errors sit mostly in the bulk estimate,
+#: so the Deming slope stays close to OLS; see amplitude_metrics().
+DEMING_LAMBDA = 8.0
+
+
+def amplitude_metrics(x: np.ndarray, y: np.ndarray,
+                      lam: float = DEMING_LAMBDA) -> dict:
+    r"""
+    Amplitude skill of a bulk estimate ``y`` against the EC reference ``x``.
+
+    The regression slope is the metric a transfer coefficient actually
+    controls: $C_\mathrm{h}$ scales the flux, so an amplitude error appears
+    as slope $\neq 1$, whereas RMSE in a low-flux regime rewards estimates
+    that simply shrink towards zero (a flat estimate can beat a skilful one).
+
+    Ordinary least squares is attenuated by noise in the reference on the
+    abscissa (regression dilution), which biases the slope *towards zero* and
+    therefore understates an amplitude overestimate. The correction depends on
+    how the error variance is split between the two variables:
+
+    * ``slope``      -- OLS slope of ``y`` on ``x``; unbiased only if ``x`` is
+      error-free, attenuated otherwise.
+    * ``slope_deming`` -- Deming (generalised orthogonal) slope for an
+      error-variance ratio ``lam`` = sigma_y_err^2 / sigma_x_err^2. This is the
+      headline amplitude metric: with the EC reference roughly three times more
+      precise than the bulk estimate (``lam`` ~ 8), it sits just above OLS.
+    * ``slope_tls``  -- the ``lam = 1`` special case (classical orthogonal
+      regression, equal error variances). Reported as an upper bound only; it
+      over-corrects here because it charges the EC reference with as much error
+      as the bulk estimate.
+    * ``std_ratio``  -- $\sigma_y/\sigma_x$, the variance-ratio amplitude
+      (= ``slope``/``r``), i.e. the limit in which all scatter is real signal.
+    """
+    sxx = float(np.var(x, ddof=1))
+    syy = float(np.var(y, ddof=1))
+    sxy = float(np.cov(x, y, ddof=1)[0, 1])
+    if sxx <= 0 or sxy == 0.0:
+        return {"slope": np.nan, "intercept": np.nan, "slope_deming": np.nan,
+                "slope_tls": np.nan, "std_ratio": np.nan}
+    slope = sxy / sxx
+    intercept = float(np.mean(y) - slope * np.mean(x))
+
+    def _deming(lam_: float) -> float:
+        # lam_ -> inf recovers OLS; lam_ = 1 is classical orthogonal regression
+        return float(((syy - lam_ * sxx)
+                      + np.sqrt((syy - lam_ * sxx) ** 2 + 4.0 * lam_ * sxy ** 2))
+                     / (2.0 * sxy))
+
+    return {"slope": float(slope), "intercept": intercept,
+            "slope_deming": _deming(lam), "slope_tls": _deming(1.0),
+            "std_ratio": float(np.sqrt(syy / sxx))}
+
+
+def slope_bootstrap_ci(
+    H_ref: np.ndarray,
+    H_pred: np.ndarray,
+    n_boot: int = 5000,
+    seed: int = 42,
+    key: str = "slope",
+) -> tuple[float, float]:
+    """Percentile bootstrap 95 % confidence interval of an amplitude slope."""
+    mask = np.isfinite(H_ref) & np.isfinite(H_pred)
+    x, y = H_ref[mask], H_pred[mask]
+    rng = np.random.default_rng(seed)
+    vals = np.empty(n_boot)
+    for i in range(n_boot):
+        idx = rng.integers(0, len(x), len(x))
+        vals[i] = amplitude_metrics(x[idx], y[idx])[key]
+    return float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))
 
 
 def run_sensitivity(

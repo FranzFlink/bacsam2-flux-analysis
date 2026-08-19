@@ -128,10 +128,24 @@ class BulkConfig:
 
 
 def reference_config() -> BulkConfig:
-    """Reference run: GLGS20, zt_ratio=1e-5 (reference scalar roughness ratio,
-    author decision 2026-07-23; supersedes 1e-3), classic 2-pt Ri_b
-    (surface → T-Bird level, manuscript Eq. rib)."""
-    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-5, label="GLGS20_ref")
+    """Reference run: GLGS20, zt_ratio=1e-1 -- the CONVENTIONAL scalar roughness
+    ratio used by models and LES over sea ice (author decision 2026-07-27;
+    supersedes the tuned 1e-5, which was an artefact of minimising RMSE in a
+    low-flux regime: RMSE rewards shrinking the amplitude and alpha_T is the
+    amplitude knob). Amplitude skill is now reported as a regression slope;
+    see amplitude_matched_config() for the slope-matched counterpart.
+    Classic 2-pt Ri_b (surface → T-Bird level, manuscript Eq. rib)."""
+    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-1, label="GLGS20_ref")
+
+
+def amplitude_matched_config() -> BulkConfig:
+    """Amplitude-matched run: GLGS20, zt_ratio=1e-4 -- the value at which the
+    in-situ bulk estimate reproduces the observed flux amplitude (regression
+    slope of unity), coinciding with the airborne EC estimate of Schroeder et
+    al. (2003). Reported ALONGSIDE the conventional reference, never as a
+    roughness retrieval: alpha_T enters C_h only logarithmically and leaves the
+    correlation unchanged."""
+    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-4, label="GLGS20_ampmatch")
 
 
 # ── roughness from fractional surface type ────────────────────────────────────
