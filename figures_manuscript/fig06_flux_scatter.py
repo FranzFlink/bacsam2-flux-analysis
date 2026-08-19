@@ -73,7 +73,7 @@ HI_BINS = np.arange(-26, 36.1, 2.0)
 cmap_ri = plt.cm.coolwarm_r
 norm_ri = mcolors.Normalize(vmin=0.2, vmax=-1)     # red = unstable, blue = stable
 
-fig, axes = fs.figure(width=fs.COL_W, aspect=1.25, nrows=2, ncols=2)
+fig, axes = fs.figure(width=fs.COL_W, aspect=1.1, nrows=2, ncols=2)
 
 # ── (a) + (c): scatter vs EC, coloured by Ri_b ───────────────────────────────
 for ax, key in [(axes[0, 0], "H_obs_bulk"), (axes[1, 0], "H_rs_bulk")]:
@@ -124,7 +124,7 @@ def hist_panel(ax, keys):
                 alpha=0.75, color=fs.C[k], lw=0.9, zorder=2)
         kde = gaussian_kde(v, bw_method=0.4)(xg)
         ax.plot(xg, kde, color=fs.C[k], label=lbl,
-                lw=2.0 if k == "H_obs_ec" else 1.6,       # EC heavier: the reference
+                lw=1.2 if k == "H_obs_ec" else 0.8,       # EC heavier: the reference
                 zorder=12 if k == "H_obs_ec" else 10)
         ax.fill_between(xg, kde, alpha=0.08, color=fs.C[k], zorder=9)
     ax.axvline(0, color="k", lw=0.6, ls=":")
@@ -149,7 +149,7 @@ _leg = [("H_obs_ec", 2.0), ("H_obs_bulk", 1.6), ("H_rs_bulk", 1.6),
         ("H_era_bulk", 1.6), ("H_era_diag", 1.6), ("H_car_diag", 1.6)]
 fig.legend(handles=[Line2D([0], [0], color=fs.C[k], lw=lw, label=fs.L[k])
                     for k, lw in _leg],
-           loc="outside upper center", ncol=2, columnspacing=1.2,
+           loc="outside upper center", ncol=3, columnspacing=1.2,
            handlelength=1.0, handletextpad=0.3)
 
 for ax, lbl in zip(axes.flat, ["(a)", "(b)", "(c)", "(d)"]):

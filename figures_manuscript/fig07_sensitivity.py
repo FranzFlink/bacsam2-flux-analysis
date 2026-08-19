@@ -41,7 +41,9 @@ def diag_metrics(key):
             float(np.mean(h[m] - EC[m])))
 
 
-# ("header", text) rows get no tick and a thin separator line above them.
+# ("header", text) rows get no tick and a thin separator line above them;
+# ("diag", label, var) rows carry ONE dot — the model-diagnosed fluxes do not
+# depend on the bulk configuration.
 ROWS = [
     ("row", "Reference ($\\alpha_T = 10^{-1}$)", "GLGS20_ref"),
     ("row", "$\\alpha_T = 10^{-4}$", "GLGS20_ztr1e-04"),
@@ -53,6 +55,9 @@ ROWS = [
     ("row", "MOSAiC set", "GLGS20_mosaic"),
     ("row", "Schnierstein set", "GLGS20_nschnier"),
     ("row", "$4{\\times}10^{-4}$ m uniform", "GLGS20_z0c4e-04"),
+    ("header", "Model-diagnosed"),
+    ("diag", "ERA5", "H_era_diag"),
+    ("diag", "CARRA$^{*}$", "H_car_diag"),
 ]
 
 PANELS = [("slope", "Slope $b$", (0.0, 2.4), [0, 1, 2], 1.0),
@@ -69,38 +74,41 @@ def row_values(label, metric):
             df.loc[f"{label}_era5only", f"rs_{metric}"])
 
 
-fig, axes = fs.figure(width=fs.COL_W, aspect=0.80, ncols=3, sharey=True)
+fig, axes = fs.figure(width=fs.COL_W, aspect=0.95, ncols=3, sharey=True)
 ypos = {}                      # y position of every entry, top to bottom
 for i, entry in enumerate(ROWS):
     ypos[i] = -float(i)
-data_rows = [(ypos[i], e[1], e[2]) for i, e in enumerate(ROWS) if e[0] == "row"]
+tick_rows = [(ypos[i], e[1]) for i, e in enumerate(ROWS) if e[0] != "header"]
 headers = [(ypos[i], e[1]) for i, e in enumerate(ROWS) if e[0] == "header"]
 
 for ax, (metric, xlab, xlim, ticks, ideal) in zip(axes, PANELS):
-    for j, (yy, _, label) in enumerate(data_rows):        # zebra banding
+    for j, (yy, _) in enumerate(tick_rows):               # zebra banding
         if j % 2 == 0:
             ax.axhspan(yy - 0.5, yy + 0.5, color="0.94", zorder=0)
     for yy, _ in headers:                                 # thin section separators
         ax.axhline(yy + 0.5, color="0.75", lw=0.5, zorder=1)
     if ideal is not None:
         ax.axvline(ideal, color="0.35", lw=0.8, ls="--", zorder=1)
-    for k in ("H_era_diag", "H_car_diag"):                # diag benchmark lines
-        ax.axvline(DIAG[k][metric], color=fs.C[k], lw=2.0, ls=(0, (4, 2)),
-                   alpha=0.9, zorder=2)
-    for yy, _, label in data_rows:
-        vo, vr, ve = row_values(label, metric)
-        ax.plot([min(vo, vr, ve), max(vo, vr, ve)], [yy, yy],
-                color="0.75", lw=1.0, zorder=3)
-        for v, key in [(vo, "H_obs_bulk"), (vr, "H_rs_bulk"), (ve, "H_era_bulk")]:
-            ax.plot(v, yy, "o", ms=4.5, color=fs.C[key], mec="white", mew=0.5, zorder=4)
+    for i, entry in enumerate(ROWS):
+        yy = ypos[i]
+        if entry[0] == "row":
+            vo, vr, ve = row_values(entry[2], metric)
+            ax.plot([min(vo, vr, ve), max(vo, vr, ve)], [yy, yy],
+                    color="0.75", lw=1.0, zorder=3)
+            for v, key in [(vo, "H_obs_bulk"), (vr, "H_rs_bulk"), (ve, "H_era_bulk")]:
+                ax.plot(v, yy, "o", ms=4.5, color=fs.C[key], mec="white", mew=0.5,
+                        zorder=4)
+        elif entry[0] == "diag":                          # one dot, no configuration
+            ax.plot(DIAG[entry[2]][metric], yy, "o", ms=4.5, color=fs.C[entry[2]],
+                    mec="white", mew=0.5, zorder=4)
     ax.set_xlim(xlim)
     ax.set_xticks(ticks)
     ax.set_xlabel(xlab)
     ax.set_ylim(min(ypos.values()) - 0.6, 0.6)
     ax.tick_params(axis="y", length=0)
 
-axes[0].set_yticks([yy for yy, _, _ in data_rows])
-axes[0].set_yticklabels([lbl for _, lbl, _ in data_rows])
+axes[0].set_yticks([yy for yy, _ in tick_rows])
+axes[0].set_yticklabels([lbl for _, lbl in tick_rows])
 axes[0].get_yticklabels()[0].set_fontweight("bold")
 for yy, text in headers:                                  # tickless header labels
     axes[0].text(-0.06, yy, text, transform=axes[0].get_yaxis_transform(),
@@ -113,10 +121,10 @@ fig.legend(handles=[
            mec="white", mew=0.5, label=fs.L["H_rs_bulk"]),
     Line2D([0], [0], marker="o", lw=0, color=fs.C["H_era_bulk"], ms=4.5,
            mec="white", mew=0.5, label=fs.L["H_era_bulk"]),
-    Line2D([0], [0], lw=2.0, ls=(0, (4, 2)), color=fs.C["H_era_diag"],
-           label=fs.L["H_era_diag"]),
-    Line2D([0], [0], lw=2.0, ls=(0, (4, 2)), color=fs.C["H_car_diag"],
-           label=fs.L["H_car_diag"])],
+    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_era_diag"], ms=4.5,
+           mec="white", mew=0.5, label=fs.L["H_era_diag"]),
+    Line2D([0], [0], marker="o", lw=0, color=fs.C["H_car_diag"], ms=4.5,
+           mec="white", mew=0.5, label=fs.L["H_car_diag"])],
     loc="outside upper center", ncol=3, columnspacing=0.8, handlelength=1.2,
     handletextpad=0.4)
 

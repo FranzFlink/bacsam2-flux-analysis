@@ -60,8 +60,8 @@ detail_days = [d for d in low_alt_days if d != "2024-04-25"]
 # ── Figure ──────────────────────────────────────────────────────────────────
 # MID_W tried first: the fixed-point-size wind barbs then overlap and hide the
 # flux-coloured markers in (a)/(b) -> full text width, as the notebook original.
-WIDTH = fs.FULL_W
-fig = plt.figure(figsize=(WIDTH, WIDTH * 0.82))
+WIDTH = fs.COL_W
+fig = plt.figure(figsize=(WIDTH, .95 * WIDTH))
 fig.get_layout_engine().set(hspace=0.06)   # room for the row-2 panel letters
 gs = fig.add_gridspec(2, 3, width_ratios=[1, 1, 0.045])
 axs = [fig.add_subplot(gs[i // 2, i % 2], projection=ccrs.NorthPolarStereo())
@@ -95,10 +95,10 @@ for ax, day, label in zip(axs, detail_days, ["(a)", "(b)", "(c)", "(d)"]):
 
     barbs = ax.barbs(x[::2], y[::2],
                      ds_day.u_mean.values[::2], ds_day.v_mean.values[::2],
-                     transform=ccrs.PlateCarree(), length=5.5, linewidth=0.9,
-                     barb_increments=dict(half=2.5, full=5, flag=25),
-                     color="white", zorder=5)
-    barbs.set_path_effects([pe.Stroke(linewidth=2.2, foreground="black"),
+                     transform=ccrs.PlateCarree(), length=4.5, linewidth=1.2,
+                     barb_increments=dict(half=2.5, full=5, flag=20),
+                     color="lightgray", zorder=7)
+    barbs.set_path_effects([pe.Stroke(linewidth=1.5, foreground="black"),
                             pe.Normal()])
 
     # coloured frame, same colour as the campaign-map focus rectangle
