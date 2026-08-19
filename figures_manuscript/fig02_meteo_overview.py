@@ -140,16 +140,17 @@ dth_hist = [
 ]
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Figure: 4 profile columns (a) + 2 stacked histograms (b, c)
+# Figure: 4 profile columns (a) on top, histograms (b) and (c) stacked below
+# (single column: side-by-side histograms would crush the region labels)
 # ═════════════════════════════════════════════════════════════════════════════
-fig = plt.figure(figsize=(fs.FULL_W, 10.5 * fs.CM))
-gs = fig.add_gridspec(2, 5, width_ratios=[1, 1, 1, 1, 2.2])
+fig = fs.gridfig(width=fs.COL_W, aspect=1.75)
+gs = fig.add_gridspec(3, 4, height_ratios=[2.1, 1, 1])
 
 axs_prof = []
 for i in range(4):
-    axs_prof.append(fig.add_subplot(gs[:, i], sharey=axs_prof[0] if i else None))
-ax_tsfc = fig.add_subplot(gs[0, 4])
-ax_dth = fig.add_subplot(gs[1, 4])
+    axs_prof.append(fig.add_subplot(gs[0, i], sharey=axs_prof[0] if i else None))
+ax_tsfc = fig.add_subplot(gs[1, :])
+ax_dth = fig.add_subplot(gs[2, :])
 
 # ── (a) Three-point theta(z) profiles per flight day ─────────────────────────
 _ylim_top = 100
@@ -206,30 +207,28 @@ for i_day, (ax, day) in enumerate(zip(axs_prof, flight_days)):
     if i_day > 0:
         ax.tick_params(axis="y", which="both", left=False, labelleft=False)
 
-axs_prof[0].set_ylabel("Height (m)", labelpad=16)
-# figure-level legend so it can spill into the empty top of the second column
-# without being painted over or reserving layout space
+axs_prof[0].set_ylabel("Height (m)")
+# one legend row above the whole figure (an in-panel box would cover the
+# ~1.6 cm wide profile columns at single-column width)
 fig.legend(
     handles=[
         Patch(facecolor=C_OBS, edgecolor="0.3", lw=0.4, label="Obs"),
-        Patch(facecolor=C_MOD, edgecolor="0.3", lw=0.4, label=fs.L["H_rs_bulk"]),
-        Patch(facecolor=C_ERA, edgecolor="0.3", lw=0.4, label="ERA5 (Standard)"),
-        Patch(facecolor=C_CAR, edgecolor="0.3", lw=0.4, label="CARRA (Standard)"),
+        Patch(facecolor=C_MOD, edgecolor="0.3", lw=0.4, label="MODIS"),
+        Patch(facecolor=C_ERA, edgecolor="0.3", lw=0.4, label="ERA5"),
+        Patch(facecolor=C_CAR, edgecolor="0.3", lw=0.4, label="CARRA"),
     ],
-    loc="upper left", bbox_to_anchor=(0.02, 0.99),
-    bbox_transform=axs_prof[0].transAxes,
-    frameon=True, framealpha=1.0,  # opaque box: it overlaps the next column
+    loc="outside upper center", ncol=4, columnspacing=1.0, handlelength=1.1,
+    handletextpad=0.4,
 )
 fs.panel_label(axs_prof[0], "(a)")
 
-# flight-level annotations left of the axis, next to the dashed height lines
-# (offset a little off the line centres to clear the y tick labels)
-axs_prof[0].text(-0.08, (z_tb_mean + 5) / _ylim_top, "T-Bird\n(~25 m)",
-                 transform=axs_prof[0].transAxes, va="center", ha="right",
-                 color="0.5", multialignment="center", in_layout=False)
-axs_prof[0].text(-0.08, (z_p6_mean - 5) / _ylim_top, "Polar 6\n(~70 m)",
-                 transform=axs_prof[0].transAxes, va="center", ha="right",
-                 color="0.5", multialignment="center", in_layout=False)
+# flight-level annotations inside the first column, on the dashed height lines
+# (there is no margin room left of the axis at single-column width)
+for _z, _txt, _dy in [(z_tb_mean, "T-Bird", 4), (z_p6_mean, "Polar 6", 4)]:
+    axs_prof[0].text(0.06, (_z + _dy) / _ylim_top, _txt,
+                     transform=axs_prof[0].transAxes, va="bottom", ha="left",
+                     color="0.5", fontsize=fs.FONT_SIZE - 1, zorder=5,
+                     bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5))
 
 # ── (b, c) Histograms: surface temperature and stratification ────────────────
 _kw_fill = dict(density=True, alpha=0.2, linewidth=0, zorder=1)
@@ -244,7 +243,7 @@ hist_panels = [
     (ax_dth, dth_hist, np.linspace(-6, 6, 20), (-8, 8), [0],
      [(-8, 0, "#fff3e0"), (0, 8, "#e8eaf6")],
      [(-4, "unstable\nstratification"), (4, "stable\nstratification")],
-     r"$\theta_{30\,\mathrm{m}} - \theta_{\mathrm{sfc}}$ (K)", "(c)"),
+     r"$\theta_\mathrm{air} - \theta_{\mathrm{sfc}}$ (K)", "(c)"),
 ]
 
 for ax, series, bins, xlim, vlines, bands, labels, xlabel, letter in hist_panels:
@@ -264,12 +263,6 @@ for ax, series, bins, xlim, vlines, bands, labels, xlabel, letter in hist_panels
     ax.set_xlim(*xlim)
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Density")
-    # y axis on the right (histograms sit at the figure's right edge)
-    ax.spines[["top", "left"]].set_visible(False)
-    ax.spines["right"].set_visible(True)
-    ax.yaxis.tick_right()
-    ax.yaxis.set_label_position("right")
-    ax.tick_params(axis="y", which="both", left=False, right=True)
     fs.panel_label(ax, letter)
 
 fs.save(fig, "fig02_meteo_overview")

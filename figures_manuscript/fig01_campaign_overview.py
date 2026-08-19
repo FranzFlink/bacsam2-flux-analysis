@@ -79,8 +79,10 @@ tracks = []
 for fp in sorted(TRACK_DIR.glob("*_mastertrack.tab")):
     df = read_mastertrack(fp)
     day = df["time"].dt.strftime("%Y-%m-%d").iloc[0]
-    overlaps = bool(np.any((seg_times >= df["time"].min())
-                           & (seg_times <= df["time"].max())))
+    if day in low_alt_days:
+        overlaps = True
+    else:
+        overlaps = False
     tracks.append((df, day, overlaps and day in analysed_days))
 
 # -- April-mean SIC backdrop (25 April excluded: bad data, 100 % everywhere) -
@@ -88,7 +90,7 @@ sic = (xr.open_dataset(SIC_FP).squeeze().sortby("time")
        .drop_sel(time="2024-04-25").sic.mean("time"))
 
 # -- figure ------------------------------------------------------------------
-fig, ax = fs.figure(width=fs.MID_W, aspect=0.9,
+fig, ax = fs.figure(width=fs.COL_W, aspect=0.9,
                     subplot_kw={"projection": ccrs.NorthPolarStereo(
                         central_longitude=LONGYEARBYEN[0])})
 lat_north = max(86.0, max(df.lat.max() for df, *_ in tracks) + 0.4)
@@ -103,7 +105,7 @@ ax.add_feature(cfeature.COASTLINE, linewidth=0.5, zorder=2)
 # 0\N{DEGREE SIGN} are drawn but not labelled -- their labels clip at the frame)
 glon, glat = np.meshgrid(np.linspace(-40, 45, 341), np.linspace(70, 88, 181))
 for field, levels, labelled, fmt in [
-        (glat, np.arange(72, 88, 2), np.arange(76, 88, 2),
+        (glat, np.arange(72, 86, 2), np.arange(76, 86, 2),
          lambda v: f"{v:.0f}\N{DEGREE SIGN}N"),
         (glon, np.arange(-30, 45, 10), [-30, -20, -10, 10, 20, 30, 40],
          lambda v: f"{abs(v):.0f}\N{DEGREE SIGN}{'E' if v >= 0 else 'W'}")]:
@@ -115,9 +117,9 @@ for field, levels, labelled, fmt in [
 # flight tracks: grey for all, day colours for the analysed flights
 for df, day, analysed in tracks:
     if analysed:
-        ax.plot(df.lon, df.lat, color=day_color[day], linewidth=1.5,
+        ax.plot(df.lon, df.lat, color=day_color[day], linewidth=1,
                 transform=PC, zorder=6,
-                path_effects=[pe.withStroke(linewidth=2.6, foreground="white")])
+                path_effects=[pe.withStroke(linewidth=1.1, foreground="white")])
     else:
         ax.plot(df.lon, df.lat, color="dimgrey", linewidth=0.7, alpha=0.8,
                 transform=PC, zorder=4)
@@ -127,8 +129,8 @@ for df, day, analysed in tracks:
 # 'Svalbard' label
 for name, (day, (x0, x1, y0, y1)) in focus.items():
     ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False,
-                           linewidth=1.3, edgecolor=day_color[day],
-                           transform=PC, zorder=7))
+                           linewidth=.75, edgecolor=day_color[day],
+                           transform=PC, zorder=7, alpha=.7, linestyle="--"))
     if name == "(b)":       # above the box, clear of the 'Svalbard' label
         lx, ly, ha, va = x0 + 0.3, y1 + 0.08, "left", "bottom"
     elif name == "(c)":     # right of the shared box
@@ -141,12 +143,12 @@ for name, (day, (x0, x1, y0, y1)) in focus.items():
 # geographical references
 ax.plot(*LONGYEARBYEN, marker="*", markersize=9, color="k",
         transform=PC, zorder=7)
-ax.text(LONGYEARBYEN[0] + 1.1, LONGYEARBYEN[1] - 0.72, "Longyearbyen",
+ax.text(LONGYEARBYEN[0] + 1.1, LONGYEARBYEN[1] - 0.72, "LYR",
         fontsize=fs.FONT_SIZE - 1, transform=PC, zorder=8, path_effects=HALO)
 for name, lon, lat, col in [("Svalbard", 19.0, 78.9, "dimgrey"),
-                            ("Greenland", -19.0, 76.3, "dimgrey"),
-                            ("Fram Strait", -4.0, 78.3, "black"),
-                            ("Arctic Ocean", 2.0, 84.0, "black")]:
+                            ("Greenland", -19.0, 80.3, "dimgrey"),
+                            ("Fram Strait", -4.0, 79.3, "black"),
+                            ("Arctic Ocean", 2.0, 85.0, "black")]:
     ax.text(lon, lat, name, fontsize=fs.FONT_SIZE - 1, color=col,
             style="italic", ha="center", va="center", transform=PC, zorder=7,
             path_effects=HALO)
@@ -158,9 +160,11 @@ handles = [Line2D([0], [0], color=day_color[d], linewidth=1.8,
 handles.append(Line2D([0], [0], color="dimgrey", linewidth=0.9,
                       label="Other flights"))
 ax.legend(handles=handles, loc="lower left", frameon=True, framealpha=0.9,
-          title="Low-level flight days")
+          title="Flight tracks")
 
 cbar = fig.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
 cbar.set_label("Sea-ice concentration (%)")
+
+ax.spines["geo"].set_visible(False)
 
 fs.save(fig, "fig01_campaign_overview")

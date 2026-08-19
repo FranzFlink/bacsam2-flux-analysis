@@ -145,8 +145,24 @@ def figure(width: float = COL_W, aspect: float = 0.75, **kwargs):
     """``plt.subplots`` at physical size: ``figsize=(width, width*aspect)``.
 
     Any extra kwargs (``nrows``, ``ncols``, ``sharex`` …) pass through.
+    For a custom GridSpec layout use :func:`gridfig` instead — this function
+    already creates axes, and adding a gridspec on top leaves a stray empty
+    axes underneath that breaks constrained layout.
     """
     return plt.subplots(figsize=(width, width * aspect), **kwargs)
+
+
+def gridfig(width: float = COL_W, aspect: float = 0.75, **kwargs):
+    """Bare figure (NO axes) at physical size, for ``fig.add_gridspec`` layouts.
+
+    Constrained layout is on via the style, so ``add_gridspec`` +
+    ``add_subplot`` compose cleanly::
+
+        fig = fs.gridfig(width=fs.COL_W, aspect=1.7)
+        gs = fig.add_gridspec(3, 4, height_ratios=[2, 1, 1])
+        ax = fig.add_subplot(gs[0, 0])
+    """
+    return plt.figure(figsize=(width, width * aspect), **kwargs)
 
 
 def panel_label(ax, label: str, x: float = -0.02, y: float = 1.02) -> None:
