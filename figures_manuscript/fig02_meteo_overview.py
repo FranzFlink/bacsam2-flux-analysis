@@ -165,10 +165,9 @@ Z_ERA = [0, 10, 31, 54, 79]
 prof_sources = [
     (C_OBS, [th_sfc, th_tb, th_p6], [z_sfc, z_tb, z_p6], None, "o", "-", "--", 4),
     (C_ERA, [theta_sfc_era5] + [theta_ml[l] for l in (137, 136, 135, 134)],
-     Z_ERA, Z_ERA, "^", "-", "--", 3),
-    (C_MOD, [theta_sfc_modis, theta_ml[137]], [0, 10], [0, 30], "d", ":", ":", 2),
-    (C_CAR, [theta_sfc_carra, theta_30_carra, theta_75_carra],
-     [0, 30, 75], [0, 30, 75], "s", "-", "--", 2.5),
+     Z_ERA, Z_ERA, "^", "-", "--", 4),
+    (C_MOD, [theta_sfc_modis, theta_ml[137]], [0, 31], [0, 31], "^", ":", ":", 4),
+    (C_CAR, [theta_sfc_carra, theta_30_carra, theta_75_carra], [0, 30, 75], [0, 30, 75], "s", "-", "--", 4),
 ]
 x_lims = [(240, 255), (240, 260), (245, 260), (265, 275)]
 
@@ -224,8 +223,8 @@ fs.panel_label(axs_prof[0], "(a)")
 
 # flight-level annotations inside the first column, on the dashed height lines
 # (there is no margin room left of the axis at single-column width)
-for _z, _txt, _dy in [(z_tb_mean, "T-Bird", 4), (z_p6_mean, "Polar 6", 4)]:
-    axs_prof[0].text(0.06, (_z + _dy) / _ylim_top, _txt,
+for _z, _txt, _dy in [(z_tb_mean, "T-Bird", 4), (z_p6_mean, "Polar 6", -7)]:
+    axs_prof[0].text(-.8, (_z + _dy) / _ylim_top, _txt,
                      transform=axs_prof[0].transAxes, va="bottom", ha="left",
                      color="0.5", fontsize=fs.FONT_SIZE - 1, zorder=5,
                      bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5))
