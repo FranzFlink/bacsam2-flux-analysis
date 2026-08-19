@@ -120,4 +120,7 @@ fig.legend(handles=[
     loc="outside upper center", ncol=3, columnspacing=0.8, handlelength=1.2,
     handletextpad=0.4)
 
+for ax, lbl in zip(axes, ["(a)", "(b)", "(c)"]):
+    fs.panel_label(ax, lbl, x=0.06)
+
 fs.save(fig, "fig07_sensitivity")

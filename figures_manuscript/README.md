@@ -23,9 +23,10 @@ pixi run python figures_manuscript/fig06_flux_scatter.py   # one figure
 pixi run python figures_manuscript/run_all.py              # all of them
 ```
 
-Outputs land in `figures_manuscript/output/` as PDF + PNG. Copy them into a
-dated `figures/YYYY_MM_DD/` folder of the manuscript repo to use them
-(flipping the `\includegraphics` paths is a deliberate, explicit step).
+Outputs land in `figures_manuscript/output/` as PDF + PNG. The manuscript
+(`D:\PHD\2026_03_12_manuscript\manuscript.tex`) points its `\graphicspath`
+directly at this output folder — re-run a script here, recompile the
+manuscript, done. No copying.
 
 ## The style contract (why the figures look consistent)
 
