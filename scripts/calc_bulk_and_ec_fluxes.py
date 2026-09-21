@@ -5,14 +5,14 @@ calc_bulk_and_ec_fluxes.py
 ==========================
 Pre-computation pipeline for the BACSAM-II bulk SHF sensitivity analysis.
 Saves sensitivity_figure_data.nc and sensitivity_summary_table.csv which are
-read by ri_b_summary.py and the publication figure notebooks.
+read by figures_manuscript/*.py, manuscript_numbers.py and make_manuscript_tables.py.
 
 All physics come exclusively from **fluxpy** (bulk, stability, util, sensitivity).
 
 Sensitivity axes
 ----------------
   A  MOST scheme              (GLGS20, BD, HB88, BH91, CB05, GAFGP07, ZE07-*)
-  B  zt_ratio                 (scalar roughness ratio: 0.01 … 1.0)
+  B  zt_ratio                 (scalar roughness ratio alpha_T: 1e-10 … 1e-1; reference 1e-1)
   C  Roughness set            (lit-lo / lit-hi / SHEBA)
   C' Constant roughness       (z0_constant; surface-type-independent)
   D  IST classification threshold (T_thresh_thick combos)
@@ -90,6 +90,10 @@ _ERA5_ML = _REPO_ROOT / "data" / "reanalysis" / "era5" / "ERA5_model_levels"
 _CARRA   = _REPO_ROOT / "data" / "reanalysis" / "carra"
 _OUT     = _REPO_ROOT / "data" / "model_output"
 
+# The paper analyses the four low-level flight days 13, 15, 17 and 23 April.
+# 25 April: 32 segments pass the < 50 m filter, but at 47 m mean altitude
+# (analysed days: 21-29 m), and the merged SIC product is unusable that day
+# (100 % everywhere). 26 April has no segment below 50 m; listed for clarity.
 EXCLUDE = [pd.Timestamp("2024-04-25").date(), pd.Timestamp("2024-04-26").date()]
 LAT_SLICE = slice(76.0, 87.0)
 LON_SLICE = slice(4.0, 36.0)

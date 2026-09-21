@@ -564,13 +564,15 @@ def classify_leg_simple(
 ) -> dict:
     """Manuscript-described QC verdict for a flight leg.
 
-    Evaluates four scored criteria plus a hard length gate:
+    Evaluates the four criteria of manuscript Appendix A (thresholds are
+    pinned by ``tests/test_most_schemes.py::test_qc_thresholds_match_manuscript``):
 
     1. Spectral slope of *w*:   |s_w + 5/3| ≤ 0.4
-    2. FFT ogive plateau error: og_fft_plateau_err < 0.15  (normalised ogive at f < 0.1 Hz)
-    3. Stationarity (R²):       R² ≥ 0.5  (cum-covariance linear fit)
+    2. FFT ogive plateau error: og_fft_plateau_err < 0.001  (normalised ogive at f < 0.1 Hz)
+    3. Stationarity (R²):       R² ≥ 0.4  (cum-covariance linear fit)
     4. SNR:                     SNR > 2
-    5. Minimum segment length:  5 km  (hard gate)
+
+    No length gate is applied: all segments are 5 km by construction.
 
     The ogive plateau is computed from a single-realisation FFT (not the Welch
     estimate), which resolves frequencies down to 1/T_leg ≈ 0.02 Hz — below
@@ -582,7 +584,7 @@ def classify_leg_simple(
     -------------
     * ``'accepted'``  – all criteria passed
     * ``'tolerable'`` – exactly one criterion violated
-    * ``'discarded'`` – two or more criteria violated, *or* leg < 5 km
+    * ``'discarded'`` – two or more criteria violated
 
     Parameters
     ----------
@@ -614,7 +616,6 @@ def classify_leg_simple(
     OGERR_LIM  = 0.001       # FFT ogive plateau error
     R2_LIM     = 0.4        # minimum R² for stationarity
     SNR_LIM    = 2.0
-    LEN_MIN    = 5.0        # km hard gate
 
     # ── Evaluate each criterion ────────────────────────────────────────────
     reasons = []
@@ -637,9 +638,6 @@ def classify_leg_simple(
     _check("snr_fwC",           snr,               snr_ok)
 
     # ── Verdict ────────────────────────────────────────────────────────────
-    # if leg_length_km < LEN_MIN:
-    #     verdict = "discarded"
-    #     reasons.append(("length_km", "fail_hard", leg_length_km))
     if n_failed == 0:
         verdict = "accepted"
         reasons.append(("length_km", "acc", leg_length_km))

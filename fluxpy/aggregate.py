@@ -384,8 +384,9 @@ def process_legs(
             # ── EC fluxes ─────────────────────────────────────────────────
             tke       = _scalar(get_tke(leg_data, highpass=cfg.highpass).mean())
             ustar     = _scalar(add_u_star(leg_data)["u_star"].mean())
-            _, hf     = get_cov(leg_data, "theta", heat_flux=True, time_dim="distance", highpass=True) #changing from T to theta changed values to better agree with bulk 
-                                                                                                        # seems also to be at leas 4 W/m² sensitive to the high-pass filter choices
+            # w'theta' covariance (manuscript Eq. Hec): potential temperature is
+            # the conserved variable; band-limited to 0.1-20 Hz (see get_cov).
+            _, hf     = get_cov(leg_data, "theta", heat_flux=True, time_dim="distance", highpass=True)
 
             hf_scalar = _scalar(hf.mean()) if hasattr(hf, "mean") else float(hf)
             mol       = _scalar(add_monin_obukhov_length(leg_data)["monin_obukhov_length"].mean())

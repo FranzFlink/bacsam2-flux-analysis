@@ -49,13 +49,12 @@ def within_leg_r(h):
 
 def line(name, h, ci=False):
     m = skill_metrics(EC, h, name)
-    out = (f"{name:<26} {m['slope']:5.2f} {m['slope_deming']:7.2f} {m['r']:6.2f} "
+    out = (f"{name:<26} {m['slope']:5.2f} {m['r']:6.2f} "
            f"{within_leg_r(h):8.2f} {m['bias']:+7.2f} {m['rmse']:6.2f} "
            f"{m['crmse']:6.2f} {m['n']:4d}")
     if ci:
         lo, hi = slope_bootstrap_ci(EC, h)
-        dlo, dhi = slope_bootstrap_ci(EC, h, key="slope_deming")
-        out += f"   OLS 95% CI [{lo:.2f}, {hi:.2f}]  Deming [{dlo:.2f}, {dhi:.2f}]"
+        out += f"   OLS 95% CI [{lo:.2f}, {hi:.2f}]"
     return out
 
 
@@ -69,7 +68,7 @@ print(f"median {np.median(ecv):.2f}   mean {ecv.mean():.2f}   max {ecv.max():.1f
 print("\n" + "=" * 118)
 print("REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)")
 print("=" * 118)
-print(f"{'estimate':<26} {'slope':>5} {'Deming':>7} {'r':>6} {'r_within':>8} "
+print(f"{'estimate':<26} {'slope':>5} {'r':>6} {'r_within':>8} "
       f"{'bias':>7} {'RMSE':>6} {'cRMSE':>6} {'n':>4}")
 for key, nm in [("H_obs_bulk", "H_S,obs,bulk"), ("H_rs_bulk", "H_S,RS,bulk"),
                 ("H_era_bulk", "H_S,ERA,bulk"), ("H_era_diag", "H_S,ERA,diag"),

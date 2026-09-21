@@ -22,7 +22,8 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 from fluxpy.sensitivity import skill_metrics  # noqa: E402
 
-OUT = REPO / "book" / "notebooks" / "figures"
+OUT = REPO / "tables_manuscript"
+OUT.mkdir(exist_ok=True)
 df = pd.read_csv(REPO / "data/model_output/sensitivity_summary_table.csv")
 FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")
 EC = np.asarray(FIG["H_obs_ec"])

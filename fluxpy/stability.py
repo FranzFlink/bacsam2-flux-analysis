@@ -19,7 +19,7 @@ doi:10.1175/JAS-D-19-0255.1), following the implementation of
 Gryanik and Lüpkes (2023, doi:10.1007/s10546-022-00730-9).
 
 Scheme objects and transfer-coefficient functions are re-exported from
-``lib/stability_lib.py``; this module adds the vectorised two-point bulk
+``fluxpy/stability_lib.py``; this module adds the vectorised two-point bulk
 Richardson number — the $Ri_b$ of the manuscript (Eq. rib), used by every
 flux pathway. No other Richardson formulation exists in the code base;
 the historical three-point gradient estimator lives only in the dedicated
