@@ -49,7 +49,7 @@ def within_leg_r(h):
 
 def line(name, h, ci=False):
     m = skill_metrics(EC, h, name)
-    out = (f"{name:<26} {m['slope']:5.1f} {m['r']:6.1f} "
+    out = (f"{name:<26} {m['slope']:5.1f} {m['r']:6.1f} {m['r'] ** 2:5.1f} "
            f"{within_leg_r(h):8.1f} {m['bias']:+7.1f} {m['rmse']:6.1f} "
            f"{m['crmse']:6.1f} {m['n']:4d}")
     if ci:
@@ -80,7 +80,7 @@ print(f"median {np.median(ecv):.1f}   mean {ecv.mean():.1f}   max {ecv.max():.1f
 print("\n" + "=" * 118)
 print("REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)")
 print("=" * 118)
-print(f"{'estimate':<26} {'slope':>5} {'r':>6} {'r_within':>8} "
+print(f"{'estimate':<26} {'slope':>5} {'r':>6} {'r2':>5} {'r_within':>8} "
       f"{'bias':>7} {'RMSE':>6} {'cRMSE':>6} {'n':>4}")
 for key, nm in [("H_obs_bulk", "H_S,obs,bulk"), ("H_rs_bulk", "H_S,RS,bulk"),
                 ("H_era_bulk", "H_S,ERA,bulk"), ("H_era_diag", "H_S,ERA,diag"),
