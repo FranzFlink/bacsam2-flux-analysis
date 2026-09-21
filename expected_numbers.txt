@@ -104,6 +104,7 @@ segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below 2 sigma_
 ==============================================================================================================
 median random error (W m-2): Finkelstein-Sims 0.7 | surrogate data 0.6 | segment-placement spread 0.9
 rank correlation Finkelstein-Sims vs surrogates 0.98, vs placement spread 0.8
+sensitivity to the lag range m (10 s used): median sigma_rand(m = 5 s) / sigma_rand(10 s) = 0.98, sigma_rand(30 s) / sigma_rand(10 s) = 1.03
 median |correlation of w and theta| in the flux band: 0.08  -> factor sqrt((1+r^2)/r^2) of Lenschow et al. (1994): 12
 
 ==============================================================================================================

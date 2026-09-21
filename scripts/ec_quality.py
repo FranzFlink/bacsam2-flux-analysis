@@ -4,8 +4,10 @@
 1. Why ratio-type quality criteria are not used to discard segments: they respond
    to the size of the flux, not to the quality of the measurement.
 2. Robustness: the comparison statistics under eight alternative screenings.
-3. Consistency of the random error: Finkelstein-Sims vs surrogate data vs the
-   formula of Lenschow et al. (1994) vs the segment-placement spread.
+3. Consistency of the random error: Finkelstein-Sims vs surrogate data (which
+   contain only the first term of the sum and are expected to be lower; Rannik et
+   al., 2016) vs the segment-placement spread; sensitivity to the lag range; the
+   factor missing in the shortcut form of the Lenschow et al. (1994) error.
 4. Physical consistency: the direction of the measured flux against the measured
    temperature difference (no transfer coefficient involved).
 5. The pitch resonance of the T-Bird near 1 Hz: upper bound of its effect.
@@ -65,6 +67,7 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
 
     # random error three ways
     sigma_fs = k * band_covariance_random_error(w, th, FS)
+    sigma_m = [k * band_covariance_random_error(w, th, FS, max_lag_s=m) for m in (5.0, 30.0)]   # sensitivity to the lag range
     sigma_sur = np.std([k * np.mean(wb * np.roll(tb, int(sh))) for sh in rng.integers(int(15 * FS), n - int(15 * FS), 300)])
     r_wt = np.corrcoef(wb, tb)[0, 1]
 
@@ -76,7 +79,7 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
     H_interp = H - b[1] + 0.5 * (dens[0] + dens[2]) * np.log(RES_EDGES[2] / RES_EDGES[1])
 
     rows.append(dict(H=H, H_total=H_total, R2=qc["R2"], fw_rel=abs((k * np.mean(sub) - H_total) / H_total),
-                     half_diff=abs(h1 - h2), sigma_fs=sigma_fs, sigma_sur=sigma_sur, r_wt=abs(r_wt),
+                     half_diff=abs(h1 - h2), sigma_fs=sigma_fs, sigma_m5=sigma_m[0], sigma_m30=sigma_m[1], sigma_sur=sigma_sur, r_wt=abs(r_wt),
                      H_interp=H_interp, dens_res=dens[1], dens_nb=0.5 * (dens[0] + dens[2]),
                      peak_w=_peak(s["w"].values), peak_theta=_peak(s["theta"].values), peak_pitch=_peak(s["pitch"].values)))
 df = pd.DataFrame(rows, index=pd.to_datetime(SEG["start_time"].values))
@@ -142,6 +145,8 @@ print(f"median random error (W m-2): Finkelstein-Sims {df.sigma_fs.median():.1f}
       f"segment-placement spread {df.sigma_place.median():.1f}")
 print(f"rank correlation Finkelstein-Sims vs surrogates {spearmanr(df.sigma_fs, df.sigma_sur)[0]:.2f}, "
       f"vs placement spread {spearmanr(df.sigma_fs, df.sigma_place, nan_policy='omit')[0]:.1f}")
+print(f"sensitivity to the lag range m (10 s used): median sigma_rand(m = 5 s) / sigma_rand(10 s) = {(df.sigma_m5 / df.sigma_fs).median():.2f}, "
+      f"sigma_rand(30 s) / sigma_rand(10 s) = {(df.sigma_m30 / df.sigma_fs).median():.2f}")
 print(f"median |correlation of w and theta| in the flux band: {df.r_wt.median():.2f}  "
       f"-> factor sqrt((1+r^2)/r^2) of Lenschow et al. (1994): {np.sqrt((1 + df.r_wt**2) / df.r_wt**2).median():.0f}")
 
