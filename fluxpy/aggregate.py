@@ -46,7 +46,7 @@ from .meteorology import add_theta
 # ── fluxpy sibling modules ────────────────────────────────────────────────────
 from .stability import bulk_richardson_2pt
 from .util      import potential_temperature
-from .qc        import qc_leg, classify_leg_soft, classify_leg_simple
+from .qc        import qc_leg, classify_leg_simple
 
 __all__ = ["AggConfig", "process_legs", "to_xarray"]
 
@@ -385,8 +385,9 @@ def process_legs(
             tke       = _scalar(get_tke(leg_data, highpass=cfg.highpass).mean())
             ustar     = _scalar(add_u_star(leg_data)["u_star"].mean())
             # w'theta' covariance (manuscript Eq. Hec): potential temperature is
-            # the conserved variable; band-limited to 0.1-20 Hz (see get_cov).
-            _, hf     = get_cov(leg_data, "theta", heat_flux=True, time_dim="distance", highpass=True)
+            # the conserved variable. Linear detrend, then the cospectrum is
+            # integrated over 0.1-20 Hz (flux_processing.band_covariance).
+            _, hf     = get_cov(leg_data, "theta", heat_flux=True, time_dim="distance", highpass=False)
 
             hf_scalar = _scalar(hf.mean()) if hasattr(hf, "mean") else float(hf)
             mol       = _scalar(add_monin_obukhov_length(leg_data)["monin_obukhov_length"].mean())
@@ -461,7 +462,6 @@ def process_legs(
                 x_dist=leg_data["distance"].values,
             )
             bin_length_km  = float(bin_right - bin_left)
-            qc_soft        = classify_leg_soft(qc_results, bin_length_km, kind="heat")
             qc_simple      = classify_leg_simple(qc_results, bin_length_km)
 
             # ── Richardson number + level diagnostics (classic 2-pt Ri_b) ─
@@ -545,14 +545,10 @@ def process_legs(
                 "tv_og":           qc_results["tv_og"],
                 "R2":              qc_results["R2"],
                 "max_dev":         qc_results["max_dev"],
-                # soft (weighted) classifier
-                "qc_verdict":      qc_soft["verdict"],
-                "qc_score":        qc_soft["score"],
-                # simple (manuscript 3-criterion) classifier
+                # manuscript three-criterion classifier (Appendix A)
                 "qc_verdict_simple":  qc_simple["verdict"],
                 "qc_n_failed_simple": qc_simple["n_failed"],
                 "qc_slope_w":              qc_simple["metrics"]["slope_w"],
-                "qc_og_fft_plateau_err":   qc_simple["metrics"]["og_fft_plateau_err"],
                 "qc_R2":                   qc_simple["metrics"]["R2"],
                 "qc_snr_fwC":              qc_simple["metrics"]["snr_fwC"],
                 # ── Lenschow error metrics ──────────────────────────────
@@ -642,6 +638,49 @@ def to_xarray(df: pd.DataFrame) -> xr.Dataset:
     for col in ("qc_verdict_int", "qc_verdict_simple_int"):
         if col in ds:
             ds[col].attrs.update(_flag_attrs)
+
+    # Units / long names (as assumed by the code that reads this file)
+    _ATTRS = {
+        "sensible_heat_flux":   ("W m-2", "Eddy-covariance sensible heat flux, 0.1-20 Hz band; positive upward; NaN if discarded by the spectral QC"),
+        "altitude":             ("m", "Segment-mean height of the T-Bird"),
+        "T_mean":               ("degC", "Segment-mean air temperature (T-Bird)"),
+        "p_mean":               ("hPa", "Segment-mean static pressure (T-Bird)"),
+        "u_mean":               ("m s-1", "Segment-mean horizontal wind component u (T-Bird)"),
+        "v_mean":               ("m s-1", "Segment-mean horizontal wind component v (T-Bird)"),
+        "w_mean":               ("m s-1", "Segment-mean vertical wind (T-Bird)"),
+        "ws_mean":              ("m s-1", "Speed of the segment-mean horizontal wind vector"),
+        "t_kt19":               ("degC", "Segment-mean KT-19 surface brightness temperature"),
+        "delta_T":              ("K", "T_mean minus t_kt19"),
+        "latitude":             ("degrees_north", "Segment-mean latitude"),
+        "longitude":            ("degrees_east", "Segment-mean longitude"),
+        "sic":                  ("%", "Sea-ice concentration along the segment (merged MODIS-AMSR2)"),
+        "lead_frac":            ("1", "Fraction of KT-19 samples warmer than -5 degC"),
+        "frac_open":            ("1", "Fraction of KT-19 samples classified as open water"),
+        "frac_thin_ice":        ("1", "Fraction of KT-19 samples classified as thin ice"),
+        "frac_thick_ice":       ("1", "Fraction of KT-19 samples classified as snow-covered ice"),
+        "N_samples":            ("1", "Number of 100 Hz samples in the segment"),
+        "leg_length_km":        ("km", "Segment length"),
+        "L_int":                ("m", "Integral length scale of w'T'"),
+        "lenschow_rel_error":   ("1", "Relative random sampling error, sqrt(2 L_int / segment length)"),
+        "qc_slope_w":           ("1", "Log-log slope of the w power spectrum, 0.1-20 Hz"),
+        "qc_R2":                ("1", "R2 of a linear fit to the cumulative covariance (stationarity)"),
+        "qc_snr_fwC":           ("1", "Signal-to-noise ratio of the frequency-weighted cospectrum"),
+        "ri_b_mean":            ("1", "Two-point bulk Richardson number, surface to T-Bird"),
+        "theta_surface":        ("K", "Surface potential temperature (KT-19, T-Bird pressure)"),
+        "theta_tbird":          ("K", "Potential temperature at the T-Bird"),
+        "z_tbird":              ("m", "Height of the T-Bird"),
+        "F_dnw_sol":            ("W m-2", "Downwelling shortwave irradiance"),
+        "F_upw_sol":            ("W m-2", "Upwelling shortwave irradiance"),
+        "F_dnw_ter":            ("W m-2", "Downwelling longwave irradiance"),
+        "F_upw_ter":            ("W m-2", "Upwelling longwave irradiance"),
+    }
+    for _name, (_units, _long) in _ATTRS.items():
+        if _name in ds:
+            ds[_name].attrs.update(units=_units, long_name=_long)
+    ds.attrs.update(
+        title="BACSAM-II T-Bird eddy-covariance fluxes and segment means on 5 km segments",
+        source="scripts/run_ec_aggregation.py (fluxpy.aggregate)",
+    )
 
     # Drop any remaining object-dtype columns that aren't netCDF-serialisable
     drop = [v for v in ds.data_vars if ds[v].dtype == object]

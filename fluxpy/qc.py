@@ -3,9 +3,9 @@ fluxpy.qc
 =========
 Spectral quality control of the eddy-covariance segments.
 
-Each 5 km segment is screened with four complementary diagnostics
-(manuscript Appendix A) that test whether its cospectrum is well resolved,
-converged, stationary, and clearly above the noise:
+Each 5 km segment is screened with three diagnostics (manuscript Appendix A),
+all computed from the linearly detrended series WITHOUT high-pass filtering,
+so that they are independent of the 0.1 Hz lower edge of the flux band:
 
 1. **Inertial-subrange slope.** The vertical-wind power spectrum is fitted
    in double-logarithmic space over the flux band; a resolved turbulent
@@ -16,28 +16,22 @@ converged, stationary, and clearly above the noise:
    following the $f^{-5/3}$ prediction for locally isotropic turbulence
    (Kolmogorov, 1941; Obukhov, 1941).
 
-2. **Ogive convergence.** The normalised cumulative cospectrum (ogive),
-   integrated from high towards low frequencies, must approach unity below
-   the 0.1 Hz cut-off,
-
-   $$ \varepsilon_\mathrm{plateau} =
-      \left| 1 - \left\langle \tilde O_{w\theta}(f)
-      \right\rangle_{f < 0.1\,\mathrm{Hz}} \right| < 10^{-3}, $$
-
-   confirming that the flux-carrying scales are contained in the segment.
-
-3. **Along-track stationarity.** The normalised cumulative covariance
+2. **Along-track stationarity.** The normalised cumulative covariance
    $S(j)$ must grow approximately linearly with fractional segment length;
    a linear fit requires $R^2 \ge 0.4$.
 
-4. **Cospectral signal-to-noise ratio.** The peak of the
+3. **Cospectral signal-to-noise ratio.** The peak of the
    frequency-weighted cospectrum $|f\,C_{w\theta}(f)|$ within the
    turbulent band must exceed twice the background level estimated
    outside it ($\mathrm{SNR} > 2$).
 
-Segments passing all four criteria are *accepted*, failing exactly one
+Segments passing all criteria are *accepted*, failing exactly one
 *tolerable*, and failing two or more *discarded*; accepted and tolerable
 segments enter the flux comparison.
+
+(An ogive-plateau criterion evaluated below 0.1 Hz was removed in v1.2: it was
+computed on series that had been high-passed at 0.1 Hz and therefore did not
+test flux convergence.)
 
 Public API
 ----------
@@ -46,7 +40,6 @@ cospectrum(w, x, fs, ...)              – cross-power spectral density (real pa
 powerspec(x, fs, ...)                  – one-sided power spectral density (Welch)
 ogive_from_cospec(f, Co)               – cumulative ogive (high → low frequency)
 qc_leg(w, theta, u, v, fs, x_dist)     – per-segment spectral metrics
-classify_leg_soft(qc, leg_length_km)   – graded verdict
 classify_leg_simple(qc, leg_length_km) – manuscript four-criterion verdict
 """
 
@@ -61,7 +54,6 @@ __all__ = [
     "powerspec",
     "ogive_from_cospec",
     "qc_leg",
-    "classify_leg_soft",
     "classify_leg_simple",
 ]
 
@@ -286,11 +278,11 @@ def qc_leg(
     ``og_th_norm``, ``cum_frac``, ``cum_cov_norm``,
     ``slope_th``, ``slope_w``, ``tv_og``, ``R2``, ``max_dev``
     """
-    # 1. Detrend + high-pass (Tetzlaff 2015)
-    w  = highpass(detrend(w,     type="linear"), fs)
-    th = highpass(detrend(theta, type="linear"), fs)
-    uu = highpass(detrend(u,     type="linear"), fs)
-    vv = highpass(detrend(v,     type="linear"), fs)
+    # 1. Linear detrend only (no high-pass; manuscript Appendix A)
+    w  = detrend(w,     type="linear")
+    th = detrend(theta, type="linear")
+    uu = detrend(u,     type="linear")
+    vv = detrend(v,     type="linear")
 
     # 2. Power spectra
     f, Pth = powerspec(th, fs)
@@ -309,8 +301,7 @@ def qc_leg(
 
     # 3b. Single-realisation FFT ogive (resolves down to 1/T_leg ≈ 0.02 Hz).
     # Zero-pad to next power-of-2 for speed; use a Hann window to suppress
-    # spectral leakage.  The plateau check uses only f_fft < fc (= 0.1 Hz,
-    # the pre-filter cutoff) where the ogive should be flat.
+    # spectral leakage.  Shown in Fig. A1e; not used as a QC criterion.
     N_fft   = len(w)
     N_pad   = int(2 ** np.ceil(np.log2(N_fft)))   # next power-of-2
     hann    = np.hanning(N_fft)
@@ -325,17 +316,6 @@ def qc_leg(
     og_fft  = ogive_from_cospec(f_fft, Co_fft)
     # Self-normalise by the FFT total flux estimate (og_fft[0])
     og_fft_norm = og_fft / og_fft[0] if abs(og_fft[0]) > 1e-12 else og_fft * np.nan
-    # Plateau metrics: mean and spread in the sub-0.1 Hz band
-    m_plat  = (f_fft > 0.0) & (f_fft < 0.1)       # skip DC bin
-    if m_plat.sum() >= 2:
-        og_fft_plateau     = float(np.nanmean(og_fft_norm[m_plat]))
-        og_fft_plateau_err = float(abs(1.0 - og_fft_plateau))
-        og_fft_spread      = float(np.nanmax(og_fft_norm[m_plat]) -
-                                   np.nanmin(og_fft_norm[m_plat]))
-    else:                                          # segment too short to resolve plateau
-        og_fft_plateau_err = np.nan
-        og_fft_spread      = np.nan
-
     # 4. Frequency-weighted co-spectrum
     fwCwth = f * Cwth
 
@@ -378,7 +358,6 @@ def qc_leg(
         Cwth=Cwth, fwCwth=fwCwth,
         og_th_norm=og_th_norm, og_th_self=og_th_self,
         f_fft=f_fft, og_fft_norm=og_fft_norm,
-        og_fft_plateau_err=og_fft_plateau_err, og_fft_spread=og_fft_spread,
         cum_frac=frac, cum_cov_norm=cum_cov_norm,
         slope_th=slope_th, slope_w=slope_w,
         tv_og=tv_og, tv_og_self=tv_og_self, R2=R2, max_dev=max_dev,
@@ -386,176 +365,7 @@ def qc_leg(
 
 
 # ---------------------------------------------------------------------------
-# Soft QC classification
-# ---------------------------------------------------------------------------
-
-def classify_leg_soft(
-    qc: dict,
-    leg_length_km: float,
-    kind: str = "heat",
-) -> dict:
-    """Soft QC verdict for a flight leg.
-
-    Aggregates multiple spectral and stationarity metrics into a single
-    weighted score and assigns one of three verdicts:
-
-    * ``'accepted'``   – score ≥ 10
-    * ``'tolerable'``  – score ≥ 6
-    * ``'discarded'``  – score < 6
-
-    Parameters
-    ----------
-    qc            : Dict returned by :func:`qc_leg`.
-    leg_length_km : Actual length of the bin [km].
-    kind          : ``'heat'`` (default) or ``'momentum'`` – controls the
-                    minimum-length thresholds.
-
-    Returns
-    -------
-    dict with keys:
-    ``verdict``      str
-    ``score``        float
-    ``flux_int_abs`` float   – |∫Co(f)df|, guard for near-zero-flux legs
-    ``metrics``      dict    – named diagnostics (R2, slopes, f95, …)
-    ``reasons``      list    – list of (name, status, value) tuples
-    """
-    f       = qc["f"]
-    Pth     = qc["Pth"]
-    Pw      = qc["Pw"]
-    Cwth    = qc["Cwth"]
-    fwCwth  = qc["fwCwth"]
-    og_norm = qc["og_th_norm"]
-    R2      = float(qc["R2"])
-    max_dev = float(qc["max_dev"])
-    tv_og   = float(qc["tv_og"])
-
-    fs = float(np.nanmax(f) * 2.0)   # approximate Nyquist
-
-    # Integrated flux magnitude (guard for tiny-flux legs)
-    flux_int = abs(_integrated_flux(f, Cwth))
-
-    # Adaptive inertial-subrange slopes
-    mth = _find_inertial_band(f, Pth, fs)
-    mw  = _find_inertial_band(f, Pw,  fs)
-    slope_th = _log_slope(f, Pth, mth)
-    slope_w  = _log_slope(f, Pw,  mw)
-
-    # Flux-convergence frequency (95 %)
-    f95 = _f_percent_from_high(f, Cwth, frac=0.95)
-
-    # Ogive plateau (lowest 10 % in frequency = FIRST elements of og_norm,
-    # since og_norm[0] is at the lowest frequency and should plateau at 1)
-    n    = len(og_norm)
-    n_tail = max(1, int(0.1 * n))
-    tail = og_norm[:n_tail] if n > 10 else og_norm
-    og_plateau     = float(np.nanmean(tail))
-    og_plateau_err = abs(1.0 - og_plateau)
-    og_spread      = float(np.nanmax(tail) - np.nanmin(tail))
-
-    # Cospectral SNR
-    snr = _cospec_peak_snr(f, fwCwth)
-
-    # Minimum-length thresholds (km)
-    min_len_acc = 2.5 if kind == "heat" else 4.0
-    min_len_tol = 1.5 if kind == "heat" else 2.5
-
-    # ── Thresholds ──────────────────────────────────────────────────────────
-    TH = dict(
-        R2_acc=0.90,      R2_tol=0.80,
-        maxdev_acc=0.10,  maxdev_tol=0.20,
-        tv_acc=0.50,      tv_tol=0.80,
-        f95_acc=0.15,     f95_tol=0.25,       # Hz
-        ogerr_acc=0.10,   ogerr_tol=0.15,
-        ogspr_acc=0.10,   ogspr_tol=0.15,
-        slope_mu=-1.6667, slope_acc=0.50, slope_tol=0.80,
-        snr_acc=2.5,      snr_tol=1.5,
-        len_acc=min_len_acc, len_tol=min_len_tol,
-        small_flux=0.01,  # K m s⁻¹  (∫Cwθ df) guard
-    )
-
-    # ── Scoring ──────────────────────────────────────────────────────────────
-    score   = 0.0
-    reasons = []
-
-    def add_score(val, acc, tol, greater=True, w=1.0, name=None):
-        nonlocal score
-        if not np.isfinite(val):
-            reasons.append((name, "nan", 0))
-            return
-        ok    = (val >= acc) if greater else (val <= acc)
-        tolok = (val >= tol) if greater else (val <= tol)
-        if ok:
-            score += 2.0 * w
-            reasons.append((name, "acc", val))
-        elif tolok:
-            score += 1.0 * w
-            reasons.append((name, "tol", val))
-        else:
-            reasons.append((name, "fail", val))
-
-    # Stationarity / homogeneity
-    add_score(R2,      TH["R2_acc"],      TH["R2_tol"],      greater=True,  w=2.0, name="R2")
-    add_score(max_dev, TH["maxdev_acc"],  TH["maxdev_tol"],  greater=False, w=2.0, name="max_dev")
-    # Ogive smoothness
-    add_score(tv_og, TH["tv_acc"], TH["tv_tol"], greater=False, w=1.5, name="tv_og")
-    # Flux convergence (95 %)
-    add_score(f95, TH["f95_acc"], TH["f95_tol"], greater=False, w=1.5, name="f95_Hz")
-
-    # Plateau metrics (skip if flux is near-zero)
-    if flux_int >= TH["small_flux"]:
-        add_score(og_plateau_err, TH["ogerr_acc"], TH["ogerr_tol"], greater=False, w=1.0, name="og_plateau_err")
-        add_score(og_spread,      TH["ogspr_acc"], TH["ogspr_tol"], greater=False, w=1.0, name="og_spread")
-    else:
-        reasons.append(("og_plateau_err", "skipped_small_flux", og_plateau_err))
-        reasons.append(("og_spread",      "skipped_small_flux", og_spread))
-
-    # Inertial slopes (θ and w)
-    for s, nm in [(slope_th, "slope_theta"), (slope_w, "slope_w")]:
-        if np.isfinite(s):
-            dev = abs(s - TH["slope_mu"])
-            add_score(dev, TH["slope_acc"], TH["slope_tol"], greater=False, w=1.0, name=nm)
-        else:
-            reasons.append((nm, "nan", s))
-
-    # Cospectral SNR
-    add_score(snr, TH["snr_acc"], TH["snr_tol"], greater=True, w=1.0, name="snr_fwC")
-
-    # Leg length
-    if leg_length_km >= TH["len_acc"]:
-        score += 2.0
-        reasons.append(("length_km", "acc", leg_length_km))
-    elif leg_length_km >= TH["len_tol"]:
-        score += 1.0
-        reasons.append(("length_km", "tol", leg_length_km))
-    else:
-        reasons.append(("length_km", "fail", leg_length_km))
-
-    # Verdict (max ≈ 14 points)
-    if score >= 10:
-        verdict = "accepted"
-    elif score >= 6:
-        verdict = "tolerable"
-    else:
-        verdict = "discarded"
-
-    return {
-        "verdict":      verdict,
-        "score":        score,
-        "flux_int_abs": flux_int,
-        "metrics": dict(
-            R2=R2, max_dev=max_dev, tv_og=tv_og,
-            f95_Hz=f95,
-            og_plateau_err=og_plateau_err, og_spread=og_spread,
-            slope_theta=slope_th, slope_w=slope_w,
-            snr_fwC=snr,
-            leg_length_km=leg_length_km,
-        ),
-        "reasons": reasons,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Simple / manuscript QC classification
+# QC verdict
 # ---------------------------------------------------------------------------
 
 def classify_leg_simple(
@@ -564,19 +374,14 @@ def classify_leg_simple(
 ) -> dict:
     """Manuscript-described QC verdict for a flight leg.
 
-    Evaluates the four criteria of manuscript Appendix A (thresholds are
+    Evaluates the three criteria of manuscript Appendix A (thresholds are
     pinned by ``tests/test_most_schemes.py::test_qc_thresholds_match_manuscript``):
 
     1. Spectral slope of *w*:   |s_w + 5/3| ≤ 0.4
-    2. FFT ogive plateau error: og_fft_plateau_err < 0.001  (normalised ogive at f < 0.1 Hz)
-    3. Stationarity (R²):       R² ≥ 0.4  (cum-covariance linear fit)
-    4. SNR:                     SNR > 2
+    2. Stationarity (R²):       R² ≥ 0.4  (cum-covariance linear fit)
+    3. SNR:                     SNR > 2
 
     No length gate is applied: all segments are 5 km by construction.
-
-    The ogive plateau is computed from a single-realisation FFT (not the Welch
-    estimate), which resolves frequencies down to 1/T_leg ≈ 0.02 Hz — below
-    the 0.1 Hz pre-filter cutoff where the normalised ogive converges to 1.
     The R² criterion is the fraction of the cumulative co-covariance curve
     explained by a linear trend (stationary = linear accumulation).
 
@@ -601,7 +406,6 @@ def classify_leg_simple(
     """
     f                  = qc["f"]
     fwCwth             = qc["fwCwth"]
-    og_fft_plateau_err = float(qc["og_fft_plateau_err"])  # FFT ogive plateau check
     R2                 = float(qc["R2"])                  # stationarity
 
     # ── Slope of w spectrum in inertial subrange (0.1–20 Hz log-log) ──────
@@ -613,7 +417,6 @@ def classify_leg_simple(
     # ── Thresholds ────────────────────────────────────────────────────────
     SLOPE_TOL  = 0.4        # |s_w + 5/3| ≤ this
     SLOPE_MU   = -5.0 / 3.0
-    OGERR_LIM  = 0.001       # FFT ogive plateau error
     R2_LIM     = 0.4        # minimum R² for stationarity
     SNR_LIM    = 2.0
 
@@ -630,8 +433,6 @@ def classify_leg_simple(
 
     slope_ok = np.isfinite(slope_w)          and abs(slope_w - SLOPE_MU) <= SLOPE_TOL
     _check("slope_w",           slope_w,           slope_ok)
-    og_ok    = np.isfinite(og_fft_plateau_err) and og_fft_plateau_err < OGERR_LIM
-    _check("og_fft_plateau_err", og_fft_plateau_err, og_ok)
     r2_ok    = np.isfinite(R2)                and R2 >= R2_LIM
     _check("R2",                R2,                r2_ok)
     snr_ok   = np.isfinite(snr)               and snr > SNR_LIM
@@ -653,7 +454,6 @@ def classify_leg_simple(
         "n_failed": n_failed,
         "metrics": dict(
             slope_w=slope_w,
-            og_fft_plateau_err=og_fft_plateau_err,
             R2=R2,
             snr_fwC=snr,
             leg_length_km=leg_length_km,

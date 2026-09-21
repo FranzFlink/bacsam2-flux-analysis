@@ -333,6 +333,17 @@ def main() -> None:
     print(f"\nBuilding xarray Dataset …")
     ds = to_xarray(df)
 
+    # Aircraft-level values (Fig. 2a): without the Polar 6 nose-boom archive
+    # they are taken from the side file extracted on the raw-data host.
+    side_fp = os.path.join(_AR, "polar6_level_at_segments.nc")
+    if data["ds_polar6"] is None and os.path.isfile(side_fp) and "z_polar6" in ds:
+        import xarray as xr
+        with xr.open_dataset(side_fp) as side:
+            side = side.load().reindex(start_time=ds["start_time"])
+        for v in ("T_polar6", "theta_polar6", "z_polar6"):
+            ds[v] = side[v]
+        print(f"Aircraft-level values merged from {os.path.basename(side_fp)}")
+
     # ── Save ──────────────────────────────────────────────────────────────
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     ds.to_netcdf(args.out, mode="w")

@@ -34,11 +34,18 @@ PYTHONIOENCODING = "utf-8"
 
 [tasks]
 # Each step can be run on its own; `pixi run all` runs them in order.
-test       = "pytest tests -q"
-verify-ec  = "python scripts/verify_ec_reproduction.py"
-precompute = "python scripts/calc_bulk_and_ec_fluxes.py"
-numbers    = { cmd = "python scripts/manuscript_numbers.py", depends-on = ["precompute"] }
-tables     = { cmd = "python scripts/make_manuscript_tables.py", depends-on = ["precompute"] }
-figures    = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
-check      = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
-all        = { depends-on = ["test", "verify-ec", "check", "tables", "figures"] }
+test          = "pytest tests -q"
+# EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
+verify-ec     = "python scripts/verify_ec_reproduction.py"
+ec-segments   = "python scripts/run_ec_aggregation.py --out-csv \"\""
+placement     = "python scripts/ec_segment_placement.py"
+window-length = "python scripts/ec_window_length.py"
+# bulk side and paper outputs
+precompute    = "python scripts/calc_bulk_and_ec_fluxes.py"
+numbers       = { cmd = "python scripts/manuscript_numbers.py", depends-on = ["precompute"] }
+tables        = { cmd = "python scripts/make_manuscript_tables.py", depends-on = ["precompute"] }
+figures       = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
+check         = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
+all           = { depends-on = ["test", "verify-ec", "check", "tables", "figures"] }
+# everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
+all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "check", "tables", "figures"] }

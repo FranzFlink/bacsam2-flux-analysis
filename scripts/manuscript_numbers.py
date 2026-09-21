@@ -49,20 +49,25 @@ def within_leg_r(h):
 
 def line(name, h, ci=False):
     m = skill_metrics(EC, h, name)
-    out = (f"{name:<26} {m['slope']:5.2f} {m['r']:6.2f} "
-           f"{within_leg_r(h):8.2f} {m['bias']:+7.2f} {m['rmse']:6.2f} "
-           f"{m['crmse']:6.2f} {m['n']:4d}")
+    out = (f"{name:<26} {m['slope']:5.1f} {m['r']:6.1f} "
+           f"{within_leg_r(h):8.1f} {m['bias']:+7.1f} {m['rmse']:6.1f} "
+           f"{m['crmse']:6.1f} {m['n']:4d}")
     if ci:
         lo, hi = slope_bootstrap_ci(EC, h)
-        out += f"   OLS 95% CI [{lo:.2f}, {hi:.2f}]"
+        out += f"   OLS 95% CI [{lo:.1f}, {hi:.1f}]"
     return out
 
 
 print("\n" + "=" * 118)
-print("EC REFERENCE (81 QC-retained 5 km segments)")
-print("=" * 118)
 ecv = EC[np.isfinite(EC)]
-print(f"median {np.median(ecv):.2f}   mean {ecv.mean():.2f}   max {ecv.max():.1f}   "
+print(f"EC REFERENCE ({ecv.size} QC-retained of {EC.size} low-level 5 km segments)")
+print("=" * 118)
+_seg = AR.sel(start_time=FIG["start_time"].values)
+_v = np.asarray(_seg["qc_verdict_simple_int"])
+print(f"spectral QC: accepted {(_v == 0).sum()}, tolerable {(_v == 1).sum()}, discarded {(_v == 2).sum()}   "
+      f"(criterion failures: slope {(np.abs(_seg['qc_slope_w'] + 5 / 3) > 0.4).sum().item()}, "
+      f"stationarity {(_seg['qc_R2'] < 0.4).sum().item()}, SNR {(_seg['qc_snr_fwC'] <= 2).sum().item()})")
+print(f"median {np.median(ecv):.1f}   mean {ecv.mean():.1f}   max {ecv.max():.1f}   "
       f"min {ecv.min():.1f}   |H|<2 W/m2: {np.mean(np.abs(ecv) < 2) * 100:.0f} % of segments")
 
 print("\n" + "=" * 118)
@@ -94,8 +99,8 @@ for a in ["1e-01", "1e-02", "1e-03", "1e-04", "1e-05", "1e-06", "1e-07"]:
         e_ = skill_metrics(EC, HR_ALL[RUNS_R.index(f"GLGS20_ztr{a}_era5only")], "")
     except ValueError:
         continue
-    print(f"{a:>8} | {o['slope']:12.2f} {o['r']:5.2f} {o['bias']:+6.2f} {o['rmse']:5.2f} |"
-          f" {r_['slope']:16.2f} {r_['r']:5.2f} | {e_['slope']:15.2f} {e_['r']:5.2f}")
+    print(f"{a:>8} | {o['slope']:12.1f} {o['r']:5.1f} {o['bias']:+6.1f} {o['rmse']:5.1f} |"
+          f" {r_['slope']:16.1f} {r_['r']:5.1f} | {e_['slope']:15.1f} {e_['r']:5.1f}")
 
 print("\n" + "=" * 118)
 print("SATELLITE T_s BENEFIT vs WITHIN-SEGMENT T_s VARIABILITY  (reference configuration)")
@@ -114,12 +119,12 @@ def rmse(x, y):
     return float(np.sqrt(np.mean((x - y) ** 2)))
 
 
-print(f"median within-segment sigma(T_s) = {med:.2f} K")
+print(f"median within-segment sigma(T_s) = {med:.1f} K")
 for nm, m in [("above median", vv > med), ("below median", vv <= med)]:
     print(f"  {nm} (n={m.sum():2d}): "
-          f"slope {np.polyfit(e[m], a_[m], 1)[0]:+.2f} -> {np.polyfit(e[m], r_[m], 1)[0]:+.2f}   "
-          f"r {np.corrcoef(e[m], a_[m])[0, 1]:.2f} -> {np.corrcoef(e[m], r_[m])[0, 1]:.2f}   "
-          f"RMSE {rmse(a_[m], e[m]):.2f} -> {rmse(r_[m], e[m]):.2f}")
+          f"slope {np.polyfit(e[m], a_[m], 1)[0]:+.1f} -> {np.polyfit(e[m], r_[m], 1)[0]:+.1f}   "
+          f"r {np.corrcoef(e[m], a_[m])[0, 1]:.1f} -> {np.corrcoef(e[m], r_[m])[0, 1]:.1f}   "
+          f"RMSE {rmse(a_[m], e[m]):.1f} -> {rmse(r_[m], e[m]):.1f}")
 
 rng = np.random.default_rng(42)
 hi = vv > med
@@ -132,9 +137,9 @@ for _ in range(5000):
     p = rng.permutation(len(vv)) < hi.sum()
     perm.append((rmse(a_[p], e[p]) - rmse(r_[p], e[p]))
                 - (rmse(a_[~p], e[~p]) - rmse(r_[~p], e[~p])))
-print(f"  RMSE gain above median: {gain:.2f} W/m2, bootstrap 95 % CI "
-      f"[{np.percentile(bs, 2.5):.2f}, {np.percentile(bs, 97.5):.2f}], "
-      f"permutation p = {np.mean(np.abs(perm) >= abs(obs)):.4f}")
+print(f"  RMSE gain above median: {gain:.1f} W/m2, bootstrap 95 % CI "
+      f"[{np.percentile(bs, 2.5):.1f}, {np.percentile(bs, 97.5):.1f}], "
+      f"permutation p = {np.mean(np.abs(perm) >= abs(obs)):.2f}")
 
 print("\n" + "=" * 118)
 print("ALPHA_T IS A WEAK, LOGARITHMIC KNOB")
@@ -144,5 +149,27 @@ s01 = amplitude_metrics(EC[np.isfinite(EC)],
 s04 = amplitude_metrics(EC[np.isfinite(EC)],
                         HO_ALL[RUNS_O.index("GLGS20_ztr1e-04")][np.isfinite(EC)])["slope"]
 print(f"3 decades of alpha_T (1e-1 -> 1e-4) change the flux amplitude by a factor "
-      f"{s04 / s01:.2f} (slope {s01:.2f} -> {s04:.2f}); the correlation does not change at all.")
+      f"{s04 / s01:.1f} (slope {s01:.1f} -> {s04:.1f}); the correlation does not change at all.")
+print()
+
+print("=" * 118)
+print("EC WINDOW-LENGTH EXPERIMENT (Fig. 3)  -- scripts/ec_window_length.py")
+print("=" * 118)
+WL = pd.read_csv(REPO / "data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv")
+print(f"{int(WL.loc[0, 'n_legs'])} low-level legs, median length {WL.loc[0, 'length_km']:.1f} km")
+for L in (1.0, 5.0, 10.0):
+    w = WL[WL["length_km"] == L].iloc[0]
+    n_qc = w["n_accepted"] + w["n_tolerable"] + w["n_discarded"]
+    print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.1f} +- {w['ratio_std']:.1f}   "
+          f"sampling error {w['lenschow_rel_error_mean'] * 100:.0f} %   "
+          f"discarded by QC {w['n_discarded'] / n_qc * 100:.0f} %")
+
+print("\n" + "=" * 118)
+print("UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2")
+print("=" * 118)
+from fluxpy.uncertainty import uncertainty_budget  # noqa: E402
+
+for key, sig in uncertainty_budget(FIG).items():
+    s = sig[np.isfinite(sig)]
+    print(f"  {key:<14} {np.median(s):4.1f} [{np.percentile(s, 25):.1f}-{np.percentile(s, 75):.1f}]")
 print()

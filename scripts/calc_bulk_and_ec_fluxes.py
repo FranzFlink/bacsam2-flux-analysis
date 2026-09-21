@@ -90,10 +90,10 @@ _ERA5_ML = _REPO_ROOT / "data" / "reanalysis" / "era5" / "ERA5_model_levels"
 _CARRA   = _REPO_ROOT / "data" / "reanalysis" / "carra"
 _OUT     = _REPO_ROOT / "data" / "model_output"
 
-# The paper analyses the four low-level flight days 13, 15, 17 and 23 April.
-# 25 April: 32 segments pass the < 50 m filter, but at 47 m mean altitude
-# (analysed days: 21-29 m), and the merged SIC product is unusable that day
-# (100 % everywhere). 26 April has no segment below 50 m; listed for clarity.
+# The paper analyses the four low-level flight days over sea ice (13, 15, 17, 23 April).
+# 25 April: the 32 segments below 50 m were flown over open water, not sea ice
+# (KT-19 mean +4.1 degC, open-water fraction 1.00). 26 April has no segment below
+# 50 m; listed for clarity.
 EXCLUDE = [pd.Timestamp("2024-04-25").date(), pd.Timestamp("2024-04-26").date()]
 LAT_SLICE = slice(76.0, 87.0)
 LON_SLICE = slice(4.0, 36.0)
@@ -776,16 +776,11 @@ def run_all(verbose: bool = False, extract_only: bool = False,
                         _lbl, int(_lost.sum()),
                         [str(t)[:16] for t in np.asarray(t_obs)[_lost]])
 
-    # ── Segment ancillaries for the published (Tier-1) file ───────────────
-    # The segment-placement uncertainty lives in the bin-resolved archive;
-    # align it once here so that every downstream notebook needs only this
-    # file. Selection identical to load_obs().
-    _bins = xr.open_dataset(_AR / "analysis_ready_polar6_turbulent_fluxes_with_bins.nc")
-    _bins = _bins.where(_bins["altitude"] < 50, drop=True)
-    _keepb = ~np.isin(pd.DatetimeIndex(_bins["start_time"].values).date, EXCLUDE)
-    _bins = _bins.isel(start_time=np.where(_keepb)[0])
-    assert _bins.sizes["start_time"] == n_legs, (_bins.sizes, n_legs)
-    sigma_placement = _bins["sensible_heat_flux_bin_std"].values.astype(float)
+    # ── Segment-placement uncertainty of the EC flux ──────────────────────
+    # Written by scripts/ec_segment_placement.py (5 km window moved in 0.05 km steps).
+    with xr.open_dataset(_AR / "ec_segment_placement.nc") as _pl:
+        sigma_placement = _pl["sigma_placement"].sel(
+            start_time=ds_obs["start_time"].values).values.astype(float)
     qc_retained = np.isfinite(H_obs_ec)
 
     # ── Build output NetCDF (self-describing; naming per fluxpy.naming) ────

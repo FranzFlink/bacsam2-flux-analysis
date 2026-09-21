@@ -94,20 +94,39 @@ def test_bulk_flux_sign_convention_positive_upward():
 
 
 def test_qc_thresholds_match_manuscript():
-    """Appendix A: |s_w + 5/3| <= 0.4, plateau error < 0.001, R2 >= 0.4, SNR > 2;
+    """Appendix A: |s_w + 5/3| <= 0.4, R2 >= 0.4, SNR > 2;
     accepted = 0 failures, tolerable = 1, discarded >= 2."""
     from fluxpy.qc import classify_leg_simple
 
     f = np.linspace(0.01, 50.0, 5000)
-    fwC = np.where((f >= 0.1) & (f <= 2.0), 10.0, 1.0)      # SNR = 10 -> pass
+    snr_pass = np.where((f >= 0.1) & (f <= 2.0), 10.0, 1.0)     # SNR = 10
+    snr_fail = np.ones_like(f)                                   # SNR = 1
 
-    def verdict(slope_w, og, r2):
-        qc = {"f": f, "fwCwth": fwC, "slope_w": slope_w, "og_fft_plateau_err": og, "R2": r2}
+    def verdict(slope_w, r2, fwC=snr_pass):
+        qc = {"f": f, "fwCwth": fwC, "slope_w": slope_w, "R2": r2}
         return classify_leg_simple(qc, 5.0)["verdict"]
 
-    assert verdict(-5 / 3, 0.0005, 0.9) == "accepted"
-    assert verdict(-5 / 3 + 0.39, 0.0009, 0.41) == "accepted"   # just inside every bound
-    assert verdict(-5 / 3 + 0.41, 0.0005, 0.9) == "tolerable"   # slope fails
-    assert verdict(-5 / 3, 0.0011, 0.9) == "tolerable"          # plateau fails
-    assert verdict(-5 / 3, 0.0005, 0.39) == "tolerable"         # stationarity fails
-    assert verdict(-5 / 3, 0.0011, 0.39) == "discarded"
+    assert verdict(-5 / 3, 0.9) == "accepted"
+    assert verdict(-5 / 3 + 0.39, 0.41) == "accepted"          # just inside every bound
+    assert verdict(-5 / 3 + 0.41, 0.9) == "tolerable"          # slope fails
+    assert verdict(-5 / 3, 0.39) == "tolerable"                # stationarity fails
+    assert verdict(-5 / 3, 0.9, snr_fail) == "tolerable"       # SNR fails
+    assert verdict(-5 / 3 + 0.41, 0.39) == "discarded"
+
+
+def test_band_covariance_parseval_and_band_selection():
+    """The band-limited covariance (EC flux estimator) must (i) sum to the ordinary
+    covariance over the full band and (ii) keep only the in-band part of a two-tone signal."""
+    from fluxpy.flux_processing import band_covariance
+
+    rng = np.random.default_rng(0)
+    n, fs = 8200, 100.0
+    x = rng.standard_normal(n)
+    y = 0.5 * x + rng.standard_normal(n)
+    full = band_covariance(x, y, fs, 0.0, fs / 2)
+    assert full == pytest.approx(np.mean((x - x.mean()) * (y - y.mean())), rel=1e-10)
+
+    t = np.arange(n) / fs
+    f_out, f_in = 5 / (n / fs), 82 / (n / fs)          # 0.061 Hz (outside), 1.0 Hz (inside)
+    s = 2.0 * np.sin(2 * np.pi * f_out * t) + 1.0 * np.sin(2 * np.pi * f_in * t)
+    assert band_covariance(s, s, fs, 0.1, 20.0) == pytest.approx(0.5, rel=1e-6)   # amplitude 1 -> variance 1/2
