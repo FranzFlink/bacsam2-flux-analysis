@@ -34,20 +34,14 @@ from scipy import signal
 from scipy.signal import correlate, correlation_lags
 from tqdm import tqdm
 
-# ── lib imports (relative to fluxpy package root) ────────────────────────────
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_LIB  = os.path.join(_HERE, "..", "lib")
-if _LIB not in sys.path:
-    sys.path.insert(0, _LIB)
-
-from flux_processing import (   # noqa: E402
+from .flux_processing import (
     get_tke,
     add_u_star,
     get_cov,
     add_monin_obukhov_length,
     add_roughness_length,
 )
-from meteorology import add_theta  # noqa: E402
+from .meteorology import add_theta
 
 # ── fluxpy sibling modules ────────────────────────────────────────────────────
 from .stability import bulk_richardson_2pt
@@ -148,6 +142,8 @@ def _robust_aerosol_means(
 ) -> dict:
     """Z-score filtered per-variable means.  Output keys: CCN, POPS, Ncpc."""
     out = {"CCN": np.nan, "POPS": np.nan, "Ncpc": np.nan}
+    if ds_ar is None:
+        return out
     available = [v for v in aerosol_vars if v in ds_ar]
     if not available:
         return out
@@ -240,10 +236,10 @@ def process_legs(
     df_legs_meta: pd.DataFrame,
     ds_radiation: xr.Dataset,
     ds_tbird:     xr.Dataset,
-    ds_polar6:    xr.Dataset,
+    ds_polar6:    xr.Dataset | None,
     ds_sic:       xr.Dataset,
-    ds_track:     xr.Dataset,
-    ds_ar:        xr.Dataset,
+    ds_track:     xr.Dataset | None,
+    ds_ar:        xr.Dataset | None,
     cfg:          AggConfig = AggConfig(),
 ) -> pd.DataFrame:
     """Aggregate high-frequency leg data into analysis-ready bins.
@@ -267,13 +263,17 @@ def process_legs(
     ds_tbird      : T-Bird nose-boom dataset.  Used as the source of all
                     EC / turbulence / altitude / position data (via ``legs``)
                     and also directly for the 3-pt Richardson.
-    ds_polar6     : Polar-6 nose-boom dataset.  Used **only** for the
-                    3-point Richardson number (lower-level reference).
+    ds_polar6     : Polar-6 nose-boom dataset, or ``None``.  Used **only** for
+                    the aircraft-level diagnostics (``T_polar6``,
+                    ``theta_polar6``, ``z_polar6``); these are NaN when absent.
+                    The EC flux and Ri_b do not depend on it.
     ds_sic        : Sea-ice concentration gridded dataset with coords
                     ``time``, ``lat``, ``lon`` and variable ``sic``.
     ds_track      : Master track dataset with coords ``time``,
-                    ``latitude``, ``longitude``.
-    ds_ar         : Aerosol dataset (cf. ``cfg.aerosol_vars``).
+                    ``latitude``, ``longitude``, or ``None`` — the SIC
+                    colocation then uses the T-Bird's own ``lat``/``lon``.
+    ds_ar         : Aerosol dataset (cf. ``cfg.aerosol_vars``), or ``None``
+                    (aerosol columns are NaN; not used in the paper).
     cfg           : :class:`AggConfig` controlling all tuning parameters.
 
     Returns
@@ -405,13 +405,14 @@ def process_legs(
 
             # ── Sea ice ───────────────────────────────────────────────────
             try:
-                track_sel  = ds_track.sel(time=slice(start, end))
-                ds_sel_sic = ds_sic.sel(
-                    time=track_sel.time,
-                    lat=track_sel.latitude,
-                    lon=track_sel.longitude,
-                    method="nearest",
-                )
+                if ds_track is not None:
+                    track_sel = ds_track.sel(time=slice(start, end))
+                    _t, _la, _lo = track_sel.time, track_sel.latitude, track_sel.longitude
+                else:  # no master track shipped: T-Bird positions, 1 Hz
+                    _pos = leg_data[["lat", "lon"]].swap_dims({"distance": "time"}).isel(
+                        time=slice(None, None, int(cfg.fs)))
+                    _t, _la, _lo = _pos.time, _pos.lat, _pos.lon
+                ds_sel_sic = ds_sic.sel(time=_t, lat=_la, lon=_lo, method="nearest")
                 sic = _scalar(ds_sel_sic["sic"].mean())
             except Exception:
                 sic = np.nan
@@ -472,19 +473,23 @@ def process_legs(
             if cfg.compute_ri_b:
                 try:
                     ds_tbird_sel  = ds_tbird_slice.mean()
-                    ds_polar6_sel = ds_polar6.sel(time=slice(start, end)).mean()
                     ds_rad_sel    = ds_rad_slice.mean()
 
                     # surface (KT-19; T-Bird pressure as surface surrogate)
                     T_sfc = float(ds_rad_sel[cfg.kt19_var])
                     p_tb  = float(ds_tbird_sel["p"])
                     T_tb  = float(ds_tbird_sel["T"])
-                    T_p6  = float(ds_polar6_sel["T"])
                     th_sfc = float(potential_temperature(T_sfc, p_tb))
                     th_tb  = float(potential_temperature(T_tb, p_tb))
-                    th_p6  = float(potential_temperature(T_p6, float(ds_polar6_sel["p"])))
                     z_tb   = float(ds_tbird_sel["h"])
-                    z_p6   = float(ds_polar6_sel["h"])
+
+                    # aircraft level: diagnostic only, NaN without the Polar 6 file
+                    T_p6 = th_p6 = z_p6 = np.nan
+                    if ds_polar6 is not None:
+                        ds_polar6_sel = ds_polar6.sel(time=slice(start, end)).mean()
+                        T_p6  = float(ds_polar6_sel["T"])
+                        th_p6 = float(potential_temperature(T_p6, float(ds_polar6_sel["p"])))
+                        z_p6  = float(ds_polar6_sel["h"])
 
                     # manuscript Eq. (rib): surface (no-slip) → T-Bird level
                     ri_b = float(bulk_richardson_2pt(

@@ -26,7 +26,7 @@ from matplotlib.lines import Line2D
 
 from fluxpy import figstyle as fs
 from fluxpy.qc import classify_leg_simple, qc_leg
-from meteorology import add_theta
+from fluxpy.meteorology import add_theta
 
 fs.apply()
 

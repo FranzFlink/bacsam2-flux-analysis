@@ -27,16 +27,9 @@ analysis notebook ``book/notebooks/data_analysis/essential_ri_b_analysis.ipynb``
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 import numpy as np
 
-# ── path bootstrap (lib/ relative to repo root) ───────────────────────────────
-_LIB = Path(__file__).parent.parent / "lib"
-if str(_LIB) not in sys.path:
-    sys.path.insert(0, str(_LIB))
-
-from stability_lib import (           # noqa: E402  (after sys.path patch)
+from .stability_lib import (
     SCHEMES,
     MOSTScheme,
     bulk_richardson,                  # original scalar 2-pt Ri

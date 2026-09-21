@@ -52,8 +52,7 @@ import sys
 _SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_SCRIPT_DIR)
 
-# Make sure lib/ and fluxpy/ are importable
-sys.path.insert(0, os.path.join(_PROJECT_ROOT, "lib"))
+# Make sure fluxpy/ is importable
 sys.path.insert(0, _PROJECT_ROOT)
 
 # ── Default data paths ────────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ DEFAULTS = dict(
     sic_nc       = os.environ.get("SIC_PATH",       os.path.join(_OBS, "satellite_unified", "sic_modis-aqua_amsr2-gcom-w1_merged_nh_1000m_APRIL.nc")),
     track_nc     = os.environ.get("TRACK_PATH",     os.path.join(_OBS, "polar6_unified",    "mastertracks_unified.nc")),
     ar_nc        = os.environ.get("AR_PATH",        os.path.join(_AR,                       "analysis_ready_polar6_t_bird.nc")),
-    flight_json  = os.environ.get("FLIGHT_JSON",    os.path.join(_PROJECT_ROOT, "lib",      "flight_sep_BACSAM-II_MASTER.json")),
+    flight_json  = os.environ.get("FLIGHT_JSON",    os.path.join(_PROJECT_ROOT, "config",   "flight_sep_BACSAM-II_MASTER.json")),
     output_nc    = os.environ.get("OUTPUT_PATH",    os.path.join(_AR, "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc")),
     output_csv   = os.environ.get("OUTPUT_CSV",     os.path.join(_AR, "analysis_ready_polar6_legs_metadata.csv")),
 )
@@ -193,14 +192,26 @@ def load_data(args) -> dict:
     if "time" in ds_tbird.coords and not ds_tbird.indexes["time"].is_monotonic_increasing:
         print("  Sorting T-Bird by time (detected non-monotonic times) …")
         ds_tbird = ds_tbird.sortby("time")
-    ds_polar6    = xr.open_dataset(args.polar6)
-    if "time" in ds_polar6.coords and not ds_polar6.indexes["time"].is_monotonic_increasing:
-        print("  Sorting Polar-6 by time (detected non-monotonic times) …")
-        ds_polar6 = ds_polar6.sortby("time")
     ds_sic       = xr.open_dataset(args.sic)
     ds_sic       = ds_sic.where(ds_sic["sic"] < 100)
-    ds_track     = xr.open_dataset(args.track)
-    ds_ar        = xr.open_dataset(args.ar).sel(platform="t-bird")
+
+    # Optional inputs: none of them enters the EC flux.  They are absent from
+    # the shipped repository; the affected side diagnostics are then NaN
+    # (aircraft level, aerosols) or use the T-Bird position (SIC colocation).
+    def _optional(path, what):
+        if os.path.isfile(path):
+            return xr.open_dataset(path)
+        print(f"  [optional input absent] {what}: {path}")
+        return None
+
+    ds_polar6 = _optional(args.polar6, "Polar 6 nose boom (aircraft-level diagnostics -> NaN)")
+    if ds_polar6 is not None and not ds_polar6.indexes["time"].is_monotonic_increasing:
+        print("  Sorting Polar-6 by time (detected non-monotonic times) …")
+        ds_polar6 = ds_polar6.sortby("time")
+    ds_track  = _optional(args.track, "master track (SIC colocation uses T-Bird lat/lon)")
+    ds_ar     = _optional(args.ar, "aerosol file (aerosol columns -> NaN)")
+    if ds_ar is not None:
+        ds_ar = ds_ar.sel(platform="t-bird")
 
     legs_csv = getattr(args, "legs_csv", "") or ""
     if legs_csv and os.path.isfile(legs_csv):
@@ -208,7 +219,7 @@ def load_data(args) -> dict:
         legs, df_legs = _load_legs_from_csv(legs_csv, ds_tbird)
         print(f"  {len(df_legs)} Polar-6 legs reconstructed (T-Bird slices).")
     else:
-        from helper import process_flight_segments
+        from fluxpy.segments import process_flight_segments
         if legs_csv and not os.path.isfile(legs_csv):
             print(f"  Legs CSV not found ({legs_csv}); running full flight segmentation …")
         else:
