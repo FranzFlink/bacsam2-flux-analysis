@@ -630,6 +630,16 @@ def run_all(verbose: bool = False, extract_only: bool = False,
     if use_cache:
         ds_modis, era5_ml_dat, era5_sl_dat, carra_sshf, ds_tbird = _read_cache(ds_obs)
     else:
+        # The CARRA forecast surface-flux file is not part of the repository.
+        # Rebuilding the cache without it would replace the shipped CARRA
+        # flux (H_car_diag) by NaN, so refuse instead of overwriting.
+        _carra_fc = _CARRA / "carra_east_forecast_sf_latlon0p05.nc"
+        if _CACHE.exists() and not _carra_fc.exists():
+            raise SystemExit(
+                f"Refusing to rebuild {_CACHE.name}: {_carra_fc.name} is not available, "
+                "so the shipped CARRA surface flux would be lost. The MODIS and ERA5 "
+                "entries of the shipped cache are reproducible from the shipped gridded "
+                "files (checked 2026-09-21: identical).")
         ds_modis    = load_modis(ds_obs)
         era5_ml_dat = load_era5_ml(ds_obs)
         era5_sl_dat = load_era5_sl(ds_obs)

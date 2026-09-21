@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this code or data, please cite the paper below."
+title: "BACSAM-II sensible-heat-flux analysis (code and data)"
+type: software
+authors:
+  - family-names: Müller
+    given-names: Joshua J.
+    affiliation: "Leipzig Institute for Meteorology (LIM), Leipzig University"
+repository-code: "https://github.com/FranzFlink/bacsam2-flux-analysis"
+preferred-citation:
+  type: article
+  title: "Evaluation of reanalysis and satellite products of sensible heat flux over Arctic sea ice against airborne eddy-covariance measurements"
+  status: submitted
+  journal: "Atmospheric Measurement Techniques"
+  authors:
+    - {family-names: Müller, given-names: "Joshua J."}
+    - {family-names: Staudinger, given-names: Ilga}
+    - {family-names: Gebhardt, given-names: Florian}
+    - {family-names: Simon, given-names: "David J."}
+    - {family-names: Köhler, given-names: Laura}
+    - {family-names: Hartmann, given-names: Jörg}
+    - {family-names: Ehrlich, given-names: André}
+    - {family-names: Schäfer, given-names: Michael}
+    - {family-names: Shupe, given-names: "Matthew D."}
+    - {family-names: Wendisch, given-names: Manfred}

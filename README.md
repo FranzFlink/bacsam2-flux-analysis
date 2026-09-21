@@ -1,66 +1,89 @@
 # BACSAM-II sensible-heat-flux analysis
 
-Analysis code and segment-level data for **Müller et al. (2026), Atmos. Meas. Tech.**:
-airborne eddy-covariance (EC) sensible heat flux over Arctic sea ice from the T-Bird
-towed platform (BACSAM-II campaign, Svalbard, April 2024), compared with bulk estimates
-driven by in-situ, combined satellite–reanalysis, and reanalysis-only forcings.
+Code and data for **Müller et al., "Evaluation of reanalysis and satellite products of
+sensible heat flux over Arctic sea ice against airborne eddy-covariance measurements"**
+(submitted to *Atmospheric Measurement Techniques*).
 
-All physics live in the **`fluxpy`** package; notebooks only orchestrate and plot.
+The repository reproduces, from the shipped data, every number, table and figure of the
+paper that is derived from data:
 
-## Quickstart
+| Step | What it shows | Time |
+|------|---------------|------|
+| `verify-ec` | The eddy-covariance (EC) reference fluxes follow from the 100 Hz T-Bird measurements | ~30 s |
+| `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~15 s |
+| `check` | The key numbers equal the committed reference `expected_numbers.txt` | ~15 s |
+| `tables` | LaTeX bodies of the data-derived tables → `tables_manuscript/` | ~5 s |
+| `figures` | All manuscript figures → `figures_manuscript/output/` | ~3 min |
 
-Requires [pixi](https://pixi.sh) (pinned conda-forge environment, linux-64 + win-64):
+## How to run it (no programming knowledge needed)
 
-```
-pixi install
-pixi run test          # unit tests (fluxpy physics, naming, Ri_b treatment)
-pixi run precompute    # bulk-flux reference run + full sensitivity sweep
-pixi run figures       # publication figures (see data tiers below)
-```
+1. **Get the repository** (about 300 MB). On GitHub: green *Code* button → *Download ZIP*,
+   then unpack. Or, with git: `git clone https://github.com/FranzFlink/bacsam2-flux-analysis.git`
+2. **Install pixi** (a small program that sets up the exact Python environment used for
+   the paper; nothing else on your computer is changed). Follow the one-line instruction
+   for your system at <https://pixi.sh>. The environment is locked for Windows, Linux and
+   macOS (tested on Windows).
+3. **Open a terminal in the unpacked folder**
+   (Windows: open the folder in Explorer, type `cmd` in the address bar, press Enter).
+4. **Run everything:**
 
-`pixi run precompute` reproduces the paper's central results
-(`data/model_output/sensitivity_figure_data.nc` and the skill summary CSV)
-from the shipped segment-level inputs in a few minutes on a laptop.
+   ```
+   pixi run all
+   ```
 
-## Data tiers
+   The first call downloads the Python environment (a few minutes). `verify-ec` and `check`
+   end with a `RESULT:` line; the run stops with an error if anything does not match.
+   Figures 1 and 4 download coastline data on first use, so an internet connection is needed once.
 
-**Tier 1 — shipped in this repository (segment-level, ~70 MB):**
+Single steps: `pixi run test`, `pixi run verify-ec`, `pixi run precompute`, `pixi run check`,
+`pixi run numbers`, `pixi run tables`, `pixi run figures`.
+
+Re-running rewrites the output files with a new time stamp; `git status` will then list
+them as modified although the numbers are identical.
+
+## What is where
 
 | Path | Content |
 |------|---------|
-| `data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc` | EC fluxes + in-situ meteorology on the 5 km segments (91 segments, 81 after spectral QC) |
-| `data/observations/ar/along_track_inputs.nc` | Leg-colocated extractions of MODIS IST, ERA5 (model + single levels), CARRA sshf, and the T-Bird state — written by `calc_bulk_and_ec_fluxes.py --extract-only` on the raw-data host |
-| `data/model_output/` | Precompute outputs (reference + sensitivity sweep) and derived diagnostics |
-| `data/reanalysis/era5/ERA5_model_levels/era5_ml_along_track_P6.nc` | ERA5 model-level along-track extract |
+| `fluxpy/` | **All physics**: bulk flux (`bulk.py`), stability functions and transfer coefficients (`stability_lib.py`, `stability.py`), EC covariance and spectra (`flux_processing.py`, `ec.py`), spectral quality control (`qc.py`), segment aggregation (`aggregate.py`), sensitivity sweep and skill metrics (`sensitivity.py`) |
+| `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments |
+| `scripts/verify_ec_reproduction.py` | Recomputes the EC segments and compares with the shipped segment file |
+| `scripts/calc_bulk_and_ec_fluxes.py` | Bulk fluxes + sensitivity sweep → `data/model_output/` |
+| `scripts/manuscript_numbers.py` | Prints the numbers quoted in the text and in the comparison table |
+| `scripts/make_manuscript_tables.py` | Sensitivity tables and the uncertainty-budget table |
+| `figures_manuscript/` | One script per manuscript figure (see its README) |
+| `tests/` | Unit tests; `test_most_schemes.py` checks the physics against independent references (numerical integration of the published stability functions, log-law limit, sign convention, QC thresholds of Appendix A) |
+| `preprocessing/` | How the shipped data files were produced from the raw archives (documentation; needs the raw data) |
+| `DATA.md` | Description, units and origin of every data file |
 
-**Tier 1b — campaign-region subsets (also shipped, ~230 MB):** written by
-`scripts/make_reviewer_subsets.py` on the raw-data host to the SAME relative
-paths as the raw archives (flux-leg time windows for the 100 Hz noseboom and
-radiation series; campaign region/period crops of ERA5, CARRA skt/sp, MODIS L3
-IST, and merged SIC). With these, **every** figure and table notebook runs from
-this repository alone.
+## Reference configuration
 
-**Tier 2 — not shipped (full raw archives, ~300 GB):** 100 Hz noseboom archive,
-full ERA5 model-level fields, CARRA rasters, MODIS granules. Only needed for the
-preprocessing/extraction stages (`--pregame`, `--extract-only`,
-`make_reviewer_subsets.py`); those steps skip cleanly when the data are absent.
-Raw data are available from the authors on request and will be archived with a DOI
-at submission.
+GLGS20 stability functions (Gryanik et al., 2020), scalar roughness ratio
+α_T = z₀,T/z₀,m = 10⁻¹, surface-type-dependent momentum roughness, classic two-point bulk
+Richardson number between the surface and the measurement level. The amplitude-matched
+configuration uses α_T = 10⁻⁴. All fluxes are positive upward. 91 low-level 5 km segments,
+81 after spectral quality control.
 
-## Layout
+Two implementation details worth knowing:
 
-| Path | Purpose |
-|------|---------|
-| `fluxpy/` | Physics package: bulk fluxes, MOST stability schemes, Ri_b, naming registry |
-| `scripts/calc_bulk_and_ec_fluxes.py` | Precompute: reference run + sensitivity sweeps (`--extract-only` writes the along-track cache) |
-| `run_full_analysis.py` | Pipeline runner (pregame → EC aggregation → essentials → figures → tables) |
-| `book/notebooks/` | Figure, table, and diagnostic notebooks (MyST/Jupyter book) |
-| `tests/` | Pytest suite |
+* The surface potential temperature uses the pressure measured at the T-Bird (≈ 24 m above
+  the surface) because no surface pressure measurement exists.
+* The EC covariance is integrated from a Welch cross-spectrum (segments of 512–1024 samples)
+  between 0.1 and 20 Hz after a 0.1 Hz high-pass; at this spectral resolution the first
+  frequency bin inside the band is 0.195 Hz.
 
-## Conventions
+## What cannot be reproduced from this repository
 
-- Flux naming per `fluxpy/naming.py` (`H_obs_ec`, `H_obs_bulk`, `H_rs_bulk`,
-  `H_era_bulk`, `H_era_diag`, `H_car_diag`); all fluxes positive upward.
-- Reference configuration: GLGS20 stability, scalar roughness ratio
-  α_T = z₀,T/z₀,m = 1×10⁻⁵, classic 2-pt bulk Richardson number
-  (effective wind for reanalysis forcings, no analysis bound).
+* Fig. 2a additionally shows the aircraft (Polar 6) level. These values are stored in the
+  shipped segment file; the aircraft nose-boom archive itself is not part of the repository.
+* The CARRA surface sensible heat flux at the segments is shipped in `along_track_inputs.nc`;
+  the CARRA forecast file it was extracted from is not part of the repository. (The MODIS and
+  ERA5 entries of that file are reproducible from the shipped gridded files.)
+* The EC window-length experiment (Fig. 3) and the segment-placement uncertainty are shipped as
+  result files; the notebooks that produced them (`preprocessing/`) need inputs that are not shipped.
+
+Raw data are available from the authors on request.
+
+## Citation
+
+See `CITATION.cff`.

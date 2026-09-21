@@ -113,3 +113,61 @@ tblC = "\n".join(out)
 (OUT / "table_sensitivity_full.tex").write_text(tblC + "\n", encoding="utf-8")
 print("-- Table C1 body written --")
 print(tblC[:1200])
+
+
+# ── Table (tab:bulk_unc): flux-uncertainty budget ────────────────────────────
+# Ported unchanged from book/notebooks/tables/table02_instrument_uncertainties.ipynb.
+H_ec = np.asarray(FIG["H_obs_ec"], dtype=float)
+e_rel = np.asarray(FIG["e_rel_ec"], dtype=float)      # Lenschow relative sampling error
+REL_INSTR = 0.05                                      # five-hole-probe flow calibration
+
+sigma_sampling = np.abs(H_ec) * e_rel
+sigma_instr = np.abs(H_ec) * REL_INSTR
+sigma_placement = np.asarray(FIG["sigma_placement"], dtype=float)
+sigma_ec = np.sqrt(sigma_sampling**2 + sigma_instr**2 + sigma_placement**2)
+
+# assumed 1-sigma input uncertainties (manuscript Table tab:bulk_unc)
+U_TS_KT19, U_TS_MODIS = 0.5, 1.5     # K
+U_TA_INSITU, U_TA_ERA = 0.3, 1.2     # K
+U_U_INSITU, U_U_ERA = 0.5, 1.7       # m s-1
+
+
+def _central(vname, axname):
+    """Central-difference dH/dx at zero perturbation from the perturbation sweeps."""
+    sweep = np.asarray(FIG[vname], dtype=float)
+    ax = np.asarray(FIG[axname], dtype=float)
+    i0 = int(np.where(ax == 0.0)[0][0])
+    return (sweep[i0 + 1] - sweep[i0 - 1]) / (ax[i0 + 1] - ax[i0 - 1])
+
+
+sigma_obs_bulk = np.sqrt((_central("H_obs_dTsfc", "dT") * U_TS_KT19) ** 2
+                         + (_central("H_obs_dTair", "dT") * U_TA_INSITU) ** 2
+                         + (_central("H_obs_dU", "dU") * U_U_INSITU) ** 2)
+sigma_rs_bulk = np.sqrt((_central("H_rs_dTsfc", "dT") * U_TS_MODIS) ** 2
+                        + (_central("H_rs_dTair", "dT") * U_TA_ERA) ** 2
+                        + (_central("H_rs_dU", "dU") * U_U_ERA) ** 2)
+
+
+def _stat(x):
+    v = x[np.isfinite(x)]
+    return f"{np.median(v):.2f} [{np.percentile(v, 25):.2f}--{np.percentile(v, 75):.2f}]"
+
+
+def _rel_stat(sig, flux, floor=2.0):
+    rel = sig / np.abs(flux) * 100
+    v = rel[np.isfinite(rel) & (np.abs(flux) >= floor)]
+    return f"{np.median(v):.1f} [{np.percentile(v, 25):.1f}--{np.percentile(v, 75):.1f}]"
+
+
+unc_rows = [
+    (r"$H_\mathrm{S,obs,EC}$ total", sigma_ec, H_ec),
+    (r"\quad Sampling", sigma_sampling, H_ec),
+    (r"\quad Instrument", sigma_instr, H_ec),
+    (r"\quad Segment placement", sigma_placement, H_ec),
+    (r"$H_\mathrm{S,obs,bulk}$", sigma_obs_bulk, np.asarray(FIG["H_obs_bulk"], dtype=float)),
+    (r"$H_\mathrm{S,RS,bulk}$", sigma_rs_bulk, np.asarray(FIG["H_rs_bulk"], dtype=float)),
+]
+tblU = "\n".join(f"{name} & {_stat(sig)} & {_rel_stat(sig, flux)} \\\\" for name, sig, flux in unc_rows)
+(OUT / "table_uncertainty_budget.tex").write_text(tblU + "\n", encoding="utf-8")
+print("\n% tab:bulk_unc  (sigma median [p25--p75] in W m-2 | sigma/|H| in %, |H| > 2 W m-2)")
+print(tblU)

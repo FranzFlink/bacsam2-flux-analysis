@@ -1,9 +1,9 @@
 [workspace]
 name = "bacsam-ii"
-version = "1.0.0"
-description = "BACSAM-II campaign analysis: airborne EC + bulk SHF over Arctic sea ice (Müller et al., AMT)"
+version = "1.1.0"
+description = "BACSAM-II: airborne eddy-covariance and bulk sensible heat flux over Arctic sea ice (Müller et al., AMT)"
 channels = ["conda-forge"]
-platforms = ["linux-64", "win-64"]
+platforms = ["linux-64", "win-64", "osx-arm64", "osx-64"]
 
 [dependencies]
 python = "3.12.*"
@@ -17,37 +17,28 @@ bottleneck = "*"
 scipy = "*"
 matplotlib = "*"
 cartopy = "*"
+pyproj = "*"
 cmocean = "*"
-seaborn = "*"
-statsmodels = "*"
-pyresample = "*"
-rioxarray = "*"
-pyyaml = "*"
-tqdm = "*"
-pillow = "*"
-jupyter = "*"
-nbconvert = "*"
-nbformat = "*"
-ipykernel = "*"
-ipywidgets = "*"
-hvplot = "*"
-holoviews = "*"
-panel = "*"
-pytest = "*"
-mystmd = "*"
-pypdf = "*"
 cmcrameri = "*"
-owslib = "*"
+pillow = "*"
+tqdm = "*"
+pytest = "*"
+# only needed to open the provenance notebooks in preprocessing/
+jupyter = "*"
+ipykernel = "*"
+
+# Windows consoles default to cp1252, which cannot print the scripts' unicode output.
+[activation.env]
+PYTHONUTF8 = "1"
+PYTHONIOENCODING = "utf-8"
 
 [tasks]
-# ── science pipeline ─────────────────────────────────────────────────────────
+# Each step can be run on its own; `pixi run all` runs them in order.
+test       = "pytest tests -q"
+verify-ec  = "python scripts/verify_ec_reproduction.py"
 precompute = "python scripts/calc_bulk_and_ec_fluxes.py"
-pipeline = "python run_full_analysis.py"
-pipeline-all = "python run_full_analysis.py --all"
-figures = "python run_full_analysis.py --figures"
-test = "pytest tests -q"
-# ── documentation (MyST v2, like panArcticTurbulentFlux) ─────────────────────
-docs-api = "python scripts/gen_api_docs.py"
-docs-build = { cmd = "myst build --html", depends-on = ["docs-api"] }
-docs = { cmd = "echo Static site written to _build/html - for interactive viewing run: pixi run docs-serve", depends-on = ["docs-build"] }
-docs-serve = { cmd = "myst start", depends-on = ["docs-api"] }
+numbers    = { cmd = "python scripts/manuscript_numbers.py", depends-on = ["precompute"] }
+tables     = { cmd = "python scripts/make_manuscript_tables.py", depends-on = ["precompute"] }
+figures    = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
+check      = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
+all        = { depends-on = ["test", "verify-ec", "check", "tables", "figures"] }

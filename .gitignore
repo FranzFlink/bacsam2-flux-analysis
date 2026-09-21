@@ -1,8 +1,7 @@
 .pixi/
 _build/
-book/_build/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-/tmp/
+.pytest_cache/
 manuscript/
