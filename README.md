@@ -76,7 +76,8 @@ GLGS20 stability functions (Gryanik et al., 2020), scalar roughness ratio
 Richardson number between the surface and the measurement level. The amplitude-matched
 configuration uses α_T = 10⁻⁴. All fluxes are positive upward. 91 low-level 5 km segments over
 sea ice. All pass the integrity check (resolved inertial subrange). Every EC flux carries a measured random error
-(median 0.7 W m⁻²); 47 of the 91 fluxes exceed their detection limit, the others are valid near-zero fluxes and are kept.
+(median 0.7 W m⁻²); 67, 46 and 33 of the 91 fluxes exceed 1, 2 and 3 times this error. All fluxes are kept: those that do
+not stand out from their random error are valid measurements of a small flux.
 Numbers are reported with one decimal, matching their precision.
 
 Two implementation details worth knowing:

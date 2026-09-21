@@ -4,7 +4,7 @@
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
 (0.5 ... 50 km). For every L the EC flux of the sub-windows is compared with
 the EC flux of the complete leg; the random error of the sub-window fluxes and
-the share of sub-windows whose flux exceeds its detection limit are collected. Same estimator as the
+the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
 Ported from the exploratory notebook of the same name (see git history).
@@ -90,7 +90,7 @@ for i, meta in enumerate(legs.itertuples()):
         if not H_sub:
             continue
         H_sub, sig = np.asarray(H_sub), np.asarray(sig)
-        windows.extend({"subleg_length_km": L, "random_error": e, "detectable": abs(h) > 1.96 * e}
+        windows.extend({"subleg_length_km": L, "random_error": e, "ratio": abs(h) / e}
                        for h, e in zip(H_sub, sig))
         ok = abs(H_full) >= MIN_FULL_FLUX
         detailed.append({
@@ -111,10 +111,12 @@ for L, g in det.groupby("subleg_length_km"):
         "median_absolute_difference": g["absolute_difference"].median(),
         "random_error_median": w["random_error"].median(),
         "random_error_p25": w["random_error"].quantile(0.25), "random_error_p75": w["random_error"].quantile(0.75),
-        "fraction_detectable": w["detectable"].mean(),
+        "fraction_above_1sigma": (w["ratio"] > 1).mean(), "fraction_above_2sigma": (w["ratio"] > 2).mean(),
+        "fraction_above_3sigma": (w["ratio"] > 3).mean(),
     })
 out = AR / "ec_leg_length_sensitivity" / "ec_sensitivity_summary.csv"
 pd.DataFrame(rows).to_csv(out, index=False, lineterminator="\n")
 print(f"\nwritten {out.relative_to(REPO)}")
 print(pd.DataFrame(rows)[["label", "n_legs", "N_bins", "ratio_mean", "ratio_std",
-                          "random_error_median", "fraction_detectable"]].round(2).to_string(index=False))
+                          "random_error_median", "fraction_above_1sigma", "fraction_above_2sigma",
+                          "fraction_above_3sigma"]].round(2).to_string(index=False))

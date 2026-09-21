@@ -1,12 +1,11 @@
 """Figure A1 -- spectral diagnostics of the EC segments (fig:spectral_qc).
 
 One line per 5-km T-Bird segment of the four low-level flight days, coloured
-by whether the segment's flux exceeds its detection limit (1.96 x random
-error); black line = median over the plotted segments.
+by whether the segment's flux exceeds twice its random error; black line = median over the plotted segments.
 
 (a-d) power spectra of theta, w, u, v with -5/3 guides;
 (e)   frequency-weighted cospectrum f*C_wtheta;
-(f)   normalised ogive O_wtheta (segments above the detection limit only:
+(f)   normalised ogive O_wtheta (fluxes above twice their random error only:
       the normalisation by the total covariance is meaningless for a flux
       that cannot be distinguished from zero).
 """
@@ -54,8 +53,8 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
                               u=data["u"].values, v=data["v"].values, fs=FS))
     w, th = detrend(data["w"].values), detrend(data["theta"].values)
     detectable.append(bool(abs(band_covariance(w, th, FS))
-                           > 1.96 * band_covariance_random_error(w, th, FS)))
-print(f"{len(list_of_qcs)} segments, {sum(detectable)} above the detection limit")
+                           > 2.0 * band_covariance_random_error(w, th, FS)))
+print(f"{len(list_of_qcs)} segments, {sum(detectable)} above twice their random error")
 
 
 # ── Plot helpers ─────────────────────────────────────────────────────────────
@@ -131,6 +130,6 @@ for key, lab in zip("ABCDEF", ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"]):
 
 axs["E"].legend(
     [Line2D([0], [0], **STYLES[True]), Line2D([0], [0], **STYLES[False]), Line2D([0], [0], color="k", lw=1.0)],
-    ["flux above detection limit", "below detection limit", "median"], loc="lower left")
+    [r"$|H_\mathrm{S}| > 2\,\sigma_\mathrm{rand}$", r"$|H_\mathrm{S}| \leq 2\,\sigma_\mathrm{rand}$", "median"], loc="lower left")
 
 fs.save(fig, "figA1_spectral_qc")

@@ -86,7 +86,7 @@ df["sigma_place"] = xr.open_dataset(REPO / "data/observations/ar/ec_segment_plac
 for v in ("H_obs_bulk", "H_rs_bulk", "H_era_bulk", "H_era_diag"):
     df[v] = FIG[v].values
 dtheta = -FIG["dtheta_obs"].values                     # theta_s - theta_air
-det = (aH > 1.96 * df["sigma_fs"]).values
+det = (aH > 2.0 * df["sigma_fs"]).values            # "above 2 sigma"; 1 and 3 sigma are reported as well
 
 print("=" * 110)
 print("1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX")
@@ -95,7 +95,7 @@ print(f"rank correlation with |H|:  R2 of the cumulative covariance {spearmanr(d
       f"relative stationarity test (Foken and Wichura, 1996) {spearmanr(df.fw_rel, aH)[0]:+.1f}")
 low = df.R2 < 0.4
 print(f"segments with R2 < 0.4: {low.sum()};  median |H| {aH[low].median():.1f} W m-2 (others: {aH[~low].median():.1f});  "
-      f"below their detection limit: {(~det[low]).mean() * 100:.0f} %;  "
+      f"below 2 sigma_rand: {(~det[low]).mean() * 100:.0f} %;  "
       f"median |first half - second half| {df.half_diff[low].median():.1f} W m-2 (others: {df.half_diff[~low].median():.1f})")
 
 print("\n" + "=" * 110)
@@ -108,7 +108,7 @@ SCREENINGS = [
     (r"relative stationarity test $< 100\,\%$", (df.fw_rel <= 1.0).values),
     (r"relative stationarity test $< 30\,\%$", (df.fw_rel < 0.3).values),
     (r"segment halves agree within $3\,\sigma_\mathrm{rand}$", (df.half_diff <= 3 * np.sqrt(2) * df.sigma_fs).values),
-    (r"only fluxes above the detection limit", det),
+    (r"only fluxes above $2\,\sigma_\mathrm{rand}$", det),
     (r"pitch-resonance bin interpolated", None),
 ]
 COLS = ["H_obs_bulk", "H_rs_bulk", "H_era_bulk", "H_era_diag"]
@@ -148,10 +148,12 @@ print(f"median |correlation of w and theta| in the flux band: {df.r_wt.median():
 print("\n" + "=" * 110)
 print("4. PHYSICAL CONSISTENCY: DIRECTION OF THE FLUX vs MEASURED TEMPERATURE DIFFERENCE")
 print("=" * 110)
-agree = np.sign(df["H"].values[det]) == np.sign(dtheta[det])
-opp = np.abs(df["H"].values[det][~agree])
-print(f"fluxes above the detection limit: {det.sum()}; direction agrees with sign(theta_s - theta_air) for {agree.sum()} "
-      f"({agree.mean() * 100:.0f} %); of the {(~agree).sum()} others, {(opp < 0.5).sum()} are smaller than 0.5 W m-2")
+for k in (1, 2, 3):
+    d = (aH > k * df["sigma_fs"]).values
+    agree = np.sign(df["H"].values[d]) == np.sign(dtheta[d])
+    small = (np.abs(df["H"].values[d][~agree]) < 0.5).sum()
+    print(f"fluxes above {k} sigma_rand: {d.sum():2d}; direction agrees with sign(theta_s - theta_air) for {agree.sum():2d} "
+          f"({agree.mean() * 100:.0f} %); of the {(~agree).sum()} others, {small} are smaller than 0.5 W m-2")
 
 print("\n" + "=" * 110)
 print("5. PITCH RESONANCE OF THE T-BIRD (0.8-1.2 Hz)")

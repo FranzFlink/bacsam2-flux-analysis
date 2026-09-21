@@ -161,10 +161,11 @@ Two questions have to be kept apart.
 $-5/3$ (inertial subrange), $|s_w + 5/3| \le 0.4$. This is a pass/fail check of the *instrument and the processing*.
 
 **How precisely is the flux known?** A covariance from 85 s of data has a random error, because only a limited number of
-eddies were sampled. It is estimated from the data themselves (Finkelstein and Sims, 2001). A flux larger than 1.96 times its
-random error is *detectable*, i.e. distinguishable from zero.
+eddies were sampled. It is estimated from the data themselves (Finkelstein and Sims, 2001). The larger a flux is compared with
+its random error $\sigma_\mathrm{rand}$, the more certain it is that it differs from zero: by chance alone a true zero flux exceeds
+1, 2 and 3 $\sigma_\mathrm{rand}$ in 32 %, 5 % and 0.3 % of all cases.
 
-Fluxes below the detection limit are **kept**. Over compact sea ice "no measurable flux" is the typical, physically correct
+Fluxes that do not stand out from their random error are **kept**. Over compact sea ice "no measurable flux" is the typical, physically correct
 result; throwing these segments away would leave only the large fluxes and bias the reference. For the same reason the paper
 does not use criteria that are ratios to the flux (such as signal-to-noise ratios): they fail for small fluxes and pass for
 large ones, whatever the quality of the measurement.
@@ -174,14 +175,15 @@ from fluxpy.flux_processing import band_covariance_random_error, C_P
 slope = qc_leg(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0)["slope_w"]
 sigma = rho * C_P * band_covariance_random_error(w, th, fs)
 print(f"this segment: spectral slope of w = {slope:.2f} -> turbulence resolved: {turbulence_resolved(slope)}")
-print(f"              flux {float(H_fluxpy):.1f} +- {sigma:.1f} W m-2 (random error) -> detectable: {abs(float(H_fluxpy)) > 1.96 * sigma}")
-det = FIG.ec_detectable.values == 1
-print(f"\nall {det.size} segments: {int(SEG.turbulence_resolved.sum())} pass the integrity check; "
-      f"median random error {np.median(FIG.sigma_random_ec.values):.1f} W m-2; {det.sum()} fluxes are detectable")
+print(f"              flux {float(H_fluxpy):.1f} +- {sigma:.1f} W m-2 (random error) -> {abs(float(H_fluxpy)) / sigma:.0f} sigma")
+ratio = FIG.ec_flux_over_sigma.values
+print(f"\nall {ratio.size} segments: {int(SEG.turbulence_resolved.sum())} pass the integrity check; "
+      f"median random error {np.median(FIG.sigma_random_ec.values):.1f} W m-2")
 days = pd.to_datetime(FIG.start_time.values).strftime("%d %b")
-print("detectable per day:", {d: f"{det[days == d].sum()}/{(days == d).sum()}" for d in pd.unique(days)})
+pd.DataFrame({f"|H| > {k} sigma": {**{d: f"{(ratio[days == d] > k).sum()} / {(days == d).sum()}" for d in pd.unique(days)},
+                                   "all": f"{(ratio > k).sum()} / {ratio.size}"} for k in (1, 2, 3)})
 '''), ("md", r'''
-15 April, the day with open leads and the largest fluxes, is fully detectable; on the days over compact ice or with weak
+On 15 April, the day with open leads and the largest fluxes, every flux stands out clearly; on the days over compact ice or with weak
 temperature contrast most fluxes are statistically zero. That is a property of the Arctic surface, not a defect of the data —
 and it is the reason why the correlations in Chapter 4 cannot be high for *any* estimate.
 
@@ -199,7 +201,7 @@ axs[1].plot(wl.length_km, wl.random_error_median, "s-", color="C4"); axs[1].set_
 for ax in axs:
     ax.set_xscale("log"); ax.axvline(5, color="goldenrod", lw=3, ls="--"); ax.set_xlabel("window length (km)")
 r5 = wl[wl.length_km == 5].iloc[0]
-print(f"at 5 km: flux ratio {r5.ratio_mean:.1f}, random error {r5.random_error_median:.1f} W m-2, detectable fluxes {r5.fraction_detectable * 100:.0f} %")
+print(f"at 5 km: flux ratio {r5.ratio_mean:.1f}, random error {r5.random_error_median:.1f} W m-2, fluxes above 2 sigma {r5.fraction_above_2sigma * 100:.0f} %")
 '''), ("md", r'''
 ## How uncertain is one EC flux?
 

@@ -3,8 +3,10 @@
 EC REFERENCE (91 of 91 low-level 5 km segments pass the integrity check)
 ======================================================================================================================
 integrity check (inertial-subrange slope of w): 91 of 91 pass; slope median -1.5, range -1.7 to -1.3
-random error: median 0.7 W m-2 [0.2-1.5]; 47 of 91 fluxes exceed their detection limit (1.96 sigma)
-   per day: 13 Apr: 8/18, 15 Apr: 22/22, 17 Apr: 13/26, 23 Apr: 4/25
+random error: median 0.7 W m-2 [0.2-1.5]
+   |H| > 1 sigma_rand: 67 of 91  (expected by chance if every true flux were zero: 28.9);  per day: 13 Apr: 14/18, 15 Apr: 22/22, 17 Apr: 16/26, 23 Apr: 15/25
+   |H| > 2 sigma_rand: 46 of 91  (expected by chance if every true flux were zero: 4.1);  per day: 13 Apr: 8/18, 15 Apr: 22/22, 17 Apr: 13/26, 23 Apr: 3/25
+   |H| > 3 sigma_rand: 33 of 91  (expected by chance if every true flux were zero: 0.2);  per day: 13 Apr: 7/18, 15 Apr: 22/22, 17 Apr: 4/26, 23 Apr: 0/25
 median 0.4   mean 2.1   max 13.1   min -5.8   |H|<2 W/m2: 56 % of segments
 
 ======================================================================================================================
@@ -53,9 +55,9 @@ ALPHA_T IS A WEAK, LOGARITHMIC KNOB
 EC WINDOW-LENGTH EXPERIMENT (Fig. 2)  -- scripts/ec_window_length.py
 ======================================================================================================================
 6 low-level legs, median length 81.5 km
-     1 km windows: H_sub/H_full = 1.0 +- 0.1   random error 1.5 W m-2   fluxes above the detection limit 32 %
-     5 km windows: H_sub/H_full = 1.0 +- 0.0   random error 0.8 W m-2   fluxes above the detection limit 48 %
-    10 km windows: H_sub/H_full = 1.0 +- 0.1   random error 0.6 W m-2   fluxes above the detection limit 61 %
+     1 km windows: H_sub/H_full = 1.0 +- 0.1   random error 1.5 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 57 / 32 / 12 %
+     5 km windows: H_sub/H_full = 1.0 +- 0.0   random error 0.8 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 71 / 48 / 36 %
+    10 km windows: H_sub/H_full = 1.0 +- 0.1   random error 0.6 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 82 / 61 / 43 %
 
 ======================================================================================================================
 UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2
@@ -82,7 +84,7 @@ heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.8, paired-bootstrap 95 % C
 1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX
 ==============================================================================================================
 rank correlation with |H|:  R2 of the cumulative covariance +0.6,  relative stationarity test (Foken and Wichura, 1996) -0.6
-segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below their detection limit: 89 %;  median |first half - second half| 0.3 W m-2 (others: 1.4)
+segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below 2 sigma_rand: 89 %;  median |first half - second half| 0.3 W m-2 (others: 1.4)
 
 ==============================================================================================================
 2. ROBUSTNESS OF THE COMPARISON TO THE SCREENING  (slope b / correlation r against the EC reference)
@@ -93,7 +95,7 @@ segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below their de
   relative stationarity test < 100 %               n = 72   1.6 / 0.8   0.7 / 0.5   0.3 / 0.4   1.3 / 0.6
   relative stationarity test < 30 %                n = 38   1.5 / 0.8   0.7 / 0.6   0.4 / 0.6   1.5 / 0.8
   segment halves agree within 3 sigma_rand         n = 71   1.5 / 0.8   0.7 / 0.5   0.2 / 0.3   1.2 / 0.6
-  only fluxes above the detection limit            n = 47   1.3 / 0.7   0.6 / 0.5   0.1 / 0.2   0.9 / 0.6
+  only fluxes above 2 sigma_rand                   n = 46   1.3 / 0.7   0.6 / 0.5   0.1 / 0.3   0.9 / 0.7
   pitch-resonance bin interpolated                 n = 91   1.6 / 0.7   0.7 / 0.4   0.2 / 0.3   1.1 / 0.5
   for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: [1.4, 1.9]
 
@@ -107,7 +109,9 @@ median |correlation of w and theta| in the flux band: 0.08  -> factor sqrt((1+r^
 ==============================================================================================================
 4. PHYSICAL CONSISTENCY: DIRECTION OF THE FLUX vs MEASURED TEMPERATURE DIFFERENCE
 ==============================================================================================================
-fluxes above the detection limit: 47; direction agrees with sign(theta_s - theta_air) for 39 (83 %); of the 8 others, 7 are smaller than 0.5 W m-2
+fluxes above 1 sigma_rand: 67; direction agrees with sign(theta_s - theta_air) for 52 (78 %); of the 15 others, 13 are smaller than 0.5 W m-2
+fluxes above 2 sigma_rand: 46; direction agrees with sign(theta_s - theta_air) for 38 (83 %); of the 8 others, 7 are smaller than 0.5 W m-2
+fluxes above 3 sigma_rand: 33; direction agrees with sign(theta_s - theta_air) for 30 (91 %); of the 3 others, 3 are smaller than 0.5 W m-2
 
 ==============================================================================================================
 5. PITCH RESONANCE OF THE T-BIRD (0.8-1.2 Hz)

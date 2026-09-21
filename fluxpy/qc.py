@@ -20,8 +20,8 @@ They are therefore not used to discard data. Instead:
   (``fluxpy.aggregate``).
 * **Random error and detection limit.** Every flux carries its own random
   error (``flux_processing.band_covariance_random_error``; Finkelstein and
-  Sims, 2001). A flux is *detectable* when it exceeds 1.96 times this error.
-  Fluxes below the detection limit are valid measurements of a small flux and
+  Sims, 2001). The paper reports how many fluxes exceed 1, 2 and 3 times this
+  error. Fluxes that do not are valid measurements of a small flux and
   are kept (Langford et al., 2015).
 
 ``qc_leg`` still returns the spectra, the cospectrum, the ogive and the

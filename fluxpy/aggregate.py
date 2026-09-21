@@ -520,7 +520,7 @@ def process_legs(
                 # ── EC fluxes ───────────────────────────────────────────
                 "sensible_heat_flux":   hf_scalar if resolved else np.nan,
                 "sensible_heat_flux_random_error": hf_random_error,
-                "flux_detectable":      float(abs(hf_scalar) > 1.96 * hf_random_error),
+                "flux_over_random_error": abs(hf_scalar) / hf_random_error if hf_random_error > 0 else np.nan,
                 "tke_mean":             tke,
                 "u_star":               ustar,
                 "monin_obukhov_length": mol,
@@ -643,7 +643,7 @@ def to_xarray(df: pd.DataFrame) -> xr.Dataset:
         "N_samples":            ("1", "Number of 100 Hz samples in the segment"),
         "leg_length_km":        ("km", "Segment length"),
         "sensible_heat_flux_random_error": ("W m-2", "Random (sampling) error of the EC flux, 1 sigma (Finkelstein and Sims, 2001)"),
-        "flux_detectable":      ("1", "1 if |flux| exceeds 1.96 x its random error; fluxes below the detection limit are valid and kept"),
+        "flux_over_random_error": ("1", "|flux| divided by its random error; the paper counts the fluxes above 1, 2 and 3 (all fluxes are kept)"),
         "qc_slope_w":           ("1", "Log-log slope of the w power spectrum, 0.1-20 Hz"),
         "turbulence_resolved":  ("1", "1 if |qc_slope_w + 5/3| <= 0.4 (integrity check; flux is NaN otherwise)"),
         "ri_b_mean":            ("1", "Two-point bulk Richardson number, surface to T-Bird"),

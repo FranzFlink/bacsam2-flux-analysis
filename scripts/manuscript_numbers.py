@@ -65,11 +65,15 @@ print("=" * 118)
 _seg = AR.sel(start_time=FIG["start_time"].values)
 print(f"integrity check (inertial-subrange slope of w): {int(_seg['turbulence_resolved'].sum())} of {EC.size} pass; "
       f"slope median {float(_seg['qc_slope_w'].median()):.1f}, range {float(_seg['qc_slope_w'].min()):.1f} to {float(_seg['qc_slope_w'].max()):.1f}")
-_sig = np.asarray(FIG["sigma_random_ec"]); _det = np.asarray(FIG["ec_detectable"]) == 1
-print(f"random error: median {np.median(_sig):.1f} W m-2 [{np.percentile(_sig, 25):.1f}-{np.percentile(_sig, 75):.1f}]; "
-      f"{_det.sum()} of {EC.size} fluxes exceed their detection limit (1.96 sigma)")
+_sig, _ratio = np.asarray(FIG["sigma_random_ec"]), np.asarray(FIG["ec_flux_over_sigma"])
+print(f"random error: median {np.median(_sig):.1f} W m-2 [{np.percentile(_sig, 25):.1f}-{np.percentile(_sig, 75):.1f}]")
 _days = pd.to_datetime(FIG["start_time"].values).strftime("%d %b")
-print("   per day: " + ", ".join(f"{d}: {_det[_days == d].sum()}/{(_days == d).sum()}" for d in pd.unique(_days)))
+from scipy.stats import norm  # noqa: E402
+for _k in (1, 2, 3):
+    _d = _ratio > _k
+    print(f"   |H| > {_k} sigma_rand: {_d.sum():2d} of {EC.size}  (expected by chance if every true flux were zero: "
+          f"{2 * (1 - norm.cdf(_k)) * EC.size:.1f});  per day: "
+          + ", ".join(f"{d}: {_d[_days == d].sum()}/{(_days == d).sum()}" for d in pd.unique(_days)))
 print(f"median {np.median(ecv):.1f}   mean {ecv.mean():.1f}   max {ecv.max():.1f}   "
       f"min {ecv.min():.1f}   |H|<2 W/m2: {np.mean(np.abs(ecv) < 2) * 100:.0f} % of segments")
 
@@ -164,7 +168,8 @@ for L in (1.0, 5.0, 10.0):
     w = WL[WL["length_km"] == L].iloc[0]
     print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.1f} +- {w['ratio_std']:.1f}   "
           f"random error {w['random_error_median']:.1f} W m-2   "
-          f"fluxes above the detection limit {w['fraction_detectable'] * 100:.0f} %")
+          f"fluxes above 1 / 2 / 3 sigma_rand: {w['fraction_above_1sigma'] * 100:.0f} / "
+          f"{w['fraction_above_2sigma'] * 100:.0f} / {w['fraction_above_3sigma'] * 100:.0f} %")
 
 print("\n" + "=" * 118)
 print("UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2")

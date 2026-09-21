@@ -593,7 +593,7 @@ def run_all(verbose: bool = False, extract_only: bool = False,
     t_obs    = ds_obs["start_time"].values
     H_obs_ec    = np.asarray(ds_obs["sensible_heat_flux"]).astype(float)
     sigma_random = ds_obs["sensible_heat_flux_random_error"].values.astype("float32")
-    detectable   = ds_obs["flux_detectable"].values.astype("float32")
+    flux_over_sigma = ds_obs["flux_over_random_error"].values.astype("float32")
 
     use_cache = _CACHE.exists() and not no_cache and not extract_only
     if use_cache:
@@ -807,7 +807,7 @@ def run_all(verbose: bool = False, extract_only: bool = False,
             "H_rs_dU":     _v(("dU", "leg"), H_rs_dU, "W m-2", "Bulk SHF, remote, perturbed wind speed"),
             # uncertainties and stability diagnostics
             "sigma_random_ec": _v("leg", sigma_random, "W m-2", "Random (sampling) error of the EC flux, 1 sigma (Finkelstein and Sims, 2001)"),
-            "ec_detectable":   _v("leg", detectable, "1", "1 if |H_obs_ec| > 1.96 sigma_random_ec (fluxes below the detection limit are kept)"),
+            "ec_flux_over_sigma": _v("leg", flux_over_sigma, "1", "|H_obs_ec| / sigma_random_ec (all fluxes are kept, whatever this ratio)"),
             "Ri_era":    _v("leg", Ri_era, "1", "Bulk Richardson number, ERA5 column (2-point, surface to model level 136; effective wind, no additional bound)"),
             "Ri_obs":    _v("leg", Ri_obs, "1", "Bulk Richardson number, observations (2-point, surface to T-Bird)"),
             "Ri_rs":     _v("leg", Ri_rs, "1", "Bulk Richardson number, remote pathway (2-point, surface to model level 136; effective wind, naturally bounded; reference configuration)"),
