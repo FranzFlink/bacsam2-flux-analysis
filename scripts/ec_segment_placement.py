@@ -9,7 +9,7 @@ integrated over 0.1-20 Hz). For each analysis segment, the placement
 uncertainty is the standard deviation of all window fluxes that overlap the
 segment, weighted by their fractional overlap (triangular weights).
 
-Ported from the notebook preprocessing/ec_segment_placement_sensitivity.ipynb.
+Ported from the exploratory notebook of the same name (see git history).
 
 Output: data/observations/ar/ec_segment_placement.nc
 Run:    pixi run placement      (about 10 minutes)

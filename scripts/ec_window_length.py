@@ -7,7 +7,7 @@ the EC flux of the complete leg, and the relative sampling error and the
 spectral QC verdicts of the sub-windows are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
-Ported from the notebook preprocessing/ec_leg_length_sensitivity.ipynb.
+Ported from the exploratory notebook of the same name (see git history).
 
 Output: data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv
 Run:    pixi run window-length      (about 2 minutes)

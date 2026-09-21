@@ -173,3 +173,40 @@ for key, sig in uncertainty_budget(FIG).items():
     s = sig[np.isfinite(sig)]
     print(f"  {key:<14} {np.median(s):4.1f} [{np.percentile(s, 25):.1f}-{np.percentile(s, 75):.1f}]")
 print()
+print("=" * 118)
+print("FURTHER NUMBERS QUOTED IN THE TEXT")
+print("=" * 118)
+from fluxpy.uncertainty import _central  # noqa: E402
+
+keep = np.isfinite(EC)
+
+
+def _q(x):
+    return f"{np.nanmedian(x):+.1f} [{np.nanpercentile(x, 25):+.1f}, {np.nanpercentile(x, 75):+.1f}]"
+
+
+print("input sensitivities, median [IQR] over segments (central difference about the unperturbed state):")
+for k, nm in (("obs", "T-Bird bulk"), ("rs", "ERA5-MODIS bulk")):
+    print(f"  {nm:<16} dH/d(dtheta) = {_q(_central(FIG, f'H_{k}_dTair', 'dT')[keep])} W m-2 K-1    "
+          f"dH/dU = {_q(_central(FIG, f'H_{k}_dU', 'dU')[keep])} W m-2 (m/s)-1")
+
+car, erad = np.asarray(FIG["H_car_diag"], float), np.asarray(FIG["H_era_diag"], float)
+m = keep & np.isfinite(car)
+print(f"model-diagnosed fluxes on the common CARRA subset (n = {m.sum()}):")
+for nm, h in (("H_S,ERA,diag", erad), ("H_S,CAR,diag", car)):
+    print(f"  {nm}: slope {np.polyfit(EC[m], h[m], 1)[0]:.1f}   r {np.corrcoef(EC[m], h[m])[0, 1]:.1f}   "
+          f"bias {(h[m] - EC[m]).mean():+.1f}")
+
+# gain in correlation from the satellite T_s in the heterogeneous half: paired bootstrap
+rng2 = np.random.default_rng(42)
+eh, rh, ah = e[hi], r_[hi], a_[hi]
+dr = np.corrcoef(eh, rh)[0, 1] - np.corrcoef(eh, ah)[0, 1]
+boot = []
+for _ in range(5000):
+    i = rng2.integers(0, eh.size, eh.size)
+    boot.append(np.corrcoef(eh[i], rh[i])[0, 1] - np.corrcoef(eh[i], ah[i])[0, 1])
+boot = np.asarray(boot)
+print(f"heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = {dr:+.1f}, paired-bootstrap 95 % CI "
+      f"[{np.percentile(boot, 2.5):+.1f}, {np.percentile(boot, 97.5):+.1f}], "
+      f"fraction of resamples <= 0: {np.mean(boot <= 0):.4f}")
+print()

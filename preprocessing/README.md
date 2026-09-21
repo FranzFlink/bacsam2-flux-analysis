@@ -13,5 +13,3 @@ outputs were removed.
 | `preprocess_carra.ipynb`, `carra_write_subset.py` | CARRA crops |
 | `ERA5_STN_dl.py` | ERA5 download (Copernicus Climate Data Store; needs your own CDS account) |
 | `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region, period and flux-leg time windows shipped here |
-| `ec_leg_length_sensitivity.ipynb` | EC window-length experiment (Fig. 3) |
-| `ec_segment_placement_sensitivity.ipynb` | EC segment-placement experiment |
