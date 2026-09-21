@@ -4,7 +4,7 @@
   psi(zeta) = int_0^zeta (phi(0) - phi(t)) / t dt
 * neutral limit of the transfer coefficients vs the analytic log law
 * sign convention and monotonic behaviour of the bulk flux
-* spectral-QC thresholds as printed in the manuscript (Appendix A)
+* integrity threshold of Appendix A; random error of the flux vs a Monte-Carlo experiment
 """
 import math
 
@@ -93,25 +93,29 @@ def test_bulk_flux_sign_convention_positive_upward():
     assert H[0] > 0.0 and H[1] < 0.0
 
 
-def test_qc_thresholds_match_manuscript():
-    """Appendix A: |s_w + 5/3| <= 0.4, R2 >= 0.4, SNR > 2;
-    accepted = 0 failures, tolerable = 1, discarded >= 2."""
-    from fluxpy.qc import classify_leg_simple
+def test_integrity_check_threshold():
+    """Appendix A: turbulence is resolved when |s_w + 5/3| <= 0.4."""
+    from fluxpy.qc import turbulence_resolved
 
-    f = np.linspace(0.01, 50.0, 5000)
-    snr_pass = np.where((f >= 0.1) & (f <= 2.0), 10.0, 1.0)     # SNR = 10
-    snr_fail = np.ones_like(f)                                   # SNR = 1
+    assert turbulence_resolved(-5 / 3)
+    assert turbulence_resolved(-5 / 3 + 0.39) and turbulence_resolved(-5 / 3 - 0.39)
+    assert not turbulence_resolved(-5 / 3 + 0.41)
+    assert not turbulence_resolved(float("nan"))
 
-    def verdict(slope_w, r2, fwC=snr_pass):
-        qc = {"f": f, "fwCwth": fwC, "slope_w": slope_w, "R2": r2}
-        return classify_leg_simple(qc, 5.0)["verdict"]
 
-    assert verdict(-5 / 3, 0.9) == "accepted"
-    assert verdict(-5 / 3 + 0.39, 0.41) == "accepted"          # just inside every bound
-    assert verdict(-5 / 3 + 0.41, 0.9) == "tolerable"          # slope fails
-    assert verdict(-5 / 3, 0.39) == "tolerable"                # stationarity fails
-    assert verdict(-5 / 3, 0.9, snr_fail) == "tolerable"       # SNR fails
-    assert verdict(-5 / 3 + 0.41, 0.39) == "discarded"
+def test_random_error_matches_monte_carlo():
+    """Finkelstein-Sims random error of the band covariance vs the spread of the
+    covariance over many independent realisations of the same process."""
+    from fluxpy.flux_processing import band_covariance, band_covariance_random_error
+
+    rng = np.random.default_rng(3)
+    n, fs = 8000, 100.0
+    cov, err = [], []
+    for _ in range(300):
+        x = rng.standard_normal(n)
+        y = 0.1 * x + rng.standard_normal(n)              # weakly correlated, like w and theta
+        cov.append(band_covariance(x, y, fs)); err.append(band_covariance_random_error(x, y, fs))
+    assert np.mean(err) == pytest.approx(np.std(cov), rel=0.15)
 
 
 def test_band_covariance_parseval_and_band_selection():

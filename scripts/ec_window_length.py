@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""EC window-length experiment (manuscript Fig. 3).
+"""EC window-length experiment (manuscript Fig. 2).
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
 (0.5 ... 50 km). For every L the EC flux of the sub-windows is compared with
-the EC flux of the complete leg, and the relative sampling error and the
-spectral QC verdicts of the sub-windows are collected. Same estimator as the
+the EC flux of the complete leg; the random error of the sub-window fluxes and
+the share of sub-windows whose flux exceeds its detection limit are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
 Ported from the exploratory notebook of the same name (see git history).
@@ -22,10 +22,9 @@ import xarray as xr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from fluxpy.aggregate import _integral_length_scale       # noqa: E402
-from fluxpy.flux_processing import get_cov                # noqa: E402
-from fluxpy.meteorology import add_theta                  # noqa: E402
-from fluxpy.qc import classify_leg_simple, qc_leg         # noqa: E402
+from scipy.signal import detrend                                          # noqa: E402
+from fluxpy.flux_processing import C_P, R, band_covariance_random_error, get_cov  # noqa: E402
+from fluxpy.meteorology import add_theta                                  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -63,7 +62,7 @@ def flux(ds):
     return float(h)
 
 
-detailed, parents = [], []
+detailed, parents, windows = [], [], []
 for i, meta in enumerate(legs.itertuples()):
     leg = ds_hf.sel(time=slice(meta.start_time, meta.end_time))
     if leg.time.size == 0 or pd.to_datetime(leg["time"][0].item()).date() in EXCLUDE:
@@ -78,58 +77,44 @@ for i, meta in enumerate(legs.itertuples()):
     print(f"leg {i:02d}: {full_km:5.1f} km, full-leg flux {H_full:+.2f} W m-2")
 
     for L in LENGTHS_KM:
-        H_sub, e_rel, n_fail = [], [], []
+        H_sub, sig = [], []
         for j in range(int(np.floor(full_km / L))):
             sel = (dist >= j * L) & (dist < (j + 1) * L)
             sub = leg.isel(time=sel).dropna(dim="time", subset=["w", "theta", "T", "p"])
             if sub.time.size < min_samples(L):
                 continue
             H_sub.append(flux(sub))
-            tas = float(sub["tas"].mean())
-            L_int = _integral_length_scale(sub["T"].values, sub["w"].values, tas, FS)
-            e_rel.append(float(np.clip(np.sqrt(2.0 * L_int / (L * 1000.0)), 0, 2)) if np.isfinite(L_int) else np.nan)
-            try:        # windows below ~1 km are too short for the Welch spectra of the QC
-                qc = qc_leg(w=sub.w.values, theta=sub.theta.values, u=sub.u.values, v=sub.v.values, fs=FS)
-                n_fail.append(classify_leg_simple(qc, L)["n_failed"])
-            except ValueError:
-                pass
+            rho = float((sub["p"] * 100.0 / (R * (sub["T"] + 273.15))).mean())
+            sig.append(rho * C_P * band_covariance_random_error(
+                detrend(sub["w"].values), detrend(sub["theta"].values), FS, max_lag_s=min(10.0, 0.25 * sub.time.size / FS)))
         if not H_sub:
             continue
+        H_sub, sig = np.asarray(H_sub), np.asarray(sig)
+        windows.extend({"subleg_length_km": L, "random_error": e, "detectable": abs(h) > 1.96 * e}
+                       for h, e in zip(H_sub, sig))
         ok = abs(H_full) >= MIN_FULL_FLUX
         detailed.append({
             "leg_id": i, "subleg_length_km": L, "n_sublegs": len(H_sub),
-            "absolute_difference": np.mean(H_sub) - H_full,
-            "relative_ratio": np.mean(H_sub) / H_full if ok else np.nan,
-            "within_leg_cv_abs": np.std(H_sub) / abs(H_full) if ok else np.nan,
-            "lenschow_mean": np.nanmean(e_rel), "lenschow_std": np.nanstd(e_rel),
-            "n_accepted": sum(f == 0 for f in n_fail), "n_tolerable": sum(f == 1 for f in n_fail),
-            "n_discarded": sum(f >= 2 for f in n_fail),
+            "absolute_difference": H_sub.mean() - H_full,
+            "relative_ratio": H_sub.mean() / H_full if ok else np.nan,
         })
 
-par, det = pd.DataFrame(parents), pd.DataFrame(detailed)
+par, det, win = pd.DataFrame(parents), pd.DataFrame(detailed), pd.DataFrame(windows)
 rows = [{"label": "full leg", "length_km": float(par["full_length_km"].median()), "subleg_length_km": np.nan,
-         "N_bins": len(par), "n_legs": len(par), "median_ratio": 1.0, "mean_ratio": 1.0, "p25_ratio": 1.0,
-         "p75_ratio": 1.0, "median_absolute_difference": 0.0, "RMSE_absolute_difference": 0.0,
-         "median_within_leg_cv_abs": 0.0, "ratio_mean": 1.0, "ratio_std": 0.0,
-         "lenschow_rel_error_mean": np.nan, "lenschow_rel_error_std": np.nan,
-         "n_accepted": len(par), "n_tolerable": 0, "n_discarded": 0}]
+         "N_bins": len(par), "n_legs": len(par), "ratio_mean": 1.0, "ratio_std": 0.0}]
 for L, g in det.groupby("subleg_length_km"):
-    r = g["relative_ratio"].dropna()
+    r, w = g["relative_ratio"].dropna(), win[win["subleg_length_km"] == L]
     rows.append({
         "label": f"{L:.1f} km".replace(".0", ""), "length_km": L, "subleg_length_km": L,
         "N_bins": int(g["n_sublegs"].sum()), "n_legs": int(g["leg_id"].nunique()),
-        "median_ratio": r.median(), "mean_ratio": r.mean(),
-        "p25_ratio": r.quantile(0.25), "p75_ratio": r.quantile(0.75),
-        "median_absolute_difference": g["absolute_difference"].median(),
-        "RMSE_absolute_difference": float(np.sqrt((g["absolute_difference"] ** 2).mean())),
-        "median_within_leg_cv_abs": g["within_leg_cv_abs"].median(),
         "ratio_mean": r.mean(), "ratio_std": r.std(ddof=0),
-        "lenschow_rel_error_mean": g["lenschow_mean"].mean(), "lenschow_rel_error_std": g["lenschow_std"].mean(),
-        "n_accepted": int(g["n_accepted"].sum()), "n_tolerable": int(g["n_tolerable"].sum()),
-        "n_discarded": int(g["n_discarded"].sum()),
+        "median_absolute_difference": g["absolute_difference"].median(),
+        "random_error_median": w["random_error"].median(),
+        "random_error_p25": w["random_error"].quantile(0.25), "random_error_p75": w["random_error"].quantile(0.75),
+        "fraction_detectable": w["detectable"].mean(),
     })
 out = AR / "ec_leg_length_sensitivity" / "ec_sensitivity_summary.csv"
 pd.DataFrame(rows).to_csv(out, index=False, lineterminator="\n")
 print(f"\nwritten {out.relative_to(REPO)}")
 print(pd.DataFrame(rows)[["label", "n_legs", "N_bins", "ratio_mean", "ratio_std",
-                          "lenschow_rel_error_mean", "n_discarded"]].round(3).to_string(index=False))
+                          "random_error_median", "fraction_detectable"]].round(2).to_string(index=False))

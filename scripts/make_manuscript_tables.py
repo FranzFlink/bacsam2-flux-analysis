@@ -135,9 +135,9 @@ def _rel_stat(sig, flux, floor=2.0):
 
 unc_rows = [
     (r"$H_\mathrm{S,obs,EC}$ total", UNC["ec_total"], H_ec),
-    (r"\quad Sampling", UNC["ec_sampling"], H_ec),
+    (r"\quad Random (sampling) error", UNC["ec_random"], H_ec),
     (r"\quad Instrument", UNC["ec_instrument"], H_ec),
-    (r"\quad Segment placement", UNC["ec_placement"], H_ec),
+    (r"\quad \textit{cross-check: segment placement}", UNC["ec_placement"], H_ec),
     (r"$H_\mathrm{S,obs,bulk}$", UNC["obs_bulk"], np.asarray(FIG["H_obs_bulk"], dtype=float)),
     (r"$H_\mathrm{S,RS,bulk}$", UNC["rs_bulk"], np.asarray(FIG["H_rs_bulk"], dtype=float)),
 ]

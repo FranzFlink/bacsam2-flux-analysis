@@ -333,6 +333,32 @@ def main() -> None:
     print(f"\nBuilding xarray Dataset …")
     ds = to_xarray(df)
 
+    # ── Save leg metadata CSV (mirrors notebook cell 4) ───────────────────
+    if args.out_csv and not args.dry_run:
+        os.makedirs(os.path.dirname(os.path.abspath(args.out_csv)), exist_ok=True)
+        data["df_legs"].to_csv(args.out_csv, index=False, header=True, sep='\t')
+        print(f"Leg metadata CSV saved → {args.out_csv} ({len(data['df_legs'])} rows)")
+
+    if args.dry_run:
+        print("Dry run — data loaded successfully.  Skipping aggregation loop.")
+        return
+
+    # ── Run pipeline ──────────────────────────────────────────────────────
+    df = process_legs(
+        legs=data["legs"],
+        df_legs_meta=data["df_legs"],
+        ds_radiation=data["ds_radiation"],
+        ds_tbird=data["ds_tbird"],
+        ds_polar6=data["ds_polar6"],
+        ds_sic=data["ds_sic"],
+        ds_track=data["ds_track"],
+        ds_ar=data["ds_ar"],
+        cfg=cfg,
+    )
+
+    print(f"\nBuilding xarray Dataset …")
+    ds = to_xarray(df)
+
     # Aircraft-level values (Fig. 2a): without the Polar 6 nose-boom archive
     # they are taken from the side file extracted on the raw-data host.
     side_fp = os.path.join(_AR, "polar6_level_at_segments.nc")

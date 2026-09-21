@@ -153,24 +153,39 @@ print(f"H by hand         : {H_by_hand:6.2f} W m-2")
 print(f"H from fluxpy     : {float(H_fluxpy):6.2f} W m-2")
 print(f"H in the data file: {EC[i]:6.2f} W m-2")
 '''), ("md", r'''
-## Step 4 — can this segment be trusted? (spectral quality control, Appendix A)
+## Step 4 — how good is this number? (Appendix A)
 
-Three checks, all on the detrended series:
+Two questions have to be kept apart.
 
-1. **Is turbulence resolved?** The power spectrum of $w$ must fall off with a slope near $-5/3$ (inertial subrange): $|s_w + 5/3| \le 0.4$.
-2. **Is the flux stationary along the segment?** The running sum of $w'\theta'$ (bottom panel in Step 1) should grow steadily; a straight-line fit must reach $R^2 \ge 0.4$.
-3. **Does the flux stand out from the noise?** The peak of the frequency-weighted cospectrum must exceed twice the background: SNR > 2.
+**Is the measurement sound?** Turbulence must be resolved: the power spectrum of $w$ has to fall off with a slope near
+$-5/3$ (inertial subrange), $|s_w + 5/3| \le 0.4$. This is a pass/fail check of the *instrument and the processing*.
 
-A segment passing all three is *accepted*, failing one *tolerable*, failing two or more *discarded*.
+**How precisely is the flux known?** A covariance from 85 s of data has a random error, because only a limited number of
+eddies were sampled. It is estimated from the data themselves (Finkelstein and Sims, 2001). A flux larger than 1.96 times its
+random error is *detectable*, i.e. distinguishable from zero.
+
+Fluxes below the detection limit are **kept**. Over compact sea ice "no measurable flux" is the typical, physically correct
+result; throwing these segments away would leave only the large fluxes and bias the reference. For the same reason the paper
+does not use criteria that are ratios to the flux (such as signal-to-noise ratios): they fail for small fluxes and pass for
+large ones, whatever the quality of the measurement.
 '''), ("code", r'''
-from fluxpy.qc import qc_leg, classify_leg_simple
-verdict = classify_leg_simple(qc_leg(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0), 5.0)
-print("this segment:", verdict["verdict"], {k: round(float(v), 2) for k, v in verdict["metrics"].items()})
-v = SEG.qc_verdict_simple_int.values
-print(f"\nall {v.size} segments: {np.sum(v == 0)} accepted, {np.sum(v == 1)} tolerable, {np.sum(v == 2)} discarded")
-print(f"criterion failures: slope {int((np.abs(SEG.qc_slope_w + 5 / 3) > 0.4).sum())}, stationarity {int((SEG.qc_R2 < 0.4).sum())}, SNR {int((SEG.qc_snr_fwC <= 2).sum())}")
+from fluxpy.qc import qc_leg, turbulence_resolved
+from fluxpy.flux_processing import band_covariance_random_error, C_P
+slope = qc_leg(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0)["slope_w"]
+sigma = rho * C_P * band_covariance_random_error(w, th, fs)
+print(f"this segment: spectral slope of w = {slope:.2f} -> turbulence resolved: {turbulence_resolved(slope)}")
+print(f"              flux {float(H_fluxpy):.1f} +- {sigma:.1f} W m-2 (random error) -> detectable: {abs(float(H_fluxpy)) > 1.96 * sigma}")
+det = FIG.ec_detectable.values == 1
+print(f"\nall {det.size} segments: {int(SEG.turbulence_resolved.sum())} pass the integrity check; "
+      f"median random error {np.median(FIG.sigma_random_ec.values):.1f} W m-2; {det.sum()} fluxes are detectable")
+days = pd.to_datetime(FIG.start_time.values).strftime("%d %b")
+print("detectable per day:", {d: f"{det[days == d].sum()}/{(days == d).sum()}" for d in pd.unique(days)})
 '''), ("md", r'''
-## Is 5 km long enough? (Fig. 3)
+15 April, the day with open leads and the largest fluxes, is fully detectable; on the days over compact ice or with weak
+temperature contrast most fluxes are statistically zero. That is a property of the Arctic surface, not a defect of the data —
+and it is the reason why the correlations in Chapter 4 cannot be high for *any* estimate.
+
+## Is 5 km long enough? (Fig. 2)
 
 A short window might miss the larger eddies; a long one blurs leads and ice together. The experiment cuts each of the six
 low-level legs into sub-windows of different length and compares their mean flux with the flux of the complete leg
@@ -180,26 +195,27 @@ wl = pd.read_csv(AR / "ec_leg_length_sensitivity/ec_sensitivity_summary.csv").qu
 fig, axs = plt.subplots(1, 2, figsize=(9, 3))
 axs[0].errorbar(wl.length_km, wl.ratio_mean, wl.ratio_std, fmt="o-", color="C1", ecolor="0.5", capsize=2)
 axs[0].axhline(1, color="k", ls="--"); axs[0].set_ylabel("sub-window flux / full-leg flux")
-axs[1].plot(wl.length_km, wl.lenschow_rel_error_mean * 100, "s-", color="C4"); axs[1].set_ylabel("random sampling error (%)")
+axs[1].plot(wl.length_km, wl.random_error_median, "s-", color="C4"); axs[1].set_ylabel("random error (W m$^{-2}$)")
 for ax in axs:
     ax.set_xscale("log"); ax.axvline(5, color="goldenrod", lw=3, ls="--"); ax.set_xlabel("window length (km)")
 r5 = wl[wl.length_km == 5].iloc[0]
-print(f"at 5 km: flux ratio {r5.ratio_mean:.1f}, sampling error {r5.lenschow_rel_error_mean * 100:.0f} %")
+print(f"at 5 km: flux ratio {r5.ratio_mean:.1f}, random error {r5.random_error_median:.1f} W m-2, detectable fluxes {r5.fraction_detectable * 100:.0f} %")
 '''), ("md", r'''
 ## How uncertain is one EC flux?
 
-Three contributions, added in quadrature: the random **sampling** error of a finite record (Lenschow et al., 1994),
-the **instrument** error (5 % from the flow calibration of the five-hole probe), and the **placement** error — the
-spread obtained when the 5 km window is shifted along the leg in 0.05 km steps (`scripts/ec_segment_placement.py`).
+Two contributions, added in quadrature: the **random** error from Step 4 and the **instrument** error (5 % from the flow
+calibration of the five-hole probe). An independent, purely empirical check of the random error is the **placement** spread —
+what happens to the flux when the 5 km window is shifted along the leg in 0.05 km steps (`scripts/ec_segment_placement.py`).
+It is not added, because it measures the same thing; it is there to show that the random error has the right size.
 '''), ("code", r'''
 from fluxpy.uncertainty import uncertainty_budget
 U = uncertainty_budget(FIG)
 pd.DataFrame({k.replace("ec_", ""): [np.nanmedian(U[k]), np.nanpercentile(U[k], 25), np.nanpercentile(U[k], 75)]
-              for k in ("ec_sampling", "ec_instrument", "ec_placement", "ec_total")},
+              for k in ("ec_random", "ec_instrument", "ec_total", "ec_placement")},
              index=["median (W m-2)", "25th percentile", "75th percentile"]).round(1)
 '''), ("md", r'''
 **Take-away.** The reference flux is a band-limited covariance that can be recomputed from the 100 Hz data in a few lines.
-Its uncertainty is dominated by *where* the 5 km window happens to sit — natural variability along the track — not by the instrument.
+Its uncertainty is dominated by the limited number of eddies in 5 km — confirmed by shifting the window along the track — not by the instrument.
 ''')]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -329,7 +345,7 @@ pd.DataFrame(rows).T.round(1)
 '''), ("md", r'''
 (CARRA is not available on 13 April, hence the smaller *n*.)
 
-## The three bulk estimates against the reference (Fig. 6)
+## The three bulk estimates against the reference (Fig. 5)
 '''), ("code", r'''
 fig, axs = plt.subplots(1, 3, figsize=(10, 3.4), sharex=True, sharey=True)
 for ax, key, c in zip(axs, ["H_obs_bulk", "H_rs_bulk", "H_era_bulk"], ["C2", "C1", "C0"]):

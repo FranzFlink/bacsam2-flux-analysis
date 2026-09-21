@@ -10,7 +10,9 @@ paper that is derived from data:
 | Step | What it shows | Time |
 |------|---------------|------|
 | `verify-ec` | The eddy-covariance (EC) reference fluxes follow from the 100 Hz T-Bird measurements | ~30 s |
-| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 3); part of `all-from-raw` | ~2 min each |
+| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 2); part of `all-from-raw` | ~2 min each |
+| `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
+| `verify-cache` | The MODIS and ERA5 values at the segments follow from the shipped gridded fields | ~5 s |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~15 s |
 | `check` | The key numbers equal the committed reference `expected_numbers.txt` | ~15 s |
 | `tables` | LaTeX bodies of the data-derived tables → `tables_manuscript/` | ~5 s |
@@ -50,7 +52,8 @@ them as modified although the numbers are identical.
 |------|---------|
 | `fluxpy/` | **All physics**: bulk flux (`bulk.py`), stability functions and transfer coefficients (`stability_lib.py`, `stability.py`), EC covariance and spectra (`flux_processing.py`, `ec.py`), spectral quality control (`qc.py`), segment aggregation (`aggregate.py`), sensitivity sweep and skill metrics (`sensitivity.py`) |
 | `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments |
-| `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement uncertainty; EC window-length experiment (Fig. 3) |
+| `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 2) |
+| `scripts/ec_quality.py` | Quality of the EC reference (Appendix A) → `tables_manuscript/table_qc_robustness.tex` |
 | `scripts/verify_ec_reproduction.py` | Recomputes the EC segments and compares with the shipped segment file |
 | `scripts/calc_bulk_and_ec_fluxes.py` | Bulk fluxes + sensitivity sweep → `data/model_output/` |
 | `scripts/manuscript_numbers.py` | Prints the numbers quoted in the text and in the comparison table |
@@ -72,7 +75,8 @@ GLGS20 stability functions (Gryanik et al., 2020), scalar roughness ratio
 α_T = z₀,T/z₀,m = 10⁻¹, surface-type-dependent momentum roughness, classic two-point bulk
 Richardson number between the surface and the measurement level. The amplitude-matched
 configuration uses α_T = 10⁻⁴. All fluxes are positive upward. 91 low-level 5 km segments over
-sea ice; the three-criterion spectral quality control accepts 73, rates 18 tolerable and discards none.
+sea ice. All pass the integrity check (resolved inertial subrange). Every EC flux carries a measured random error
+(median 0.7 W m⁻²); 47 of the 91 fluxes exceed their detection limit, the others are valid near-zero fluxes and are kept.
 Numbers are reported with one decimal, matching their precision.
 
 Two implementation details worth knowing:
@@ -85,8 +89,6 @@ Two implementation details worth knowing:
 
 ## What cannot be reproduced from this repository
 
-* Fig. 2a additionally shows the aircraft (Polar 6) level. These segment means are shipped in
-  `polar6_level_at_segments.nc`; the aircraft nose-boom archive itself is not part of the repository.
 * The CARRA surface sensible heat flux at the segments is shipped in `along_track_inputs.nc`;
   the CARRA forecast file it was extracted from is not part of the repository. (The MODIS and
   ERA5 entries of that file are reproducible from the shipped gridded files.)

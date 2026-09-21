@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Compare the numbers printed by manuscript_numbers.py with expected_numbers.txt.
+"""Compare the numbers printed by manuscript_numbers.py and ec_quality.py with expected_numbers.txt.
 
-expected_numbers.txt is the committed output of manuscript_numbers.py for this
+expected_numbers.txt is the committed output of these two scripts for this
 version of the repository. Numbers are compared with a tolerance of 0.02 (one
 unit in the last printed digit plus rounding) so that harmless floating-point
 differences between operating systems do not raise a false alarm.
@@ -20,8 +20,9 @@ EXPECTED = REPO / "expected_numbers.txt"
 NUM = re.compile(r"[-+]?\d+\.\d+|[-+]?\d+")
 TOL = 0.02
 
-out = subprocess.run([sys.executable, str(REPO / "scripts/manuscript_numbers.py")],
-                     capture_output=True, text=True, encoding="utf-8", check=True).stdout
+out = "".join(subprocess.run([sys.executable, str(REPO / "scripts" / script)],
+                             capture_output=True, text=True, encoding="utf-8", check=True).stdout
+              for script in ("manuscript_numbers.py", "ec_quality.py"))
 
 if "--update" in sys.argv:
     EXPECTED.write_text(out, encoding="utf-8", newline="\n")

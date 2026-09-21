@@ -60,13 +60,16 @@ def line(name, h, ci=False):
 
 print("\n" + "=" * 118)
 ecv = EC[np.isfinite(EC)]
-print(f"EC REFERENCE ({ecv.size} QC-retained of {EC.size} low-level 5 km segments)")
+print(f"EC REFERENCE ({ecv.size} of {EC.size} low-level 5 km segments pass the integrity check)")
 print("=" * 118)
 _seg = AR.sel(start_time=FIG["start_time"].values)
-_v = np.asarray(_seg["qc_verdict_simple_int"])
-print(f"spectral QC: accepted {(_v == 0).sum()}, tolerable {(_v == 1).sum()}, discarded {(_v == 2).sum()}   "
-      f"(criterion failures: slope {(np.abs(_seg['qc_slope_w'] + 5 / 3) > 0.4).sum().item()}, "
-      f"stationarity {(_seg['qc_R2'] < 0.4).sum().item()}, SNR {(_seg['qc_snr_fwC'] <= 2).sum().item()})")
+print(f"integrity check (inertial-subrange slope of w): {int(_seg['turbulence_resolved'].sum())} of {EC.size} pass; "
+      f"slope median {float(_seg['qc_slope_w'].median()):.1f}, range {float(_seg['qc_slope_w'].min()):.1f} to {float(_seg['qc_slope_w'].max()):.1f}")
+_sig = np.asarray(FIG["sigma_random_ec"]); _det = np.asarray(FIG["ec_detectable"]) == 1
+print(f"random error: median {np.median(_sig):.1f} W m-2 [{np.percentile(_sig, 25):.1f}-{np.percentile(_sig, 75):.1f}]; "
+      f"{_det.sum()} of {EC.size} fluxes exceed their detection limit (1.96 sigma)")
+_days = pd.to_datetime(FIG["start_time"].values).strftime("%d %b")
+print("   per day: " + ", ".join(f"{d}: {_det[_days == d].sum()}/{(_days == d).sum()}" for d in pd.unique(_days)))
 print(f"median {np.median(ecv):.1f}   mean {ecv.mean():.1f}   max {ecv.max():.1f}   "
       f"min {ecv.min():.1f}   |H|<2 W/m2: {np.mean(np.abs(ecv) < 2) * 100:.0f} % of segments")
 
@@ -153,16 +156,15 @@ print(f"3 decades of alpha_T (1e-1 -> 1e-4) change the flux amplitude by a facto
 print()
 
 print("=" * 118)
-print("EC WINDOW-LENGTH EXPERIMENT (Fig. 3)  -- scripts/ec_window_length.py")
+print("EC WINDOW-LENGTH EXPERIMENT (Fig. 2)  -- scripts/ec_window_length.py")
 print("=" * 118)
 WL = pd.read_csv(REPO / "data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv")
 print(f"{int(WL.loc[0, 'n_legs'])} low-level legs, median length {WL.loc[0, 'length_km']:.1f} km")
 for L in (1.0, 5.0, 10.0):
     w = WL[WL["length_km"] == L].iloc[0]
-    n_qc = w["n_accepted"] + w["n_tolerable"] + w["n_discarded"]
     print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.1f} +- {w['ratio_std']:.1f}   "
-          f"sampling error {w['lenschow_rel_error_mean'] * 100:.0f} %   "
-          f"discarded by QC {w['n_discarded'] / n_qc * 100:.0f} %")
+          f"random error {w['random_error_median']:.1f} W m-2   "
+          f"fluxes above the detection limit {w['fraction_detectable'] * 100:.0f} %")
 
 print("\n" + "=" * 118)
 print("UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2")

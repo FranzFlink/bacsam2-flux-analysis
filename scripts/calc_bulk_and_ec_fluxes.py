@@ -196,38 +196,6 @@ def load_era5_sl(ds_obs: xr.Dataset) -> dict:
     return {"skt_K": skt_K, "avg_ishf": avg_ishf, "sp_Pa": surface_pressure}
 
 
-def load_carra(ds_obs: xr.Dataset) -> dict:
-    """Load CARRA surface and height-level data colocated to P6 legs."""
-    t_da   = xr.DataArray(pd.to_datetime(ds_obs["start_time"].values), dims="leg")
-    lat_da = xr.DataArray(np.asarray(ds_obs["latitude"]),               dims="leg")
-    lon_da = xr.DataArray(np.asarray(ds_obs["longitude"]),              dims="leg")
-    ds_sf = (
-        xr.open_dataset(_CARRA / "carra_east_latlon0p05.nc")[["skt", "sp"]]
-        .sel(lat=LAT_SLICE, lon=LON_SLICE)
-        .load()
-    )
-    ds_hl = xr.open_dataset(_CARRA / "height_level" / "carra_latlon0p05.nc").sel(
-        lat=LAT_SLICE, lon=LON_SLICE
-    )
-    hl30 = ds_hl.sel(heightAboveGround=30.0)[["t", "ws", "pres"]].load()
-    hl75 = ds_hl.sel(heightAboveGround=75.0)[["t", "ws", "pres"]].load()
-    sf_col   = ds_sf.sel(time=t_da,       lat=lat_da, lon=lon_da, method="nearest")
-    hl30_col = hl30.sel(valid_time=t_da,  lat=lat_da, lon=lon_da, method="nearest")
-    hl75_col = hl75.sel(valid_time=t_da,  lat=lat_da, lon=lon_da, method="nearest")
-    n_ok = int(np.isfinite(sf_col["skt"].values).sum())
-    log.info("CARRA: %d/%d legs with valid skt", n_ok, ds_obs.sizes["start_time"])
-    return {
-        "skt_K":  sf_col["skt"].values.astype(float),
-        "sp_Pa":  sf_col["sp"].values.astype(float),
-        "T30_K":  hl30_col["t"].values.astype(float),
-        "ws30":   hl30_col["ws"].values.astype(float),
-        "p30_Pa": hl30_col["pres"].values.astype(float),
-        "T75_K":  hl75_col["t"].values.astype(float),
-        "ws75":   hl75_col["ws"].values.astype(float),
-        "p75_Pa": hl75_col["pres"].values.astype(float),
-    }
-
-
 def load_carra_direct_shf(ds_obs: xr.Dataset) -> np.ndarray:
     """Load CARRA model-diagnostic SHF (sshf [J m⁻² h⁻¹] → W m⁻²)."""
     fp = _CARRA / "carra_east_forecast_sf_latlon0p05.nc"
@@ -624,27 +592,27 @@ def run_all(verbose: bool = False, extract_only: bool = False,
     n_legs  = ds_obs.sizes["start_time"]
     t_obs    = ds_obs["start_time"].values
     H_obs_ec    = np.asarray(ds_obs["sensible_heat_flux"]).astype(float)
-    e_rel   = ds_obs["lenschow_rel_error"].values.astype("float32")
+    sigma_random = ds_obs["sensible_heat_flux_random_error"].values.astype("float32")
+    detectable   = ds_obs["flux_detectable"].values.astype("float32")
 
     use_cache = _CACHE.exists() and not no_cache and not extract_only
     if use_cache:
         ds_modis, era5_ml_dat, era5_sl_dat, carra_sshf, ds_tbird = _read_cache(ds_obs)
     else:
-        # The CARRA forecast surface-flux file is not part of the repository.
-        # Rebuilding the cache without it would replace the shipped CARRA
-        # flux (H_car_diag) by NaN, so refuse instead of overwriting.
-        _carra_fc = _CARRA / "carra_east_forecast_sf_latlon0p05.nc"
-        if _CACHE.exists() and not _carra_fc.exists():
-            raise SystemExit(
-                f"Refusing to rebuild {_CACHE.name}: {_carra_fc.name} is not available, "
-                "so the shipped CARRA surface flux would be lost. The MODIS and ERA5 "
-                "entries of the shipped cache are reproducible from the shipped gridded "
-                "files (checked 2026-09-21: identical).")
         ds_modis    = load_modis(ds_obs)
         era5_ml_dat = load_era5_ml(ds_obs)
         era5_sl_dat = load_era5_sl(ds_obs)
-        carra_sshf  = load_carra_direct_shf(ds_obs)
         ds_tbird    = _load_tbird(ds_obs)
+        # The CARRA forecast surface-flux file is not part of the repository. Without it the
+        # CARRA flux of the existing along-track file is carried over (it was extracted on the
+        # raw-data host); MODIS and ERA5 are re-extracted from the shipped gridded files.
+        _carra_fc = _CARRA / "carra_east_forecast_sf_latlon0p05.nc"
+        if not _carra_fc.exists() and _CACHE.exists():
+            with xr.open_dataset(_CACHE) as _old:
+                carra_sshf = _old["carra_sshf_Wm2"].values.astype(float)
+            log.warning("CARRA forecast file absent: CARRA surface flux carried over from the existing %s", _CACHE.name)
+        else:
+            carra_sshf = load_carra_direct_shf(ds_obs)
         _write_cache(ds_obs, ds_modis, era5_ml_dat, era5_sl_dat, carra_sshf, ds_tbird)
         if extract_only:
             log.info("Extract-only run complete (%.1f s) — cache ready to ship.",
@@ -838,7 +806,8 @@ def run_all(verbose: bool = False, extract_only: bool = False,
             "H_obs_dU":    _v(("dU", "leg"), H_obs_dU, "W m-2", "Bulk SHF, in-situ, perturbed wind speed"),
             "H_rs_dU":     _v(("dU", "leg"), H_rs_dU, "W m-2", "Bulk SHF, remote, perturbed wind speed"),
             # uncertainties and stability diagnostics
-            "e_rel_ec":  _v("leg", e_rel, "1", "Lenschow relative sampling error of the EC flux"),
+            "sigma_random_ec": _v("leg", sigma_random, "W m-2", "Random (sampling) error of the EC flux, 1 sigma (Finkelstein and Sims, 2001)"),
+            "ec_detectable":   _v("leg", detectable, "1", "1 if |H_obs_ec| > 1.96 sigma_random_ec (fluxes below the detection limit are kept)"),
             "Ri_era":    _v("leg", Ri_era, "1", "Bulk Richardson number, ERA5 column (2-point, surface to model level 136; effective wind, no additional bound)"),
             "Ri_obs":    _v("leg", Ri_obs, "1", "Bulk Richardson number, observations (2-point, surface to T-Bird)"),
             "Ri_rs":     _v("leg", Ri_rs, "1", "Bulk Richardson number, remote pathway (2-point, surface to model level 136; effective wind, naturally bounded; reference configuration)"),

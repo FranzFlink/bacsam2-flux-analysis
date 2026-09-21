@@ -35,6 +35,9 @@ from scipy.signal import correlate, correlation_lags
 from tqdm import tqdm
 
 from .flux_processing import (
+    C_P,
+    R as R_DRY,
+    band_covariance_random_error,
     get_tke,
     add_u_star,
     get_cov,
@@ -46,7 +49,7 @@ from .meteorology import add_theta
 # ── fluxpy sibling modules ────────────────────────────────────────────────────
 from .stability import bulk_richardson_2pt
 from .util      import potential_temperature
-from .qc        import qc_leg, classify_leg_simple
+from .qc        import qc_leg, turbulence_resolved
 
 __all__ = ["AggConfig", "process_legs", "to_xarray"]
 
@@ -436,21 +439,10 @@ def process_legs(
             else:
                 frac_open = frac_thin_ice = frac_thick_ice = np.nan
 
-            # ── Integral length scale & Lenschow relative error ────────────
-            T_arr   = leg_data["T"].values.flatten()
-            w_arr   = leg_data["w"].values.flatten()
-            tas_bin = float(leg_data["tas"].mean(skipna=True))
-            L_int   = _integral_length_scale(T_arr, w_arr, tas_bin, cfg.fs)
-
-            # Averaging distance = bin length in metres; U ≈ TAS
-            bin_len_m = (bin_right - bin_left) * 1e3
-            if np.isfinite(L_int) and tas_bin > 0 and bin_len_m > 0:
-                T_avg_bin         = bin_len_m / tas_bin          # [s]
-                lenschow_rel_err  = float(np.clip(
-                    np.sqrt(2.0 * L_int / (tas_bin * T_avg_bin)), 0.0, 2.0
-                ))
-            else:
-                lenschow_rel_err = np.nan
+            # ── Random error of the flux (Finkelstein & Sims, 2001) ────────
+            _rho = float((leg_data["p"] * 100.0 / (R_DRY * (leg_data["T"] + 273.15))).mean())
+            hf_random_error = _rho * C_P * band_covariance_random_error(
+                signal.detrend(leg_data["w"].values), signal.detrend(leg_data["theta"].values), cfg.fs)
 
             # ── QC ────────────────────────────────────────────────────────
             qc_results = qc_leg(
@@ -462,7 +454,7 @@ def process_legs(
                 x_dist=leg_data["distance"].values,
             )
             bin_length_km  = float(bin_right - bin_left)
-            qc_simple      = classify_leg_simple(qc_results, bin_length_km)
+            resolved       = turbulence_resolved(qc_results["slope_w"])
 
             # ── Richardson number + level diagnostics (classic 2-pt Ri_b) ─
             # Keep unaveraged slices for std computations; .mean() copies are
@@ -526,7 +518,9 @@ def process_legs(
                 "latitude":        _scalar(leg_data["lat"].mean()),
                 "longitude":       _scalar(leg_data["lon"].mean()),
                 # ── EC fluxes ───────────────────────────────────────────
-                "sensible_heat_flux":   hf_scalar if qc_simple["verdict"] != "discarded" else np.nan,
+                "sensible_heat_flux":   hf_scalar if resolved else np.nan,
+                "sensible_heat_flux_random_error": hf_random_error,
+                "flux_detectable":      float(abs(hf_scalar) > 1.96 * hf_random_error),
                 "tke_mean":             tke,
                 "u_star":               ustar,
                 "monin_obukhov_length": mol,
@@ -540,20 +534,8 @@ def process_legs(
                 # ── QC ──────────────────────────────────────────────────
                 "N_samples":       N_samples,
                 "leg_length_km":   bin_length_km,
-                "slope_th":        qc_results["slope_th"],
-                "slope_w":         qc_results["slope_w"],
-                "tv_og":           qc_results["tv_og"],
-                "R2":              qc_results["R2"],
-                "max_dev":         qc_results["max_dev"],
-                # manuscript three-criterion classifier (Appendix A)
-                "qc_verdict_simple":  qc_simple["verdict"],
-                "qc_n_failed_simple": qc_simple["n_failed"],
-                "qc_slope_w":              qc_simple["metrics"]["slope_w"],
-                "qc_R2":                   qc_simple["metrics"]["R2"],
-                "qc_snr_fwC":              qc_simple["metrics"]["snr_fwC"],
-                # ── Lenschow error metrics ──────────────────────────────
-                "L_int":               L_int,
-                "lenschow_rel_error":  lenschow_rel_err,
+                "qc_slope_w":      qc_results["slope_w"],
+                "turbulence_resolved": float(resolved),
                 "ri_b_std":  0.0,
                 # std variables — computed from *unaveraged* time slices
                 "T_sfc_std": float(ds_rad_slice[cfg.kt19_var].std(skipna=True)),
@@ -660,11 +642,10 @@ def to_xarray(df: pd.DataFrame) -> xr.Dataset:
         "frac_thick_ice":       ("1", "Fraction of KT-19 samples classified as snow-covered ice"),
         "N_samples":            ("1", "Number of 100 Hz samples in the segment"),
         "leg_length_km":        ("km", "Segment length"),
-        "L_int":                ("m", "Integral length scale of w'T'"),
-        "lenschow_rel_error":   ("1", "Relative random sampling error, sqrt(2 L_int / segment length)"),
+        "sensible_heat_flux_random_error": ("W m-2", "Random (sampling) error of the EC flux, 1 sigma (Finkelstein and Sims, 2001)"),
+        "flux_detectable":      ("1", "1 if |flux| exceeds 1.96 x its random error; fluxes below the detection limit are valid and kept"),
         "qc_slope_w":           ("1", "Log-log slope of the w power spectrum, 0.1-20 Hz"),
-        "qc_R2":                ("1", "R2 of a linear fit to the cumulative covariance (stationarity)"),
-        "qc_snr_fwC":           ("1", "Signal-to-noise ratio of the frequency-weighted cospectrum"),
+        "turbulence_resolved":  ("1", "1 if |qc_slope_w + 5/3| <= 0.4 (integrity check; flux is NaN otherwise)"),
         "ri_b_mean":            ("1", "Two-point bulk Richardson number, surface to T-Bird"),
         "theta_surface":        ("K", "Surface potential temperature (KT-19, T-Bird pressure)"),
         "theta_tbird":          ("K", "Potential temperature at the T-Bird"),

@@ -3,10 +3,11 @@ fluxpy.uncertainty
 ==================
 Flux-uncertainty budget of manuscript Table ``tab:bulk_unc``.
 
-* EC flux: quadrature sum of (i) the random sampling error after Lenschow et
-  al. (1994), (ii) a 5 % instrument error from the five-hole-probe flow
-  calibration and (iii) the segment-placement error
-  (``scripts/ec_segment_placement.py``).
+* EC flux: quadrature sum of (i) the random (sampling) error of the band
+  covariance (Finkelstein and Sims, 2001) and (ii) a 5 % instrument error from
+  the five-hole-probe flow calibration. The segment-placement spread
+  (``scripts/ec_segment_placement.py``) is an independent, empirical measure of
+  the same sampling variability; it is reported as a cross-check and NOT added.
 * Bulk fluxes: first-order Gaussian propagation of the assumed 1-sigma input
   uncertainties, with the derivatives dH/dx taken as central differences from
   the perturbation experiments stored in ``sensitivity_figure_data.nc``.
@@ -37,12 +38,11 @@ def uncertainty_budget(fig: xr.Dataset) -> dict[str, np.ndarray]:
     """Per-segment 1-sigma uncertainties [W m-2] of the EC and the two bulk fluxes."""
     H_ec = np.asarray(fig["H_obs_ec"], dtype=float)
     out = {
-        "ec_sampling":   np.abs(H_ec) * np.asarray(fig["e_rel_ec"], dtype=float),
+        "ec_random":     np.asarray(fig["sigma_random_ec"], dtype=float),
         "ec_instrument": np.abs(H_ec) * REL_INSTRUMENT,
         "ec_placement":  np.asarray(fig["sigma_placement"], dtype=float),
     }
-    out["ec_total"] = np.sqrt(out["ec_sampling"] ** 2 + out["ec_instrument"] ** 2
-                              + out["ec_placement"] ** 2)
+    out["ec_total"] = np.sqrt(out["ec_random"] ** 2 + out["ec_instrument"] ** 2)
     for key, (u_ts, u_ta, u_u) in INPUT_UNCERTAINTY.items():
         out[f"{key}_bulk"] = np.sqrt(
             (_central(fig, f"H_{key}_dTsfc", "dT") * u_ts) ** 2

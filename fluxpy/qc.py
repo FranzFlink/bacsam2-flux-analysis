@@ -3,35 +3,30 @@ fluxpy.qc
 =========
 Spectral quality control of the eddy-covariance segments.
 
-Each 5 km segment is screened with three diagnostics (manuscript Appendix A),
-all computed from the linearly detrended series WITHOUT high-pass filtering,
-so that they are independent of the 0.1 Hz lower edge of the flux band:
+Quality of the eddy-covariance segments (manuscript Appendix A).
 
-1. **Inertial-subrange slope.** The vertical-wind power spectrum is fitted
-   in double-logarithmic space over the flux band; a resolved turbulent
-   cascade requires
+A quality control of a flux *reference* must test the measurement, not the
+measurand. Over compact sea ice most fluxes are close to zero, and every
+criterion that is a ratio to the flux (signal-to-noise ratios, relative
+stationarity tests, the R2 of the cumulative covariance) then fails for small
+fluxes and passes for large ones: on the 91 segments of the paper such criteria
+correlate with |H| at |rho| = 0.6-0.7 and would censor the near-zero fluxes.
+They are therefore not used to discard data. Instead:
 
-   $$ \left| s_w + \tfrac{5}{3} \right| \le 0.4, $$
+* **Integrity check (pass/fail).** The turbulence must be resolved: the power
+  spectrum of the vertical wind has to follow the inertial-subrange slope,
+  $|s_w + 5/3| \le 0.4$ between 0.1 and 20 Hz (Kolmogorov, 1941). Data
+  completeness and constant flight level are enforced when the segments are cut
+  (``fluxpy.aggregate``).
+* **Random error and detection limit.** Every flux carries its own random
+  error (``flux_processing.band_covariance_random_error``; Finkelstein and
+  Sims, 2001). A flux is *detectable* when it exceeds 1.96 times this error.
+  Fluxes below the detection limit are valid measurements of a small flux and
+  are kept (Langford et al., 2015).
 
-   following the $f^{-5/3}$ prediction for locally isotropic turbulence
-   (Kolmogorov, 1941; Obukhov, 1941).
-
-2. **Along-track stationarity.** The normalised cumulative covariance
-   $S(j)$ must grow approximately linearly with fractional segment length;
-   a linear fit requires $R^2 \ge 0.4$.
-
-3. **Cospectral signal-to-noise ratio.** The peak of the
-   frequency-weighted cospectrum $|f\,C_{w\theta}(f)|$ within the
-   turbulent band must exceed twice the background level estimated
-   outside it ($\mathrm{SNR} > 2$).
-
-Segments passing all criteria are *accepted*, failing exactly one
-*tolerable*, and failing two or more *discarded*; accepted and tolerable
-segments enter the flux comparison.
-
-(An ogive-plateau criterion evaluated below 0.1 Hz was removed in v1.2: it was
-computed on series that had been high-passed at 0.1 Hz and therefore did not
-test flux convergence.)
+``qc_leg`` still returns the spectra, the cospectrum, the ogive and the
+cumulative covariance, which are shown in Fig. A1 and used by
+``scripts/ec_quality.py`` for the robustness table.
 
 Public API
 ----------
@@ -40,7 +35,7 @@ cospectrum(w, x, fs, ...)              – cross-power spectral density (real pa
 powerspec(x, fs, ...)                  – one-sided power spectral density (Welch)
 ogive_from_cospec(f, Co)               – cumulative ogive (high → low frequency)
 qc_leg(w, theta, u, v, fs, x_dist)     – per-segment spectral metrics
-classify_leg_simple(qc, leg_length_km) – manuscript four-criterion verdict
+turbulence_resolved(slope_w)           – inertial-subrange integrity check
 """
 
 from __future__ import annotations
@@ -54,7 +49,7 @@ __all__ = [
     "powerspec",
     "ogive_from_cospec",
     "qc_leg",
-    "classify_leg_simple",
+    "turbulence_resolved",
 ]
 
 
@@ -365,98 +360,13 @@ def qc_leg(
 
 
 # ---------------------------------------------------------------------------
-# QC verdict
+# Integrity check
 # ---------------------------------------------------------------------------
 
-def classify_leg_simple(
-    qc: dict,
-    leg_length_km: float,
-) -> dict:
-    """Manuscript-described QC verdict for a flight leg.
+SLOPE_TOL = 0.4          # |s_w + 5/3| <= SLOPE_TOL
 
-    Evaluates the three criteria of manuscript Appendix A (thresholds are
-    pinned by ``tests/test_most_schemes.py::test_qc_thresholds_match_manuscript``):
 
-    1. Spectral slope of *w*:   |s_w + 5/3| ≤ 0.4
-    2. Stationarity (R²):       R² ≥ 0.4  (cum-covariance linear fit)
-    3. SNR:                     SNR > 2
-
-    No length gate is applied: all segments are 5 km by construction.
-    The R² criterion is the fraction of the cumulative co-covariance curve
-    explained by a linear trend (stationary = linear accumulation).
-
-    Verdict rules
-    -------------
-    * ``'accepted'``  – all criteria passed
-    * ``'tolerable'`` – exactly one criterion violated
-    * ``'discarded'`` – two or more criteria violated
-
-    Parameters
-    ----------
-    qc            : Dict returned by :func:`qc_leg`.
-    leg_length_km : Actual length of the bin [km].
-
-    Returns
-    -------
-    dict with keys:
-    ``verdict``   str
-    ``n_failed``  int   – number of violated criteria (excludes length gate)
-    ``metrics``   dict  – the numeric values of each diagnostic
-    ``reasons``   list  – list of (name, status, value) tuples
-    """
-    f                  = qc["f"]
-    fwCwth             = qc["fwCwth"]
-    R2                 = float(qc["R2"])                  # stationarity
-
-    # ── Slope of w spectrum in inertial subrange (0.1–20 Hz log-log) ──────
-    slope_w = float(qc["slope_w"])   # pre-computed in qc_leg
-
-    # ── Cospectral SNR ─────────────────────────────────────────────────────
-    snr = _cospec_peak_snr(f, fwCwth)
-
-    # ── Thresholds ────────────────────────────────────────────────────────
-    SLOPE_TOL  = 0.4        # |s_w + 5/3| ≤ this
-    SLOPE_MU   = -5.0 / 3.0
-    R2_LIM     = 0.4        # minimum R² for stationarity
-    SNR_LIM    = 2.0
-
-    # ── Evaluate each criterion ────────────────────────────────────────────
-    reasons = []
-    n_failed = 0
-
-    def _check(name, val, passed):
-        nonlocal n_failed
-        status = "acc" if passed else "fail"
-        if not passed:
-            n_failed += 1
-        reasons.append((name, status, val))
-
-    slope_ok = np.isfinite(slope_w)          and abs(slope_w - SLOPE_MU) <= SLOPE_TOL
-    _check("slope_w",           slope_w,           slope_ok)
-    r2_ok    = np.isfinite(R2)                and R2 >= R2_LIM
-    _check("R2",                R2,                r2_ok)
-    snr_ok   = np.isfinite(snr)               and snr > SNR_LIM
-    _check("snr_fwC",           snr,               snr_ok)
-
-    # ── Verdict ────────────────────────────────────────────────────────────
-    if n_failed == 0:
-        verdict = "accepted"
-        reasons.append(("length_km", "acc", leg_length_km))
-    elif n_failed == 1:
-        verdict = "tolerable"
-        reasons.append(("length_km", "acc", leg_length_km))
-    else:
-        verdict = "discarded"
-        reasons.append(("length_km", "acc", leg_length_km))
-
-    return {
-        "verdict":  verdict,
-        "n_failed": n_failed,
-        "metrics": dict(
-            slope_w=slope_w,
-            R2=R2,
-            snr_fwC=snr,
-            leg_length_km=leg_length_km,
-        ),
-        "reasons": reasons,
-    }
+def turbulence_resolved(slope_w: float) -> bool:
+    """True when the w power spectrum follows the inertial-subrange slope,
+    |s_w + 5/3| <= 0.4 (the only pass/fail criterion; see the module docstring)."""
+    return bool(np.isfinite(slope_w) and abs(slope_w + 5.0 / 3.0) <= SLOPE_TOL)

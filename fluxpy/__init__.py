@@ -46,7 +46,7 @@ from . import util, stability, ec, bulk, qc, aggregate, sensitivity   # noqa: F4
 from .util       import potential_temperature, air_density                 # noqa: F401
 from .stability  import bulk_richardson_2pt, bulk_richardson  # noqa: F401
 from .bulk       import BulkConfig, reference_config, amplitude_matched_config  # noqa: F401
-from .qc         import qc_leg, classify_leg_simple                         # noqa: F401
+from .qc         import qc_leg, turbulence_resolved                         # noqa: F401
 from .aggregate  import AggConfig, process_legs, to_xarray                 # noqa: F401
 from .sensitivity import skill_metrics, amplitude_metrics, slope_bootstrap_ci  # noqa: F401
 

@@ -1,8 +1,10 @@
 
 ======================================================================================================================
-EC REFERENCE (91 QC-retained of 91 low-level 5 km segments)
+EC REFERENCE (91 of 91 low-level 5 km segments pass the integrity check)
 ======================================================================================================================
-spectral QC: accepted 73, tolerable 18, discarded 0   (criterion failures: slope 0, stationarity 18, SNR 0)
+integrity check (inertial-subrange slope of w): 91 of 91 pass; slope median -1.5, range -1.7 to -1.3
+random error: median 0.7 W m-2 [0.2-1.5]; 47 of 91 fluxes exceed their detection limit (1.96 sigma)
+   per day: 13 Apr: 8/18, 15 Apr: 22/22, 17 Apr: 13/26, 23 Apr: 4/25
 median 0.4   mean 2.1   max 13.1   min -5.8   |H|<2 W/m2: 56 % of segments
 
 ======================================================================================================================
@@ -10,16 +12,16 @@ REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)
 ======================================================================================================================
 estimate                   slope      r r_within    bias   RMSE  cRMSE    n
 H_S,obs,bulk                 1.6    0.7      0.5    +2.2    6.6    6.2   91   OLS 95% CI [1.4, 1.9]
-H_S,RS,bulk                  0.7    0.5      0.0    -1.5    4.7    4.5   91   OLS 95% CI [0.4, 1.0]
+H_S,RS,bulk                  0.7    0.5      0.0    -1.5    4.7    4.4   91   OLS 95% CI [0.4, 1.1]
 H_S,ERA,bulk                 0.2    0.3     -0.1    -3.6    5.0    3.6   91
-H_S,ERA,diag                 1.2    0.6     -0.2    -2.8    6.8    6.2   91
+H_S,ERA,diag                 1.2    0.6     -0.1    -2.8    6.7    6.1   91
 H_S,CAR,diag                 1.2    0.6      0.3    -3.7    7.5    6.6   73
 
 ======================================================================================================================
 AMPLITUDE-MATCHED CONFIGURATION  alpha_T = 1e-4  (Schroeder et al., 2003)
 ======================================================================================================================
 H_S,obs,bulk                 1.0    0.7      0.5    +0.3    3.7    3.6   91   OLS 95% CI [0.9, 1.2]
-H_S,RS,bulk                  0.4    0.5      0.0    -1.9    3.9    3.4   91
+H_S,RS,bulk                  0.5    0.5      0.0    -1.9    3.9    3.4   91
 H_S,ERA,bulk                 0.2    0.3     -0.1    -3.1    4.6    3.4   91
 
 ======================================================================================================================
@@ -29,18 +31,18 @@ alpha_T SWEEP  (slope / r / bias / RMSE)   -- note r is INVARIANT to alpha_T
    1e-01 |          1.6   0.7   +2.2   6.6 |              0.7   0.5 |             0.2   0.3
    1e-02 |          1.4   0.7   +1.3   5.2 |              0.6   0.5 |             0.2   0.3
    1e-03 |          1.2   0.7   +0.8   4.3 |              0.5   0.5 |             0.2   0.3
-   1e-04 |          1.0   0.7   +0.3   3.7 |              0.4   0.5 |             0.2   0.3
+   1e-04 |          1.0   0.7   +0.3   3.7 |              0.5   0.5 |             0.2   0.3
    1e-05 |          0.9   0.7   +0.0   3.3 |              0.4   0.5 |             0.2   0.3
-   1e-06 |          0.8   0.7   -0.2   3.0 |              0.3   0.5 |             0.1   0.3
+   1e-06 |          0.8   0.7   -0.2   3.0 |              0.4   0.5 |             0.1   0.3
    1e-07 |          0.8   0.7   -0.4   2.9 |              0.3   0.5 |             0.1   0.3
 
 ======================================================================================================================
 SATELLITE T_s BENEFIT vs WITHIN-SEGMENT T_s VARIABILITY  (reference configuration)
 ======================================================================================================================
 median within-segment sigma(T_s) = 1.2 K
-  above median (n=45): slope -0.0 -> +0.4   r -0.4 -> 0.4   RMSE 4.9 -> 4.3
+  above median (n=45): slope -0.0 -> +0.5   r -0.4 -> 0.5   RMSE 4.9 -> 4.2
   below median (n=46): slope +0.3 -> +0.5   r 0.3 -> 0.4   RMSE 5.1 -> 5.1
-  RMSE gain above median: 0.6 W/m2, bootstrap 95 % CI [-0.4, 1.6], permutation p = 0.28
+  RMSE gain above median: 0.8 W/m2, bootstrap 95 % CI [-0.1, 1.6], permutation p = 0.14
 
 ======================================================================================================================
 ALPHA_T IS A WEAK, LOGARITHMIC KNOB
@@ -48,31 +50,69 @@ ALPHA_T IS A WEAK, LOGARITHMIC KNOB
 3 decades of alpha_T (1e-1 -> 1e-4) change the flux amplitude by a factor 0.6 (slope 1.6 -> 1.0); the correlation does not change at all.
 
 ======================================================================================================================
-EC WINDOW-LENGTH EXPERIMENT (Fig. 3)  -- scripts/ec_window_length.py
+EC WINDOW-LENGTH EXPERIMENT (Fig. 2)  -- scripts/ec_window_length.py
 ======================================================================================================================
 6 low-level legs, median length 81.5 km
-     1 km windows: H_sub/H_full = 1.0 +- 0.1   sampling error 9 %   discarded by QC 2 %
-     5 km windows: H_sub/H_full = 1.0 +- 0.0   sampling error 5 %   discarded by QC 0 %
-    10 km windows: H_sub/H_full = 1.0 +- 0.1   sampling error 4 %   discarded by QC 0 %
+     1 km windows: H_sub/H_full = 1.0 +- 0.1   random error 1.5 W m-2   fluxes above the detection limit 32 %
+     5 km windows: H_sub/H_full = 1.0 +- 0.0   random error 0.8 W m-2   fluxes above the detection limit 48 %
+    10 km windows: H_sub/H_full = 1.0 +- 0.1   random error 0.6 W m-2   fluxes above the detection limit 61 %
 
 ======================================================================================================================
 UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2
 ======================================================================================================================
-  ec_sampling     0.1 [0.0-0.2]
+  ec_random       0.7 [0.2-1.5]
   ec_instrument   0.1 [0.0-0.2]
   ec_placement    0.9 [0.2-1.3]
-  ec_total        0.9 [0.2-1.4]
+  ec_total        0.8 [0.2-1.5]
   obs_bulk        3.3 [1.0-4.6]
-  rs_bulk         9.4 [2.3-12.9]
+  rs_bulk         9.8 [2.2-12.9]
 
 ======================================================================================================================
 FURTHER NUMBERS QUOTED IN THE TEXT
 ======================================================================================================================
 input sensitivities, median [IQR] over segments (central difference about the unperturbed state):
   T-Bird bulk      dH/d(dtheta) = -4.6 [-5.9, -1.7] W m-2 K-1    dH/dU = +0.4 [-0.2, +4.2] W m-2 (m/s)-1
-  ERA5-MODIS bulk  dH/d(dtheta) = -2.1 [-5.6, -0.4] W m-2 K-1    dH/dU = +0.8 [-0.6, +3.8] W m-2 (m/s)-1
+  ERA5-MODIS bulk  dH/d(dtheta) = -2.0 [-5.6, -0.4] W m-2 K-1    dH/dU = +0.8 [-0.6, +4.3] W m-2 (m/s)-1
 model-diagnosed fluxes on the common CARRA subset (n = 73):
   H_S,ERA,diag: slope 1.3   r 0.6   bias -3.3
   H_S,CAR,diag: slope 1.2   r 0.6   bias -3.7
-heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.7, paired-bootstrap 95 % CI [+0.4, +1.0], fraction of resamples <= 0: 0.0000
+heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.8, paired-bootstrap 95 % CI [+0.5, +1.1], fraction of resamples <= 0: 0.0000
+
+==============================================================================================================
+1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX
+==============================================================================================================
+rank correlation with |H|:  R2 of the cumulative covariance +0.6,  relative stationarity test (Foken and Wichura, 1996) -0.6
+segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below their detection limit: 89 %;  median |first half - second half| 0.3 W m-2 (others: 1.4)
+
+==============================================================================================================
+2. ROBUSTNESS OF THE COMPARISON TO THE SCREENING  (slope b / correlation r against the EC reference)
+==============================================================================================================
+  none (this study)                                n = 91   1.6 / 0.7   0.7 / 0.5   0.2 / 0.3   1.2 / 0.6
+  R^2 >= 0.4 of the cumulative covariance          n = 73   1.6 / 0.7   0.7 / 0.5   0.3 / 0.4   1.2 / 0.6
+  R^2 >= 0.6                                       n = 66   1.6 / 0.8   0.7 / 0.5   0.3 / 0.4   1.2 / 0.7
+  relative stationarity test < 100 %               n = 72   1.6 / 0.8   0.7 / 0.5   0.3 / 0.4   1.3 / 0.6
+  relative stationarity test < 30 %                n = 38   1.5 / 0.8   0.7 / 0.6   0.4 / 0.6   1.5 / 0.8
+  segment halves agree within 3 sigma_rand         n = 71   1.5 / 0.8   0.7 / 0.5   0.2 / 0.3   1.2 / 0.6
+  only fluxes above the detection limit            n = 47   1.3 / 0.7   0.6 / 0.5   0.1 / 0.2   0.9 / 0.6
+  pitch-resonance bin interpolated                 n = 91   1.6 / 0.7   0.7 / 0.4   0.2 / 0.3   1.1 / 0.5
+  for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: [1.4, 1.9]
+
+==============================================================================================================
+3. RANDOM ERROR: INDEPENDENT ESTIMATES
+==============================================================================================================
+median random error (W m-2): Finkelstein-Sims 0.7 | surrogate data 0.6 | segment-placement spread 0.9
+rank correlation Finkelstein-Sims vs surrogates 0.98, vs placement spread 0.8
+median |correlation of w and theta| in the flux band: 0.08  -> factor sqrt((1+r^2)/r^2) of Lenschow et al. (1994): 12
+
+==============================================================================================================
+4. PHYSICAL CONSISTENCY: DIRECTION OF THE FLUX vs MEASURED TEMPERATURE DIFFERENCE
+==============================================================================================================
+fluxes above the detection limit: 47; direction agrees with sign(theta_s - theta_air) for 39 (83 %); of the 8 others, 7 are smaller than 0.5 W m-2
+
+==============================================================================================================
+5. PITCH RESONANCE OF THE T-BIRD (0.8-1.2 Hz)
+==============================================================================================================
+spectral peak relative to neighbouring bands, median: pitch 19x, w 3.0x, theta 1.5x
+cospectral density in the resonance bin relative to its neighbours (mean over |H| > 2 W m-2, n = 40): 1.2x
+flux reduction if the resonance bin is replaced by the interpolation of its neighbours: median 7 % (quartiles -1 to 12 %); effect on the comparison: last row of the table above
 
