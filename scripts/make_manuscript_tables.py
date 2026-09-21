@@ -54,7 +54,8 @@ for name, sub in rows:
         f"{name} & {rng_str(sub, 'obs_slope')} & {rng_str(sub, 'obs_r')} & "
         f"{rng_str(sub, 'rs_slope')} & {rng_str(sub, 'rs_r')} \\\\")
 tbl3 = "\n".join(lines)
-(OUT / "table_sensitivity_summary.tex").write_text(tbl3 + "\n", encoding="utf-8")
+(OUT / "table_sensitivity_summary.tex").write_text(tbl3 + "\n", encoding="utf-8", newline="
+")
 print("── Table 3 body ──\n" + tbl3 + "\n")
 
 # ── Table C1: full matrix with slope and r ───────────────────────────────────
@@ -110,7 +111,8 @@ for title, labels in GROUPS:
             f"{w(f'{r.rs_slope:.1f}')} & {w(f'{r.rs_r:.1f}')} \\\\")
     out.append(r"\hline")
 tblC = "\n".join(out)
-(OUT / "table_sensitivity_full.tex").write_text(tblC + "\n", encoding="utf-8")
+(OUT / "table_sensitivity_full.tex").write_text(tblC + "\n", encoding="utf-8", newline="
+")
 print("-- Table C1 body written --")
 print(tblC[:1200])
 
@@ -142,6 +144,7 @@ unc_rows = [
     (r"$H_\mathrm{S,RS,bulk}$", UNC["rs_bulk"], np.asarray(FIG["H_rs_bulk"], dtype=float)),
 ]
 tblU = "\n".join(f"{name} & {_stat(sig)} & {_rel_stat(sig, flux)} \\\\" for name, sig, flux in unc_rows)
-(OUT / "table_uncertainty_budget.tex").write_text(tblU + "\n", encoding="utf-8")
+(OUT / "table_uncertainty_budget.tex").write_text(tblU + "\n", encoding="utf-8", newline="
+")
 print("\n% tab:bulk_unc  (sigma median [p25--p75] in W m-2 | sigma/|H| in %, |H| > 2 W m-2)")
 print(tblU)
