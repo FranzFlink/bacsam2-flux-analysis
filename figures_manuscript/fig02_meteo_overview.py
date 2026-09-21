@@ -191,7 +191,7 @@ for i_day, (ax, day) in enumerate(zip(axs_prof, flight_days)):
                 markeredgewidth=0.25, markeredgecolor="0.3", markerfacecolor=c,
                 zorder=zo)
 
-    ax.set_ylim(0, _ylim_top)
+    ax.set_ylim(-10, _ylim_top)
     ax.set_xlim(*x_lims[i_day])
     ax.set_xlabel(r"$\theta$ (K)")
     ax.set_title(pd.Timestamp(day).strftime("%d %b"), fontweight="bold")
