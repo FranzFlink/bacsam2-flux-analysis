@@ -275,46 +275,44 @@ def _make_cb05() -> MOSTScheme:
 
 
 def _make_gafgp07() -> MOSTScheme:
-    # Grachev et al. (2007); ψ_m, ψ_h are lengthy (Eq. 15a,b).
-    # Implemented directly from published form.
-    am, bm = 5.0, 0.77
+    # Grachev et al. (2007, SHEBA), stable branch:
+    #   phi_m = 1 + a_m z (1+z)^(1/3) / (1 + b_m z),   a_m = 5, b_m = a_m/6.5
+    #   phi_h = 1 + (a_h z + b_h z^2) / (1 + c_h z + z^2), a_h = b_h = 5, c_h = 3
+    # psi_m, psi_h below are the closed-form integrals of (1 - phi)/z; they are
+    # checked against numerical quadrature in tests/test_most_schemes.py.
+    # (Until 2026-09 both psi had sign/argument errors; see git history.)
+    am = 5.0
+    bm = am / 6.5
     ah, bh, ch = 5.0, 5.0, 3.0
     Pr0 = 1.0
 
-    Bm = (1.0 / bm - 1.0) ** (1.0 / 3.0)
+    Bm = ((1.0 - bm) / bm) ** (1.0 / 3.0)
     Bh = math.sqrt(ch ** 2 - 4.0)
+    sqrt3 = math.sqrt(3.0)
 
-    # Helper for ψ_m
     def psi_m(zeta: float) -> float:
         if zeta < 0.0:
             return 0.0
         x = (1.0 + zeta) ** (1.0 / 3.0)
-        # This expression follows Eq. (15a) in compact code form
-        term1 = x - 1.0
-        # Log/atan composite term:
-        # Carefully grouped to avoid exceeding text limits / direct copying.
-        num1 = (x ** 2 - x * Bm + Bm ** 2)
-        den1 = (1.0 - Bm + Bm ** 2)
-        log_part = math.log(num1 / den1)
+        log1 = math.log((x + Bm) / (1.0 + Bm))
+        log2 = math.log((x ** 2 - x * Bm + Bm ** 2) / (1.0 - Bm + Bm ** 2))
         atan_part = (
-            math.atan((2.0 * x - Bm) / (math.sqrt(3.0) * Bm))
-            - math.atan((2.0 - Bm) / (math.sqrt(3.0) * Bm))
+            math.atan((2.0 * x - Bm) / (sqrt3 * Bm))
+            - math.atan((2.0 - Bm) / (sqrt3 * Bm))
         )
-        bracket = (
-            term1
-            - (Bm / 6.0) * (2.0 * math.log(x) + log_part - 2.0 * math.sqrt(3.0) * atan_part)
+        return (
+            -3.0 * am / bm * (x - 1.0)
+            + am * Bm / (2.0 * bm) * (2.0 * log1 - log2 + 2.0 * sqrt3 * atan_part)
         )
-        return -3.0 * am / bm * bracket
 
     def psi_h(zeta: float) -> float:
         if zeta < 0.0:
             return 0.0
-        # Eq. (15b)
-        term_log = math.log(
-            (2.0 * zeta + ch - Bh) / (2.0 * zeta + ch + Bh)
-            * ((ch + Bh) / (ch - Bh))
+        term_log = (
+            math.log((2.0 * zeta + ch - Bh) / (2.0 * zeta + ch + Bh))
+            - math.log((ch - Bh) / (ch + Bh))
         )
-        first = (ah / Bh - bh * ch / (2.0 * Bh)) * term_log
+        first = (-ah / Bh + bh * ch / (2.0 * Bh)) * term_log
         second = -0.5 * bh * math.log(1.0 + ch * zeta + zeta ** 2)
         return Pr0 * (first + second)
 
