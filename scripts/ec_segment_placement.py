@@ -12,7 +12,7 @@ segment, weighted by their fractional overlap (triangular weights).
 Ported from the exploratory notebook of the same name (see git history).
 
 Output: data/observations/ar/ec_segment_placement.nc
-Run:    pixi run placement      (about 10 minutes)
+Run:    pixi run placement      (about 2 minutes)
 """
 import sys
 import warnings

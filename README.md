@@ -61,6 +61,11 @@ them as modified although the numbers are identical.
 | `book/` | A step-by-step, executable walk through the method (see below) |
 | `DATA.md` | Description, units and origin of every data file |
 
+## Want to understand the method rather than just run it?
+
+Read the [book](book/README.md): five short notebooks that walk from the 100 Hz measurements to the
+paper's conclusions, computing one segment by hand at each step. `pixi run book` re-executes them.
+
 ## Reference configuration
 
 GLGS20 stability functions (Gryanik et al., 2020), scalar roughness ratio

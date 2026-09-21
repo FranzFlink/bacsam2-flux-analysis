@@ -46,6 +46,7 @@ numbers       = { cmd = "python scripts/manuscript_numbers.py", depends-on = ["p
 tables        = { cmd = "python scripts/make_manuscript_tables.py", depends-on = ["precompute"] }
 figures       = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
 check         = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
+book          = { cmd = "python book/build_book.py", depends-on = ["precompute"] }
 all           = { depends-on = ["test", "verify-ec", "check", "tables", "figures"] }
 # everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
 all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "check", "tables", "figures"] }
