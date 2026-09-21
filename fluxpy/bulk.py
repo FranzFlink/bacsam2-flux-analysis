@@ -487,19 +487,17 @@ def _compute_ri(
     if ds_tbird is not None:
         # Classic 2-pt Ri_b, surface → T-Bird (manuscript Eq. rib):
         # Δθ = θ_TB − θ_s, Δz = z_TB, Δu/Δv = T-Bird wind (no-slip surface).
-        log.info("[%s] Classic 2-pt bulk Ri_b (surface → T-Bird level)", cfg.label)
-        theta_tb = potential_temperature(
-            np.asarray(ds_tbird["T"], dtype=float),
-            np.asarray(ds_tbird["p"], dtype=float),
-        )
-        u_tb = np.asarray(ds_tbird["u"], dtype=float)
-        v_tb = np.asarray(ds_tbird["v"], dtype=float)
-        z_tb = np.asarray(ds_tbird["h"], dtype=float)
+        # All inputs are the 5 km SEGMENT MEANS (the same θ, wind and height
+        # that enter the flux). Until 2026-09 this branch used the single
+        # 100 Hz T-Bird sample nearest to the segment start instead, which
+        # contradicted the manuscript ("all quantities are evaluated on the
+        # same 5 km segments"). ``ds_tbird`` now only selects this branch.
+        log.info("[%s] Classic 2-pt bulk Ri_b (surface → T-Bird level; segment means)", cfg.label)
         Ri = bulk_richardson_2pt(
-            dtheta=theta_tb - theta_sfc,
-            dz=z_tb,
-            du=u_tb, dv=v_tb,
-            theta_ref=0.5 * (theta_sfc + theta_tb),
+            dtheta=theta_air - theta_sfc,
+            dz=z_obs,
+            du=U_u, dv=U_v,
+            theta_ref=0.5 * (theta_sfc + theta_air),
             eps_wind2=cfg.ri_eps_wind2,
         )
     else:
