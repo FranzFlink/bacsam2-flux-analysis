@@ -882,7 +882,7 @@ def run_all(verbose: bool = False, extract_only: bool = False,
     ds_fig.to_netcdf(_nc, mode="w")
     log.info("Writing %s", _csv)
     summary_combined = pd.concat([summary, summary_era5only], ignore_index=True)
-    summary_combined.to_csv(_csv, index=False)
+    summary_combined.to_csv(_csv, index=False, lineterminator="\n")
     log.info("Pipeline complete in %.1f s", time.perf_counter() - t_wall)
     log.info("Variables: %s", list(ds_fig.data_vars))
     log.info("Summary rows: %d  cols: %s", len(summary_combined), list(summary_combined.columns))
