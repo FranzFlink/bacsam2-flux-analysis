@@ -432,10 +432,10 @@ appreciably; the eight stability schemes are practically indistinguishable, beca
 
 ## Sensitivity to the inputs
 '''), ("code", r'''
-from fluxpy.uncertainty import _central, uncertainty_budget
+from fluxpy.uncertainty import central_difference, uncertainty_budget
 keep = np.isfinite(EC); q = lambda x: f"{np.nanmedian(x):+.1f}  [{np.nanpercentile(x, 25):+.1f}, {np.nanpercentile(x, 75):+.1f}]"
-pd.DataFrame({name: {"per +1 K in (theta_air - theta_s)   (W m-2)": q(_central(FIG, f"H_{k}_dTair", "dT")[keep]),
-                     "per +1 m/s in wind speed   (W m-2)": q(_central(FIG, f"H_{k}_dU", "dU")[keep])}
+pd.DataFrame({name: {"per +1 K in (theta_air - theta_s)   (W m-2)": q(central_difference(FIG, f"H_{k}_dTair", "dT")[keep]),
+                     "per +1 m/s in wind speed   (W m-2)": q(central_difference(FIG, f"H_{k}_dU", "dU")[keep])}
               for k, name in (("obs", "measured inputs"), ("rs", "MODIS + ERA5"))}).T
 '''), ("md", r'''
 (median and inter-quartile range over the segments.) One kelvin in the temperature difference matters far more than one

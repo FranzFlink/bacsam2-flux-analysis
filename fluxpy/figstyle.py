@@ -35,7 +35,7 @@ Typical figure script::
     fig, ax = fs.figure(width=fs.COL_W, aspect=0.8)
     ax.plot(x, y, color=fs.C["H_obs_bulk"], label=fs.L["H_obs_bulk"])
     fs.panel_label(ax, "(a)")
-    fs.save(fig, "fig06_flux_scatter")
+    fs.save(fig, "fig05_flux_scatter")
 """
 from __future__ import annotations
 
@@ -66,18 +66,8 @@ C = {
 GREY = "0.45"               # 1:1 lines, reference lines
 GRID = "0.82"               # zero lines / faint guides
 
-# Math-text legend/axis labels (single source: fluxpy.naming.LABELS)
-try:
-    from fluxpy.naming import LABELS as L          # noqa: N811
-except Exception:                                  # pragma: no cover
-    L = {
-        "H_obs_ec":   r"$H_\mathrm{S,obs,EC}$",
-        "H_obs_bulk": r"$H_\mathrm{S,obs,bulk}$",
-        "H_rs_bulk":  r"$H_\mathrm{S,RS,bulk}$",
-        "H_era_bulk": r"$H_\mathrm{S,ERA,bulk}$",
-        "H_era_diag": r"$H_\mathrm{S,ERA,diag}$",
-        "H_car_diag": r"$H_\mathrm{S,CAR,diag}$",
-    }
+# Math-text legend/axis labels (single source: fluxpy.naming.PLOT_LABEL)
+from fluxpy.naming import PLOT_LABEL as L          # noqa: E402, N811
 
 FLUX_UNIT = r"(W m$^{-2}$)"
 FLUX_AXIS = r"$H_\mathrm{S}$ (W m$^{-2}$)"

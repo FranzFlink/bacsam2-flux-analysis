@@ -183,7 +183,7 @@ print()
 print("=" * 118)
 print("FURTHER NUMBERS QUOTED IN THE TEXT")
 print("=" * 118)
-from fluxpy.uncertainty import _central  # noqa: E402
+from fluxpy.uncertainty import central_difference as _central  # noqa: E402
 
 keep = np.isfinite(EC)
 
