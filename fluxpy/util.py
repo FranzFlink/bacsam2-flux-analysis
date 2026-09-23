@@ -49,6 +49,20 @@ def potential_temperature(T, p, p0: float = P0) -> np.ndarray:
     return _to_kelvin(T) * (p0 / _to_pa(p)) ** RD_OVER_CP
 
 
+def surface_pressure_hypsometric(p_z, z, T_mean) -> np.ndarray:
+    r"""Surface pressure from the pressure ``p_z`` measured at height ``z`` [m] above
+    the surface (hypsometric equation for dry air; manuscript App. B1),
+
+    $$ p_\mathrm{s} = p_z \exp\!\left( \frac{g\, z}{R_d\, \bar T} \right), $$
+
+    with the layer-mean temperature ``T_mean`` [degC or K]. Returned in the unit of
+    ``p_z``. At z = 24 m and 250 K the surface pressure is about 3.3 hPa higher than
+    ``p_z``, which lowers the surface potential temperature by about g z / c_p = 0.23 K
+    compared with using ``p_z`` itself.
+    """
+    return np.asarray(p_z, dtype=float) * np.exp(G * np.asarray(z, dtype=float) / (RD * _to_kelvin(T_mean)))
+
+
 def air_density(T, p) -> np.ndarray:
     r"""Dry-air density from the ideal-gas law, $\rho = p / (R_d T)$ [kg m-3].
 

@@ -32,7 +32,7 @@ import xarray as xr
 from matplotlib.patches import Patch
 
 from fluxpy import figstyle as fs
-from fluxpy.util import potential_temperature
+from fluxpy.util import potential_temperature, surface_pressure_hypsometric
 from calc_bulk_and_ec_fluxes import load_era5_sl, load_modis, load_obs  # noqa: E402
 
 fs.apply()
@@ -63,13 +63,16 @@ t_seg = xr.DataArray(start_times, dims="leg")
 lat_seg = xr.DataArray(np.asarray(obs["latitude"]), dims="leg")
 lon_seg = xr.DataArray(np.asarray(obs["longitude"]), dims="leg")
 
-# observations: KT-19 surface, T-Bird level (both with the T-Bird pressure, as in the
-# in-situ bulk flux), Polar 6 level from the aircraft-level side file
+# observations: KT-19 surface (surface pressure reconstructed hydrostatically from the
+# T-Bird pressure, as in the in-situ bulk flux), T-Bird level, Polar 6 level from the
+# aircraft-level side file
 T_kt19 = np.asarray(obs["t_kt19"], dtype=float)
+T_tbird = np.asarray(obs["T_mean"], dtype=float)
 p_tbird = np.asarray(obs["p_mean"], dtype=float)
-theta_sfc_obs = potential_temperature(T_kt19, p_tbird)
-theta_tbird = potential_temperature(np.asarray(obs["T_mean"], dtype=float), p_tbird)
 z_tbird = np.asarray(obs["altitude"], dtype=float)
+p_sfc_obs = surface_pressure_hypsometric(p_tbird, z_tbird, T_mean=0.5 * (T_kt19 + T_tbird))
+theta_sfc_obs = potential_temperature(T_kt19, p_sfc_obs)
+theta_tbird = potential_temperature(T_tbird, p_tbird)
 polar6 = xr.open_dataset(_POLAR6_LEVEL).reindex(start_time=obs["start_time"].values)
 theta_polar6 = np.asarray(polar6["theta_polar6"], dtype=float)
 z_polar6 = np.asarray(polar6["z_polar6"], dtype=float)

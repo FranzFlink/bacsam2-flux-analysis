@@ -19,10 +19,11 @@ Steps inside each (Appendix B):
       z0m_eff = fraction-weighted geometric mean (Eq. B3); z0T = alpha_T * z0m
   B3  transfer coefficient C_h = C_hn * f_h(Ri_b, z/z0m, z/z0T) (:mod:`fluxpy.stability_lib`)
 
-Both potential temperatures of a pathway are computed with the same pressure
-(T-Bird pressure in situ, ERA5 surface pressure remote), so the temperature
-difference is the measured difference without an adiabatic correction between
-the surface and the measurement level (author decision; manuscript App. B1).
+Each potential temperature is computed with the pressure at its own height. In
+situ, the surface pressure is reconstructed from the T-Bird pressure with the
+hypsometric equation (no surface pressure is measured; fluxpy.util.
+surface_pressure_hypsometric); using the T-Bird pressure at the surface as well
+would make theta_s too warm by about g z / c_p = 0.23 K at 24 m.
 
 Sign: theta_s > theta_air (warm surface, e.g. a lead) gives H_S > 0, upward.
 """
@@ -36,7 +37,8 @@ import numpy as np
 import xarray as xr
 
 from .stability import Cd_Ch_noniterative, SCHEMES, bulk_richardson_2pt, effective_wind_speed
-from .util import CP, air_density, assign_roughness, classify_surface, potential_temperature
+from .util import (CP, air_density, assign_roughness, classify_surface, potential_temperature,
+                   surface_pressure_hypsometric)
 
 log = logging.getLogger(__name__)
 
@@ -196,8 +198,9 @@ def compute_bulk_shf_obs(ds: xr.Dataset, cfg: BulkConfig) -> xr.Dataset:
 
     ``ds`` is the segment file: ``t_kt19`` [degC] KT-19 surface temperature,
     ``T_mean`` [degC], ``p_mean`` [hPa], ``u_mean``, ``v_mean`` [m/s], ``altitude``
-    [m] of the T-Bird, and the surface fractions ``frac_*``. Both potential
-    temperatures use the T-Bird pressure (no surface pressure is measured).
+    [m] of the T-Bird, and the surface fractions ``frac_*``. theta_air uses the
+    T-Bird pressure; theta_s the surface pressure reconstructed from it with the
+    hypsometric equation (no surface pressure is measured).
     Returns ``H_obs_bulk``, ``Ri_obs``, ``z0_obs``, ``zt_obs``, ``Cd_obs``,
     ``Ch_obs``, ``rho_obs``, ``dtheta_obs``.
     """
@@ -208,7 +211,8 @@ def compute_bulk_shf_obs(ds: xr.Dataset, cfg: BulkConfig) -> xr.Dataset:
     v = np.asarray(ds["v_mean"], dtype=float)
     z = np.asarray(ds["altitude"], dtype=float)
 
-    theta_sfc = potential_temperature(T_sfc, p_hPa)
+    p_sfc_hPa = surface_pressure_hypsometric(p_hPa, z, T_mean=0.5 * (T_sfc + T_air))   # B1, layer-mean T
+    theta_sfc = potential_temperature(T_sfc, p_sfc_hPa)
     theta_air = potential_temperature(T_air, p_hPa)
     rho = air_density(T_air, p_hPa)
     z0, zt, method = _roughness(ds, T_sfc, cfg)                           # B2

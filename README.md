@@ -98,8 +98,10 @@ Numbers are reported with one decimal, matching their precision.
 
 Two implementation details worth knowing:
 
-* The surface potential temperature uses the pressure measured at the T-Bird (≈ 24 m above
-  the surface) because no surface pressure measurement exists.
+* Every potential temperature uses the pressure at its own height. No surface pressure is
+  measured in situ, so the surface pressure of the in-situ estimate is reconstructed from the
+  T-Bird pressure (≈ 24 m above the surface) with the hypsometric equation
+  (`fluxpy.util.surface_pressure_hypsometric`).
 * The EC covariance is the part of the w–θ covariance carried by frequencies between 0.1 and
   20 Hz: linear detrend, cospectrum of the full segment, summed over the band
   (`fluxpy.eddy_covariance.band_covariance`; frequency resolution ≈ 0.012 Hz).

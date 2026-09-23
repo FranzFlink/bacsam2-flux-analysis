@@ -246,13 +246,23 @@ print("reference configuration:", cfg.scheme_name, "| alpha_T =", cfg.zt_ratio, 
 ## Step 1 — temperature difference and wind
 
 Surface temperature from the KT-19 infrared pyrometer, air temperature and wind from the T-Bird — all averaged over
-the 5 km segment. Both temperatures are converted to potential temperature with the pressure measured at the T-Bird
-(no surface pressure measurement exists; the T-Bird flies only ≈ 24 m above the surface).
+the 5 km segment. Both temperatures are converted to potential temperature, each with the pressure *at its own height*.
+The T-Bird measures the pressure about 24 m above the ice; nobody measures it at the surface. The surface pressure follows
+from the hydrostatic (hypsometric) equation,
+
+$$p_\mathrm{s} = p_z \exp\!\left(\frac{g\,z}{R_d\,\bar T}\right),$$
+
+about 3 hPa more than at the T-Bird. It looks negligible, but it is not: using $p_z$ at the surface would make
+$\theta_\mathrm{s}$ too warm by $g z / c_p \approx 0.23$ K, and the typical temperature difference is only about 1 K.
 '''), ("code", r'''
+from fluxpy.util import surface_pressure_hypsometric
 T_s, T_a, p, z = float(s.t_kt19), float(s.T_mean), float(s.p_mean), float(s.altitude)
 u, v = float(s.u_mean), float(s.v_mean); U = np.hypot(u, v)
-th_s, th_a = float(potential_temperature(T_s, p)), float(potential_temperature(T_a, p))
-print(f"surface {T_s:.1f} degC, air {T_a:.1f} degC at {z:.0f} m  ->  theta_s - theta_air = {th_s - th_a:+.1f} K;  wind {U:.1f} m/s")
+p_s = float(surface_pressure_hypsometric(p, z, T_mean=0.5 * (T_s + T_a)))
+th_s, th_a = float(potential_temperature(T_s, p_s)), float(potential_temperature(T_a, p))
+print(f"pressure {p:.1f} hPa at the T-Bird ({z:.0f} m)  ->  {p_s:.1f} hPa at the surface")
+print(f"surface {T_s:.1f} degC, air {T_a:.1f} degC  ->  theta_s - theta_air = {th_s - th_a:+.2f} K "
+      f"(with the T-Bird pressure at the surface it would be {float(potential_temperature(T_s, p)) - th_a:+.2f} K);  wind {U:.1f} m/s")
 '''), ("md", r'''
 ## Step 2 — stability: the bulk Richardson number
 
