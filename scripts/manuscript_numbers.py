@@ -14,6 +14,9 @@ Blocks (in the order printed) and where they appear in the manuscript
     window-length experiment ............ Sect. 3.1, Fig. 3
     uncertainty budget .................. Table 2
     further numbers ..................... input sensitivities (Sect. 4.2), CARRA subset (Sect. 4.1), paired bootstrap
+    sample and flight facts ............. abstract, Sect. 2.1, 3.1, 4 (heights, airspeed, latitude, flux extremes)
+    percentages ......................... abstract, Sect. 4.1, Discussion, Conclusions (amplitude, variance, reduction)
+    Richardson number ................... Appendix B1 (range of Ri_b, effect of a bound)
 
 Framework (Sect. 4.1): amplitude skill is a regression slope and variability skill
 a correlation, because RMSE in this low-flux regime rewards estimates that shrink
@@ -229,7 +232,9 @@ def further_numbers(split):
     print("FURTHER NUMBERS QUOTED IN THE TEXT")
     print(RULE)
     keep = np.isfinite(EC)
-    print("input sensitivities, median [IQR] over segments (central difference about the unperturbed state):")
+    dT, dU = (float(np.asarray(FIG[a])[np.asarray(FIG[a]) > 0].min()) for a in ("dT", "dU"))
+    print(f"input sensitivities, median [IQR] over segments (central difference with +-{dT:.1f} K and "
+          f"+-{dU:.1f} m/s about the unperturbed state):")
     for k, name in (("obs", "T-Bird bulk"), ("rs", "ERA5-MODIS bulk")):
         print(f"  {name:<16} dH/d(dtheta) = {quartiles(central_difference(FIG, f'H_{k}_dTair', 'dT')[keep])} W m-2 K-1    "
               f"dH/dU = {quartiles(central_difference(FIG, f'H_{k}_dU', 'dU')[keep])} W m-2 (m/s)-1")
@@ -256,6 +261,86 @@ def further_numbers(split):
     print()
 
 
+def sample_and_flight_facts():
+    """Abstract, Sect. 2.1, 3.1 and 4: the sample, the platform and the extremes of the fluxes."""
+    print(RULE)
+    print("SAMPLE AND FLIGHT FACTS (abstract, Sect. 2.1, 3.1, 4, Discussion)")
+    print(RULE)
+    seg = SEG.sel(start_time=FIG["start_time"].values)
+    tbird = xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
+    tas, height_range = [], []
+    for t0, t1 in zip(seg["start_time"].values, seg["end_time"].values):
+        s = tbird.sel(time=slice(t0, t1))
+        tas.append(float(s["tas"].mean()))
+        h = pd.Series(s["h"].values.astype(float)).rolling(1000, center=True).mean()      # 10 s running mean
+        height_range.append(float(h.max() - h.min()))
+    tas, height_range, z = np.asarray(tas), np.asarray(height_range), np.asarray(seg["altitude"], dtype=float)
+    days = T.strftime("%d %b")
+    level = height_range <= 20.0
+    duration = (pd.to_datetime(seg["end_time"].values) - pd.to_datetime(seg["start_time"].values)).total_seconds()
+    print(f"{EC.size} segments, {float(seg['segment_length_km'].sum()):.0f} km, {len(pd.unique(days))} flight days, "
+          f"{LEG.max() + 1} legs (a new leg after a gap > 10 min; segments per leg {', '.join(map(str, np.bincount(LEG)))})")
+    print(f"T-Bird height, segment means: mean {z.mean():.0f} m, range {z.min():.0f}-{z.max():.0f} m; "
+          f"{(~level).sum()} segment(s) not at one level (height changes by > 20 m), without them {z[level].min():.0f}-{z[level].max():.0f} m")
+    print(f"true airspeed, mean over the segments {tas.mean():.0f} m/s; segment duration median {np.median(duration):.0f} s; "
+          f"0.1-20 Hz corresponds to {tas.mean() / 20:.0f}-{tas.mean() / 0.1:.0f} m along the track")
+    polar6 = xr.open_dataset(REPO / "data/observations/ar/polar6_level_at_segments.nc").reindex(start_time=FIG["start_time"].values)
+    print(f"Polar 6 level, mean height {float(polar6['z_polar6'].mean()):.0f} m; "
+          f"northernmost segment {float(seg['latitude'].max()):.1f} N ({days[int(np.argmax(seg['latitude'].values))]})")
+    era, car = np.asarray(FIG["H_era_diag"], float), np.asarray(FIG["H_car_diag"], float)
+    for d in pd.unique(days):
+        m = days == d
+        print(f"  {d}: EC flux {EC[m].min():+.1f} to {EC[m].max():+.1f} W m-2;  lowest H_S,ERA,diag {np.nanmin(era[m]):+.1f}, "
+              f"lowest H_S,CAR,diag " + (f"{np.nanmin(car[m]):+.1f}" if np.isfinite(car[m]).any() else "(no CARRA)"))
+    print()
+
+
+def quoted_percentages():
+    """Percentages the abstract, Sect. 4.1, the Discussion and the Conclusions derive from slope and r."""
+    print(RULE)
+    print("PERCENTAGES QUOTED IN THE TEXT (derived from the slopes and correlations above)")
+    print(RULE)
+    for key, name in [("H_obs_bulk", "H_S,obs,bulk"), ("H_rs_bulk", "H_S,RS,bulk"), ("H_era_bulk", "H_S,ERA,bulk"),
+                      ("H_era_diag", "H_S,ERA,diag"), ("H_car_diag", "H_S,CAR,diag")]:
+        m = skill_metrics(EC, np.asarray(FIG[key], dtype=float), name)
+        print(f"  {name:<14} slope {m['slope']:.2f}: recovers {m['slope'] * 100:3.0f} % of the amplitude "
+              f"({(m['slope'] - 1) * 100:+4.0f} %);  r {m['r']:.2f}: explains {m['r'] ** 2 * 100:2.0f} % of the variance")
+    ok = np.isfinite(EC)
+    b_ref = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ref")][ok])["slope"]
+    b_matched = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ztr1e-04")][ok])["slope"]
+    print(f"transfer coefficient reduction needed for unit amplitude: 1 - {b_matched:.2f} / {b_ref:.2f} = "
+          f"{(1 - b_matched / b_ref) * 100:.0f} %")
+    print()
+
+
+def richardson_number():
+    """Appendix B1: the range of the in-situ Ri_b and how little a bound on it would change."""
+    print(RULE)
+    print("BULK RICHARDSON NUMBER OF THE IN-SITU ESTIMATE (Appendix B1)")
+    print(RULE)
+    ri = np.asarray(FIG["Ri_obs"], dtype=float)
+    i = int(np.nanargmax(np.abs(ri)))
+    print(f"|Ri_b| below {np.sort(np.abs(ri))[-2]:.1f} on all segments but one: Ri_b = {ri[i]:+.1f} at "
+          f"{pd.Timestamp(T[i]):%d %b %H:%M} (wind {float(FIG['U_obs'][i]):.1f} m/s, H_S,obs,bulk {float(FIG['H_obs_bulk'][i]):+.2f} W m-2)")
+    sys.path.insert(0, str(REPO / "scripts"))
+    import logging
+    logging.disable(logging.WARNING)
+    from dataclasses import replace
+    from calc_bulk_and_ec_fluxes import load_obs
+    from fluxpy.bulk import compute_bulk_shf_obs, reference_config
+    obs = load_obs()
+    free = skill_metrics(EC, np.asarray(compute_bulk_shf_obs(obs, reference_config())["H_obs_bulk"]), "")
+    changes, slope_changes = [], []
+    for bound in (1.0, 2.5, 5.0):
+        m = skill_metrics(EC, np.asarray(compute_bulk_shf_obs(obs, replace(reference_config(), ri_clip=bound))["H_obs_bulk"]), "")
+        changes.append(max(abs(m["bias"] - free["bias"]), abs(m["rmse"] - free["rmse"])))
+        slope_changes.append(abs(m["slope"] - free["slope"]))
+    print(f"bounding |Ri_b| at 1, 2.5 or 5 changes bias and RMSE of H_S,obs,bulk by at most {max(changes):.2f} W m-2 "
+          f"and the slope by at most {max(slope_changes):.3f}")
+    logging.disable(logging.NOTSET)
+    print()
+
+
 if __name__ == "__main__":
     ec_reference()
     reference_configuration()
@@ -266,3 +351,6 @@ if __name__ == "__main__":
     window_length_experiment()
     uncertainty_budget_table()
     further_numbers(split)
+    sample_and_flight_facts()
+    quoted_percentages()
+    richardson_number()
