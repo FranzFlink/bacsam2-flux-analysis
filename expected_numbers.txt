@@ -14,8 +14,8 @@ REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)
 ======================================================================================================================
 estimate                   slope      r    r2 r_within    bias   RMSE  cRMSE    n
 H_S,obs,bulk                 1.6    0.7   0.5      0.5    +1.2    6.1    6.0   91   OLS 95% CI [1.4, 1.9]
-H_S,RS,bulk                  0.7    0.5   0.3      0.0    -1.5    4.7    4.4   91   OLS 95% CI [0.4, 1.1]
-H_S,ERA,bulk                 0.2    0.3   0.1     -0.1    -3.5    5.0    3.6   91
+H_S,RS,bulk                  0.8    0.5   0.2      0.1    -2.3    5.3    4.7   91   OLS 95% CI [0.5, 1.1]
+H_S,ERA,bulk                 0.3    0.4   0.1     -0.1    -4.1    5.7    3.9   91
 H_S,ERA,diag                 1.2    0.6   0.3     -0.1    -2.8    6.7    6.1   91
 H_S,CAR,diag                 1.2    0.6   0.3      0.3    -3.6    7.5    6.6   73
 
@@ -23,28 +23,28 @@ H_S,CAR,diag                 1.2    0.6   0.3      0.3    -3.6    7.5    6.6   7
 AMPLITUDE-MATCHED CONFIGURATION  alpha_T = 1e-4  (Schroeder et al., 2003)
 ======================================================================================================================
 H_S,obs,bulk                 1.0    0.7   0.5      0.5    -0.4    3.6    3.6   91   OLS 95% CI [0.9, 1.2]
-H_S,RS,bulk                  0.5    0.5   0.3      0.0    -1.9    3.9    3.4   91
-H_S,ERA,bulk                 0.2    0.3   0.1     -0.1    -3.1    4.6    3.4   91
+H_S,RS,bulk                  0.5    0.5   0.2      0.0    -2.5    4.3    3.6   91
+H_S,ERA,bulk                 0.2    0.4   0.1     -0.1    -3.6    5.0    3.5   91
 
 ======================================================================================================================
 alpha_T SWEEP  (slope / r / bias / RMSE)   -- note r is INVARIANT to alpha_T
 ======================================================================================================================
  alpha_T | T-Bird slope     r   bias  RMSE | ERA5-MODIS slope     r | ERA5-only slope     r
-   1e-01 |          1.6   0.7   +1.2   6.1 |              0.7   0.5 |             0.2   0.3
-   1e-02 |          1.3   0.7   +0.5   4.9 |              0.6   0.5 |             0.2   0.3
-   1e-03 |          1.2   0.7   -0.0   4.1 |              0.5   0.5 |             0.2   0.3
-   1e-04 |          1.0   0.7   -0.4   3.6 |              0.5   0.5 |             0.2   0.3
-   1e-05 |          0.9   0.7   -0.6   3.3 |              0.4   0.5 |             0.2   0.3
-   1e-06 |          0.8   0.7   -0.8   3.1 |              0.4   0.5 |             0.1   0.3
-   1e-07 |          0.8   0.7   -0.9   3.0 |              0.3   0.5 |             0.1   0.3
+   1e-01 |          1.6   0.7   +1.2   6.1 |              0.8   0.5 |             0.3   0.4
+   1e-02 |          1.3   0.7   +0.5   4.9 |              0.6   0.5 |             0.3   0.4
+   1e-03 |          1.2   0.7   -0.0   4.1 |              0.6   0.5 |             0.3   0.4
+   1e-04 |          1.0   0.7   -0.4   3.6 |              0.5   0.5 |             0.2   0.4
+   1e-05 |          0.9   0.7   -0.6   3.3 |              0.4   0.5 |             0.2   0.4
+   1e-06 |          0.8   0.7   -0.8   3.1 |              0.4   0.5 |             0.2   0.4
+   1e-07 |          0.8   0.7   -0.9   3.0 |              0.4   0.5 |             0.2   0.4
 
 ======================================================================================================================
 SATELLITE T_s BENEFIT vs WITHIN-SEGMENT T_s VARIABILITY  (reference configuration)
 ======================================================================================================================
 median within-segment sigma(T_s) = 1.2 K
-  above median (n=45): slope -0.0 -> +0.5   r -0.4 -> 0.5   RMSE 4.9 -> 4.2
-  below median (n=46): slope +0.3 -> +0.5   r 0.3 -> 0.4   RMSE 5.1 -> 5.1
-  RMSE gain above median: 0.8 W/m2, bootstrap 95 % CI [-0.1, 1.6], permutation p = 0.14
+  above median (n=45): slope -0.0 -> +0.5   r -0.4 -> 0.4   RMSE 5.0 -> 4.1
+  below median (n=46): slope +0.4 -> +0.6   r 0.3 -> 0.3   RMSE 6.3 -> 6.2
+  RMSE gain above median: 0.9 W/m2, bootstrap 95 % CI [0.1, 1.6], permutation p = 0.03
 
 ======================================================================================================================
 ALPHA_T IS A WEAK, LOGARITHMIC KNOB
@@ -67,18 +67,18 @@ UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2
   ec_placement    0.9 [0.2-1.3]
   ec_total        0.8 [0.2-1.5]
   obs_bulk        3.1 [0.7-4.4]
-  rs_bulk         9.8 [2.2-12.9]
+  rs_bulk         8.7 [1.4-11.7]
 
 ======================================================================================================================
 FURTHER NUMBERS QUOTED IN THE TEXT
 ======================================================================================================================
 input sensitivities, median [IQR] over segments (central difference about the unperturbed state):
   T-Bird bulk      dH/d(dtheta) = -4.3 [-5.7, -1.2] W m-2 K-1    dH/dU = +0.0 [-0.3, +3.7] W m-2 (m/s)-1
-  ERA5-MODIS bulk  dH/d(dtheta) = -2.0 [-5.6, -0.4] W m-2 K-1    dH/dU = +0.8 [-0.6, +4.3] W m-2 (m/s)-1
+  ERA5-MODIS bulk  dH/d(dtheta) = -2.0 [-5.1, -0.4] W m-2 K-1    dH/dU = +0.2 [-0.8, +3.7] W m-2 (m/s)-1
 model-diagnosed fluxes on the common CARRA subset (n = 73):
   H_S,ERA,diag: slope 1.3   r 0.6   bias -3.3
   H_S,CAR,diag: slope 1.2   r 0.6   bias -3.6
-heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.8, paired-bootstrap 95 % CI [+0.5, +1.1], fraction of resamples <= 0: 0.0000
+heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.9, paired-bootstrap 95 % CI [+0.5, +1.3], fraction of resamples <= 0: 0.0000
 
 ==============================================================================================================
 1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX
@@ -89,14 +89,14 @@ segments with R2 < 0.4: 18;  median |H| 0.2 W m-2 (others: 2.3);  below 2 sigma_
 ==============================================================================================================
 2. ROBUSTNESS OF THE COMPARISON TO THE SCREENING  (slope b / correlation r against the EC reference)
 ==============================================================================================================
-  none (this study)                                n = 91   1.6 / 0.7   0.7 / 0.5   0.2 / 0.3   1.2 / 0.6
-  R^2 >= 0.4 of the cumulative covariance          n = 73   1.6 / 0.7   0.7 / 0.5   0.3 / 0.4   1.2 / 0.6
-  R^2 >= 0.6                                       n = 66   1.5 / 0.8   0.7 / 0.5   0.3 / 0.4   1.2 / 0.7
-  relative stationarity test < 100 %               n = 72   1.6 / 0.8   0.7 / 0.5   0.3 / 0.4   1.3 / 0.6
-  relative stationarity test < 30 %                n = 38   1.5 / 0.8   0.7 / 0.6   0.4 / 0.6   1.5 / 0.8
-  segment halves agree within 3 sigma_rand         n = 71   1.5 / 0.8   0.7 / 0.5   0.2 / 0.3   1.2 / 0.6
+  none (this study)                                n = 91   1.6 / 0.7   0.8 / 0.5   0.3 / 0.4   1.2 / 0.6
+  R^2 >= 0.4 of the cumulative covariance          n = 73   1.6 / 0.7   0.8 / 0.5   0.4 / 0.4   1.2 / 0.6
+  R^2 >= 0.6                                       n = 66   1.5 / 0.8   0.8 / 0.5   0.4 / 0.4   1.2 / 0.7
+  relative stationarity test < 100 %               n = 72   1.6 / 0.8   0.8 / 0.5   0.4 / 0.4   1.3 / 0.6
+  relative stationarity test < 30 %                n = 38   1.5 / 0.8   0.7 / 0.6   0.5 / 0.6   1.5 / 0.8
+  segment halves agree within 3 sigma_rand         n = 71   1.5 / 0.8   0.7 / 0.5   0.3 / 0.3   1.2 / 0.6
   only fluxes above 2 sigma_rand                   n = 46   1.3 / 0.7   0.6 / 0.5   0.1 / 0.3   0.9 / 0.7
-  pitch-resonance bin interpolated                 n = 91   1.6 / 0.7   0.7 / 0.4   0.2 / 0.3   1.1 / 0.5
+  pitch-resonance bin interpolated                 n = 91   1.6 / 0.7   0.7 / 0.4   0.3 / 0.3   1.1 / 0.5
   for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: [1.4, 1.9]
 
 ==============================================================================================================

@@ -63,6 +63,26 @@ def surface_pressure_hypsometric(p_z, z, T_mean) -> np.ndarray:
     return np.asarray(p_z, dtype=float) * np.exp(G * np.asarray(z, dtype=float) / (RD * _to_kelvin(T_mean)))
 
 
+#: ECMWF L137 hybrid coefficients (a [Pa], b) of the lowest half levels 133-137
+#: (https://confluence.ecmwf.int/display/UDOC/L137+model+level+definitions);
+#: half level 137 is the surface.
+L137_HALF_LEVELS = {133: (62.781250, 0.988500), 134: (22.835938, 0.991984),
+                    135: (3.757813, 0.995003), 136: (0.0, 0.997630), 137: (0.0, 1.0)}
+
+
+def era5_level_pressure(p_sfc, level: int) -> np.ndarray:
+    r"""Pressure [Pa] of ERA5 full model level ``level`` (134-137) from the surface
+    pressure ``p_sfc`` [Pa or hPa], the mean of its two bounding half levels,
+
+    $$ p_k = \tfrac12 \left[ a_{k-1/2} + a_{k+1/2} + (b_{k-1/2} + b_{k+1/2})\, p_\mathrm{s} \right]. $$
+
+    Level 136, the level of the reanalysis-driven bulk estimates, lies 3.7 hPa below
+    the surface pressure (31 m above the surface in the standard atmosphere).
+    """
+    (a_top, b_top), (a_bottom, b_bottom) = L137_HALF_LEVELS[level - 1], L137_HALF_LEVELS[level]
+    return 0.5 * (a_top + a_bottom + (b_top + b_bottom) * _to_pa(p_sfc))
+
+
 def air_density(T, p) -> np.ndarray:
     r"""Dry-air density from the ideal-gas law, $\rho = p / (R_d T)$ [kg m-3].
 

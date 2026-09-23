@@ -43,6 +43,13 @@ def test_surface_pressure_integrates_the_hydrostatic_equation():
     assert float(util.surface_pressure_hypsometric(1000.0, 24.0, -23.15)) == pytest.approx(p, rel=1e-6)   # degC input
 
 
+def test_era5_level_pressure_matches_the_ecmwf_l137_table():
+    # full-level pressures pf [hPa] of the published L137 table for the standard surface pressure 1013.25 hPa
+    for level, pf_hPa in ((134, 1003.7906), (135, 1006.7900), (136, 1009.5363), (137, 1012.0494)):
+        assert float(util.era5_level_pressure(101325.0, level)) / 100 == pytest.approx(pf_hPa, abs=1e-3)
+    assert float(util.era5_level_pressure(1013.25, 136)) == pytest.approx(100953.63, abs=0.1)     # hPa input
+
+
 def test_hydrostatic_surface_theta_offset_is_g_z_over_cp():
     # using the pressure 24 m up at the surface overestimates theta_s by about g z / c_p (Appendix B1)
     T_s, z, p_z = -20.0, 24.0, 1000.0

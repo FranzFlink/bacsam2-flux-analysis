@@ -46,7 +46,7 @@ sys.path.insert(0, str(REPO))
 from fluxpy.bulk import compute_bulk_shf_obs, compute_bulk_shf_remote, reference_config  # noqa: E402
 from fluxpy.sensitivity import run_sensitivity, sensitivity_matrix, skill_metrics  # noqa: E402
 from fluxpy.stability import Cd_Ch_noniterative  # noqa: E402
-from fluxpy.util import CP  # noqa: E402
+from fluxpy.util import CP, era5_level_pressure  # noqa: E402
 
 logging.basicConfig(format="%(asctime)s [%(levelname)-7s] %(name)s: %(message)s",
                     datefmt="%H:%M:%S", level=logging.INFO)
@@ -216,6 +216,8 @@ def era5_forcing(era5_ml: dict, era5_sl: dict, ds_modis: xr.Dataset, ds_obs: xr.
         "t":    series(era5_ml["T30_K"] - 273.15, "degC", "ERA5 air temperature, model level 136 (~31 m)"),
         "ws":   series(era5_ml["ws30"], "m s-1", "ERA5 wind speed, model level 136"),
         "pres": series(np.full(n, era5_sl["sp_Pa"]), "Pa", "ERA5 surface pressure"),
+        "pres_air": series(era5_level_pressure(era5_sl["sp_Pa"], ERA5_LEVEL), "Pa",
+                           "ERA5 pressure of model level 136 (L137 hybrid coefficients)"),
     })
     ist_modis = np.asarray(ds_modis["IST"], dtype=float)
     ist_filled = np.where(np.isnan(ist_modis), era5_sl["skt_K"], ist_modis)

@@ -32,7 +32,7 @@ import xarray as xr
 from matplotlib.patches import Patch
 
 from fluxpy import figstyle as fs
-from fluxpy.util import potential_temperature, surface_pressure_hypsometric
+from fluxpy.util import era5_level_pressure, potential_temperature, surface_pressure_hypsometric
 from calc_bulk_and_ec_fluxes import load_era5_sl, load_modis, load_obs  # noqa: E402
 
 fs.apply()
@@ -48,9 +48,9 @@ _ERA5_ML = REPO / "data" / "reanalysis" / "era5" / "ERA5_model_levels" / "era5_m
 _POLAR6_LEVEL = REPO / "data" / "observations" / "ar" / "polar6_level_at_segments.nc"
 
 # ERA5 model levels closest to the surface and their standard-atmosphere heights [m]
-# (ECMWF L137 definitions). The level pressure is sigma * surface pressure with sigma
-# the mean of the two half-level b coefficients; the a term (< 0.02 hPa) is neglected.
-ERA5_LEVELS = {137: (10.0, 0.998815), 136: (31.0, 0.996317), 135: (54.0, 0.993618), 134: (79.0, 0.990448)}
+# (ECMWF L137 definitions); the level pressure is fluxpy.util.era5_level_pressure,
+# as in the reanalysis-driven bulk fluxes.
+ERA5_LEVELS = {137: 10.0, 136: 31.0, 135: 54.0, 134: 79.0}
 CARRA_LEVELS_M = (30.0, 75.0)
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -85,8 +85,9 @@ ist = np.asarray(load_modis(obs)["IST"], dtype=float)
 ist = np.where(np.isnan(ist), era5_sl["skt_K"], ist)
 theta_sfc_modis = potential_temperature(ist, p_sfc_hPa)
 era5_ml = xr.open_dataset(_ERA5_ML).sel(time=t_seg, latitude=lat_seg, longitude=lon_seg, method="nearest")
-theta_era5 = {level: potential_temperature(era5_ml["t"].sel(model_level=level).values, sigma * p_sfc_hPa)
-              for level, (_, sigma) in ERA5_LEVELS.items()}
+theta_era5 = {level: potential_temperature(era5_ml["t"].sel(model_level=level).values,
+                                           era5_level_pressure(era5_sl["sp_Pa"], level))
+              for level in ERA5_LEVELS}
 
 
 def load_carra(ds_obs: xr.Dataset) -> dict:
@@ -133,11 +134,11 @@ z_tbird_mean, z_polar6_mean = np.nanmean(z_tbird[valid]), np.nanmean(z_polar6[va
 
 # (colour, theta at the levels, heights of the levels (per segment or fixed), marker,
 #  line style of single segments, line style of the median)
-Z_ERA5 = [0.0] + [ERA5_LEVELS[k][0] for k in (137, 136, 135, 134)]
+Z_ERA5 = [0.0] + [ERA5_LEVELS[k] for k in (137, 136, 135, 134)]
 sources = [
     (C_OBS, [theta_sfc_obs, theta_tbird, theta_polar6], [np.zeros_like(z_tbird), z_tbird, z_polar6], "o", "-", "--"),
     (C_ERA, [theta_sfc_era5] + [theta_era5[k] for k in (137, 136, 135, 134)], Z_ERA5, "^", "-", "--"),
-    (C_MOD, [theta_sfc_modis, theta_era5[136]], [0.0, ERA5_LEVELS[136][0]], "^", ":", ":"),
+    (C_MOD, [theta_sfc_modis, theta_era5[136]], [0.0, ERA5_LEVELS[136]], "^", ":", ":"),
     (C_CAR, [theta_sfc_carra, theta_carra[30.0], theta_carra[75.0]], [0.0, 30.0, 75.0], "s", "-", "--"),
 ]
 X_LIMITS = [(240, 255), (240, 260), (245, 260), (265, 275)]

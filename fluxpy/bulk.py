@@ -23,7 +23,9 @@ Each potential temperature is computed with the pressure at its own height. In
 situ, the surface pressure is reconstructed from the T-Bird pressure with the
 hypsometric equation (no surface pressure is measured; fluxpy.util.
 surface_pressure_hypsometric); using the T-Bird pressure at the surface as well
-would make theta_s too warm by about g z / c_p = 0.23 K at 24 m.
+would make theta_s too warm by about g z / c_p = 0.23 K at 24 m. Remote, theta_s
+uses the ERA5 surface pressure and theta_air the pressure of model level 136
+(fluxpy.util.era5_level_pressure).
 
 Sign: theta_s > theta_air (warm surface, e.g. a lead) gives H_S > 0, upward.
 """
@@ -231,7 +233,9 @@ def compute_bulk_shf_remote(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.
     """H_S,RS,bulk or H_S,ERA,bulk: the reanalysis-driven bulk estimate (Table 1, rows 3-4).
 
     ``ds_rs``    the ERA5 column at the level closest to the T-Bird: ``t`` [degC],
-                 ``ws`` [m/s], ``pres`` [Pa or hPa] (surface pressure).
+                 ``ws`` [m/s], ``pres`` [Pa or hPa] (surface pressure, for theta_s) and
+                 ``pres_air`` [Pa or hPa] (pressure of the level of ``t``, for theta_air
+                 and the air density).
     ``ds_modis`` the surface temperature ``IST`` [K] (MODIS, gap-filled with ERA5
                  skin temperature, or ERA5 skin temperature alone); values outside
                  150-280 K are masked.
@@ -243,14 +247,14 @@ def compute_bulk_shf_remote(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.
     T_sfc_K = np.asarray(ds_modis["IST"], dtype=float)
     T_sfc = np.where((T_sfc_K > 150) & (T_sfc_K < 280), T_sfc_K - 273.15, np.nan)
     T_air = np.asarray(ds_rs["t"], dtype=float)
-    pres = np.asarray(ds_rs["pres"], dtype=float)
-    p_hPa = pres / 100.0 if np.nanmedian(pres) > 2000 else pres
+    p_sfc = np.asarray(ds_rs["pres"], dtype=float)
+    p_air = np.asarray(ds_rs["pres_air"], dtype=float)
     U = np.asarray(ds_rs["ws"], dtype=float)
     z = np.broadcast_to(np.asarray(z_ref, dtype=float), len(T_sfc)).copy()
 
-    theta_sfc = potential_temperature(T_sfc, p_hPa)
-    theta_air = potential_temperature(T_air, p_hPa)
-    rho = air_density(T_air, p_hPa)
+    theta_sfc = potential_temperature(T_sfc, p_sfc)                               # B1, each at its own pressure
+    theta_air = potential_temperature(T_air, p_air)
+    rho = air_density(T_air, p_air)
     z0, zt, method = _roughness(ds_obs, T_sfc, cfg)                           # B2
     Ri = bulk_richardson_remote(theta_sfc, theta_air, U, z, cfg)              # B1
     Cd, Ch = transfer_coefficients(Ri, z, z0, zt, cfg.scheme_name)            # B3
