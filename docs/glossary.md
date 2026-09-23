@@ -40,7 +40,7 @@ the variable names in `data/model_output/sensitivity_figure_data.nc` (`fluxpy/na
 | Term | Meaning in this work |
 |------|---------------------|
 | leg | a complete constant-altitude flight stretch (tens of km) |
-| segment | a 5 km piece of a leg; all estimates are compared on the same 91 segments |
+| segment | a 5 km piece of a leg; all estimates are compared on the same 90 segments |
 | forcing | the source of the inputs of a bulk estimate (in situ, ERA5–MODIS, reanalysis only) |
 | configuration | the parameter settings of the bulk algorithm (stability scheme, $\alpha_T$, roughness) |
 | reference configuration | GLGS20 stability functions, $\alpha_T = 10^{-1}$, surface-type-dependent roughness |

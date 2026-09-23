@@ -286,9 +286,10 @@ def measurement_height():
         ranges.append(h.max() - h.min())
     ranges = np.asarray(ranges)
     level = ranges <= 20.0
-    print(f"  T-Bird height range within a segment: median {np.median(ranges):.0f} m; more than 20 m in {(~level).sum()} segment(s): "
-          + ", ".join(f"{pd.Timestamp(t):%d %b %H:%M} ({r:.0f} m, mean height {zz:.0f} m)"
-                      for t, r, zz in zip(seg["start_time"].values[~level], ranges[~level], z[~level])))
+    print(f"  T-Bird height range within a segment (10 s running mean): median {np.median(ranges):.0f} m, maximum {ranges.max():.0f} m; "
+          f"more than 20 m in {(~level).sum()} segment(s)"
+          + "".join(f", {pd.Timestamp(t):%d %b %H:%M} ({r:.0f} m, mean height {zz:.0f} m)"
+                    for t, r, zz in zip(seg["start_time"].values[~level], ranges[~level], z[~level])))
     print(f"  without them (n = {level.sum()}): "
           + "   ".join(f"{name} {b:.1f} / {r:.1f}" for (key, name) in BULK for b, r in [slope_r(EC[level], H(key)[level])])
           + f";  maximum mean height {z[level].max():.0f} m")

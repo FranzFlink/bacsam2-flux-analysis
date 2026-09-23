@@ -41,7 +41,7 @@ from fluxpy.uncertainty import central_difference, uncertainty_budget  # noqa: E
 RULE = "=" * 118
 
 # ── pipeline output ──────────────────────────────────────────────────────────
-FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # 91 segments, all estimates
+FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # the 90 segments, all estimates
 SEG = xr.open_dataset(REPO / "data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc")
 SEG = SEG.where(SEG.altitude <= 50, drop=True)                                   # low-level segments (all days)
 
@@ -283,7 +283,7 @@ def sample_and_flight_facts():
     print(f"T-Bird height, segment means: mean {z.mean():.0f} m, range {z.min():.0f}-{z.max():.0f} m; "
           f"{(~level).sum()} segment(s) not at one level (height changes by > 20 m), without them {z[level].min():.0f}-{z[level].max():.0f} m")
     print(f"true airspeed, mean over the segments {tas.mean():.0f} m/s; segment duration median {np.median(duration):.0f} s; "
-          f"0.1-20 Hz corresponds to {tas.mean() / 20:.0f}-{tas.mean() / 0.1:.0f} m along the track")
+          f"0.1-20 Hz corresponds to about {tas.mean() / 20:.0f}-{round(tas.mean() / 0.1, -1):.0f} m along the track")
     polar6 = xr.open_dataset(REPO / "data/observations/ar/polar6_level_at_segments.nc").reindex(start_time=FIG["start_time"].values)
     print(f"Polar 6 level, mean height {float(polar6['z_polar6'].mean()):.0f} m; "
           f"northernmost segment {float(seg['latitude'].max()):.1f} N ({days[int(np.argmax(seg['latitude'].values))]})")

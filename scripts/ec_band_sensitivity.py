@@ -61,7 +61,7 @@ print("EC FLUX BAND: how much flux lies outside 0.1-20 Hz, and does the comparis
 print(RULE)
 print(f"0.1-20 Hz recomputed here vs the shipped EC fluxes: max |difference| {np.max(np.abs(reference - ec_shipped)):.3f} W m-2")
 print(f"flux in the band / flux in 0.1-20 Hz for the {large.sum()} segments with |H| > 2 W m-2: median [quartiles];  "
-      "then slope b / r of each bulk estimate against the EC flux of that band (n = 91)")
+      f"then slope b / r of each bulk estimate against the EC flux of that band (n = {reference.size})")
 print(f"  {'band':<24} {'flux ratio':>20}   " + "   ".join(f"{name:>13}" for _, name in ESTIMATES))
 for name, _ in BANDS:
     ratio = flux[name][large] / reference[large]
@@ -71,6 +71,6 @@ for name, _ in BANDS:
 below =(flux["all frequencies"] - reference)[large] / reference[large]
 print(f"flux outside 0.1-20 Hz relative to the flux inside, |H| > 2 W m-2: median {np.median(below) * 100:+.0f} % "
       f"(quartiles {np.percentile(below, 25) * 100:+.0f} to {np.percentile(below, 75) * 100:+.0f} %); "
-      f"rank correlation of the all-frequency and the 0.1-20 Hz flux over all 91 segments: "
+      f"rank correlation of the all-frequency and the 0.1-20 Hz flux over all {reference.size} segments: "
       f"{spearmanr(flux['all frequencies'], reference)[0]:.2f}")
 print()

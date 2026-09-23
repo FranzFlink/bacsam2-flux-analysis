@@ -17,7 +17,7 @@ table and figure of it from the shipped data.
 
 ## What is compared
 
-Six estimates of the same flux on the same 91 flight segments of 5 km. Going down, measured inputs
+Six estimates of the same flux on the same 90 flight segments of 5 km. Going down, measured inputs
 are replaced step by step by products that are available everywhere, so whatever skill is lost can be
 attributed to the input that was replaced.
 
@@ -28,7 +28,7 @@ flowchart LR
   M["MODIS T<sub>s</sub><br/>ERA5 T, U, p"] -->|bulk formula| RS["H<sub>S,RS,bulk</sub>"]
   E["ERA5 T<sub>s</sub><br/>ERA5 T, U, p"] -->|bulk formula| ER["H<sub>S,ERA,bulk</sub>"]
   D["ERA5, CARRA<br/>model output"] --> DG["H<sub>S,ERA,diag</sub><br/>H<sub>S,CAR,diag</sub>"]
-  EC --> C{{"compared on 91 segments<br/>slope b and correlation r"}}
+  EC --> C{{"compared on 90 segments<br/>slope b and correlation r"}}
   OB & RS & ER & DG --> C
 ```
 
@@ -70,5 +70,5 @@ copy of the manuscript annotated with it.
 3. **The stability scheme hardly matters** under the near-neutral spring conditions sampled.
    → [Chapter 3](../book/03_bulk_method.ipynb)
 
-How far these statements carry, with only 91 segments on four flight days, is the subject of
+How far these statements carry, with only 90 segments on four flight days, is the subject of
 [Chapter 6](../book/06_robustness.ipynb).

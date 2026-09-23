@@ -5,11 +5,11 @@ Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 4, Figs. 4-6),
 Sect. 4.2 (sensitivity, Table 3, Fig. 7), Table 2 (uncertainty budget), Appendix C.
 
 Writes
-    data/model_output/sensitivity_figure_data.nc      every flux estimate on the 91 segments
+    data/model_output/sensitivity_figure_data.nc      every flux estimate on the 90 segments
     data/model_output/sensitivity_summary_table.csv   skill of every configuration
 
 Stages
-    1  load_obs             the 91 low-level segments over sea ice with the EC reference
+    1  load_obs             the 90 low-level segments over sea ice with the EC reference
     2  along-track inputs   MODIS IST, ERA5 level 136 (T, wind, height), ERA5 skin temperature,
                             surface pressure and surface flux, CARRA surface flux, at each segment.
                             Cached in along_track_inputs.nc so that the bulk computation
@@ -82,7 +82,8 @@ DU_LEVELS_MS = np.array([-4., -3., -2., -1., -0.5, 0., 0.5, 1., 2., 3., 4.])
 # ══════════════════════════════════════════════════════════════════════════════
 
 def load_obs() -> xr.Dataset:
-    """The 91 low-level segments over sea ice (T-Bird below 50 m; 25 and 26 April excluded)."""
+    """The 90 low-level segments over sea ice (T-Bird below 50 m and at one level, see
+    fluxpy.aggregate.SegmentConfig.max_height_range_m; 25 and 26 April excluded)."""
     ds = xr.open_dataset(_AR / "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc")
     ds["ws_mean"] = np.sqrt(ds["u_mean"] ** 2 + ds["v_mean"] ** 2)
     ds = ds.where(ds["altitude"] < MAX_TBIRD_HEIGHT_M, drop=True)
@@ -166,8 +167,8 @@ def _write_cache(ds_obs, ds_modis, era5_ml, era5_sl, carra_sshf) -> None:
     ds = xr.Dataset(data, coords={"leg": ("leg", np.arange(n, dtype="int16")),
                                   "start_time": ("leg", ds_obs["start_time"].values)},
                     attrs={"title": "BACSAM-II along-track (segment-colocated) inputs of the bulk fluxes",
-                           "summary": "MODIS IST, ERA5 level 136, ERA5 single levels and CARRA sshf at the "
-                                      "91 segments, written by calc_bulk_and_ec_fluxes.py --extract-only.",
+                           "summary": f"MODIS IST, ERA5 level 136, ERA5 single levels and CARRA sshf at the "
+                                      f"{n} segments, written by calc_bulk_and_ec_fluxes.py --extract-only.",
                            "history": time.strftime("%Y-%m-%dT%H:%M:%SZ created", time.gmtime())})
     ds.to_netcdf(_CACHE, mode="w")
     log.info("cache written: %s", _CACHE)
@@ -196,7 +197,11 @@ def load_inputs(ds_obs: xr.Dataset, use_cache: bool, extract_only: bool):
         carra_sshf = load_carra_direct_shf(ds_obs)
     else:   # the CARRA forecast file is not shipped: keep the values extracted on the raw-data host
         with xr.open_dataset(_CACHE) as old:
-            carra_sshf = old["carra_sshf_Wm2"].values.astype(float)
+            by_time = pd.Series(old["carra_sshf_Wm2"].values.astype(float), index=pd.to_datetime(old["start_time"].values))
+        wanted = pd.to_datetime(ds_obs["start_time"].values)
+        if not wanted.isin(by_time.index).all():
+            raise RuntimeError("segments without a cached CARRA flux: the CARRA forecast file is needed")
+        carra_sshf = by_time.reindex(wanted).values                     # matched by segment start time
         log.warning("CARRA forecast file absent: CARRA flux carried over from the existing cache")
     _write_cache(ds_obs, ds_modis, era5_ml, era5_sl, carra_sshf)
     return ds_modis, era5_ml, era5_sl, carra_sshf
@@ -377,7 +382,7 @@ def run_all(extract_only: bool = False, no_cache: bool = False, verbose: bool = 
             "dU": ("dU", DU_LEVELS_MS.astype("float32"), {"units": "m s-1"}),
         },
         attrs={
-            "title": "BACSAM-II sensible heat flux comparison: flux estimates on the 91 segments and the sensitivity sweep",
+            "title": f"BACSAM-II sensible heat flux comparison: flux estimates on the {n} segments and the sensitivity sweep",
             "summary": "Six sensible-heat-flux estimates on common 5 km flight segments (airborne eddy covariance, "
                        "in-situ bulk, satellite/reanalysis bulk, model-diagnosed), all configurations of the "
                        "sensitivity analysis and the input perturbations. Names follow fluxpy.naming; all fluxes positive upward.",

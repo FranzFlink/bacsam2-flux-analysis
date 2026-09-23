@@ -49,8 +49,12 @@ class SegmentConfig:
     length_km: float = 5.0          #: segment length along the track [km]
     min_samples: int = 100          #: skip a segment with fewer 100 Hz samples (a full
                                     #: 5 km segment has about 8200)
-    max_height_range_m: float = 100.0   #: skip a segment whose T-Bird height varies more
-                                        #: than this (constant flight level, Appendix A1)
+    max_height_range_m: float = 30.0    #: skip a segment whose T-Bird height (raw 100 Hz,
+                                        #: max - min) varies more than this: constant flight
+                                        #: level, Appendix A1. Level segments vary by at most
+                                        #: 22 m (altimeter over rough ice, towed-body motion);
+                                        #: the one segment flown while the T-Bird was winched
+                                        #: up (13 April 10:21 UTC) by 53 m. Until 2026-09-23: 100 m.
     fs: float = SAMPLING_HZ         #: sampling frequency of the T-Bird [Hz]
     T_open_degC: float = -1.8       #: KT-19 T_s above this: open water      (Table B1)
     T_thick_degC: float = -20.0     #: KT-19 T_s at or below this: snow-covered ice
