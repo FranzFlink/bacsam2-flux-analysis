@@ -26,7 +26,7 @@ REPO = Path("..").resolve(); sys.path.insert(0, str(REPO))
 plt.rcParams.update({"figure.dpi": 110, "figure.constrained_layout.use": True, "axes.grid": True, "grid.alpha": 0.3, "font.size": 10})
 
 AR  = REPO / "data/observations/ar"
-FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # all flux estimates, 91 segments
+FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # all flux estimates, 90 segments
 SEG = xr.open_dataset(AR / "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc").sel(start_time=FIG.start_time.values)
 EC  = FIG["H_obs_ec"].values
 '''
@@ -46,8 +46,8 @@ From these data the flux can be measured directly with the **eddy-covariance (EC
 | Symbol | How it is obtained | Inputs |
 |---|---|---|
 | $H_\mathrm{S,obs,EC}$ | eddy covariance — **the reference** | 100 Hz $w$, $\theta$ from the T-Bird |
-| $H_\mathrm{S,obs,bulk}$ | bulk formula | measured: KT-19 surface temperature, T-Bird air temperature and wind |
-| $H_\mathrm{S,RS,bulk}$ | bulk formula | MODIS surface temperature + ERA5 air temperature and wind |
+| $H_\mathrm{S,obs,bulk}$ | bulk formula | measured: KT-19 surface temperature, T-Bird air temperature, wind and pressure |
+| $H_\mathrm{S,RS,bulk}$ | bulk formula | MODIS surface temperature (ERA5's where clouds hide the surface) + ERA5 air temperature, wind and pressure at the model level closest to the T-Bird |
 | $H_\mathrm{S,ERA,bulk}$ | bulk formula | ERA5 only |
 | $H_\mathrm{S,ERA,diag}$, $H_\mathrm{S,CAR,diag}$ | taken from the model output | the flux ERA5 / CARRA diagnose themselves |
 
@@ -56,7 +56,7 @@ Whatever skill is lost on the way can then be attributed to the input that was r
 
 The chapters follow the paper: **2** how the EC reference is measured · **3** how the bulk method works ·
 **4** how the estimates compare · **5** what the result depends on, and how uncertain it is ·
-**6** how robust all of this is with 91 segments from four flight days.
+**6** how robust all of this is with 90 segments from four flight days.
 
 > [!NOTE]
 > **How to read this book.** Every chapter computes its numbers live from the files in `data/`, with the same
@@ -69,7 +69,9 @@ The chapters follow the paper: **2** how the EC reference is measured · **3** h
 '''), ("code", SETUP), ("md", r'''
 ## The segments
 
-The analysis uses the low-level legs (T-Bird below 50 m) of the four flight days over sea ice.
+The analysis uses the constant-altitude legs flown low over sea ice: T-Bird below 50 m, height varying by less than
+30 m within a segment (paper Sect. 2.1 and Appendix A1). Low legs on 25 April were flown over open water and are
+not part of the comparison.
 '''), ("code", r'''
 t = pd.to_datetime(SEG.start_time.values)
 tab = pd.DataFrame({"segments": 1, "T-Bird height (m)": SEG.altitude.values,
@@ -121,8 +123,10 @@ print(f"segment {pd.Timestamp(t0):%d %b %Y %H:%M:%S} UTC: {seg.time.size} sample
 '''), ("md", r'''
 ## Step 1 — the raw signals
 
-Vertical wind $w$ and potential temperature $\theta$. A linear trend is removed from both; what remains are the
-turbulent fluctuations $w'$ and $\theta'$.
+Vertical wind $w$ and potential temperature $\theta$. The motion of the towed platform has already been removed from the
+wind with the inertial navigation data, and the potential rather than the virtual potential temperature is used because
+the air is cold and dry (paper Sect. 3.1). A linear trend is removed from both series; what remains are the turbulent
+fluctuations $w'$ and $\theta'$.
 '''), ("code", r'''
 from scipy.signal import detrend
 w, th = detrend(seg.w.values), detrend(seg.theta.values)
@@ -135,8 +139,8 @@ print(f"plain covariance of the detrended series: {np.mean(w * th):.4f} K m/s")
 '''), ("md", r'''
 ## Step 2 — which eddy sizes carry the flux?
 
-The cospectrum splits the covariance by frequency. At 61 m s⁻¹ airspeed a frequency $f$ corresponds to an eddy of
-length $61\,\mathrm{m\,s^{-1}}/f$. The paper integrates the cospectrum between **0.1 and 20 Hz** (eddies of about 3 to 610 m):
+The cospectrum splits the covariance by frequency. At the mean airspeed of 60 m s⁻¹ a frequency $f$ corresponds to an eddy of
+length $60\,\mathrm{m\,s^{-1}}/f$. The paper integrates the cospectrum between **0.1 and 20 Hz** (eddies of about 3 to 600 m):
 slower variations are mesoscale changes along the track rather than turbulence, faster ones are instrument noise.
 
 The shaded band below is what enters the flux.
@@ -174,7 +178,7 @@ Two questions have to be kept apart.
 **Is the measurement sound?** Turbulence must be resolved: the power spectrum of $w$ has to fall off with a slope near
 $-5/3$ (inertial subrange), $|s_w + 5/3| \le 0.4$. This is a pass/fail check of the *instrument and the processing*.
 
-**How precisely is the flux known?** A covariance from 85 s of data has a random error, because only a limited number of
+**How precisely is the flux known?** A covariance from about 83 s of data has a random error, because only a limited number of
 eddies were sampled. It is estimated from the data themselves (Finkelstein and Sims, 2001). The larger a flux is compared with
 its random error $\sigma_\mathrm{rand}$, the more certain it is that it differs from zero: by chance alone a true zero flux exceeds
 1, 2 and 3 $\sigma_\mathrm{rand}$ in 32 %, 5 % and 0.3 % of all cases.
@@ -230,6 +234,10 @@ pd.DataFrame({k.replace("ec_", ""): [np.nanmedian(U[k]), np.nanpercentile(U[k], 
               for k in ("ec_random", "ec_instrument", "ec_total", "ec_placement")},
              index=["median (W m-2)", "25th percentile", "75th percentile"]).round(1)
 '''), ("md", r'''
+Appendix A of the paper adds two checks that are not repeated here (`pixi run ec-quality` prints them): the comparison
+does not depend on how the fluxes would be screened (Table A1, eight alternative screenings), and the pitch resonance of the
+towed T-Bird near 1 Hz lowers the larger fluxes by less than a tenth (median) and leaves the comparison practically unchanged.
+
 **Take-away.** The reference flux is a band-limited covariance that can be recomputed from the 100 Hz data in a few lines.
 Its uncertainty is dominated by the limited number of eddies in 5 km — confirmed by shifting the window along the track — not by the instrument.
 ''')]
@@ -253,7 +261,7 @@ This chapter computes $H_\mathrm{S,obs,bulk}$ for one segment by hand and then s
 
 > [!NOTE]
 > **In the paper:** Sect. 3.2, Eq. (2), Appendix B, Table B1. **In the code:** `fluxpy/bulk.py` (the steps B1–B3),
-> `fluxpy/stability.py` (Eq. B2), `fluxpy/stability_lib.py` (the eight stability schemes), `fluxpy/util.py`
+> `fluxpy/stability.py` (Eq. B3), `fluxpy/stability_lib.py` (the eight stability schemes), `fluxpy/util.py`
 > (constants, potential temperature, pressures).
 '''), ("code", SETUP + r'''
 from fluxpy.util import potential_temperature, air_density, CP, G
@@ -273,7 +281,7 @@ from the hydrostatic (hypsometric) equation,
 $$p_\mathrm{s} = p_z \exp\!\left(\frac{g\,z}{R_d\,\bar T}\right),$$
 
 about 3 hPa more than at the T-Bird. It looks negligible, but it is not: using $p_z$ at the surface would make
-$\theta_\mathrm{s}$ too warm by $g z / c_p \approx 0.23$ K, and the typical temperature difference is only about 1 K.
+$\theta_\mathrm{s}$ too warm by $g z / c_p \approx 0.23$ K, and the typical temperature difference is only one to two kelvin.
 The reanalysis-driven estimates follow the same rule the other way round: the surface pressure is known, and the
 air temperature of ERA5 model level 136 (about 31 m) gets the pressure of that level (`fluxpy.util.era5_level_pressure`).
 '''), ("code", r'''
@@ -377,11 +385,20 @@ from fluxpy.sensitivity import skill_metrics
 import logging; logging.disable(logging.INFO)
 NAMES = {"H_obs_bulk": "H_S,obs,bulk  (measured inputs)", "H_rs_bulk": "H_S,RS,bulk   (MODIS + ERA5)",
          "H_era_bulk": "H_S,ERA,bulk  (ERA5 only)", "H_era_diag": "H_S,ERA,diag  (ERA5's own flux)", "H_car_diag": "H_S,CAR,diag  (CARRA's own flux)"}
+T = pd.to_datetime(FIG.start_time.values)
+LEG = np.cumsum(np.r_[0, np.diff(T.values) / np.timedelta64(1, "m")] > 10)          # a new leg after a gap of > 10 min
+
+def r_leg(h):
+    """correlation after removing the mean of every leg: only the variability along the legs counts"""
+    d = pd.DataFrame({"ec": EC, "h": h, "leg": LEG}).dropna()
+    a = d.groupby("leg")[["ec", "h"]].transform(lambda s: s - s.mean())
+    return np.corrcoef(a.ec, a.h)[0, 1]
+
 rows = {}
 for key, name in NAMES.items():
     h = FIG[key].values; ok = np.isfinite(h)
     m = skill_metrics(EC, h, key)
-    rows[name] = {"slope b": m["slope"], "r": m["r"], "sd ratio": m["std_ratio"], "bias (W m-2)": m["bias"],
+    rows[name] = {"slope b": m["slope"], "r": m["r"], "r_leg": r_leg(h), "sd ratio": m["std_ratio"], "bias (W m-2)": m["bias"],
                   "MAE (W m-2)": np.mean(np.abs(h[ok] - EC[ok])), "RMSE (W m-2)": m["rmse"], "n": m["n"]}
 rows["zero flux  (H = 0 everywhere)"] = {"bias (W m-2)": -EC.mean(), "MAE (W m-2)": np.mean(np.abs(EC)),
                                         "RMSE (W m-2)": np.sqrt(np.mean(EC ** 2)), "n": EC.size}
@@ -391,7 +408,15 @@ table.fillna("–")
 (CARRA is not available on 13 April, hence the smaller *n*.) The forecast "no flux anywhere" has a smaller MAE and RMSE than
 every estimate in the table: in this weak-flux regime the error measures reward caution, not skill.
 
-## The three bulk estimates against the reference (Fig. 6)
+$r_\mathrm{leg}$ is the correlation after the mean of every leg has been removed from both series (Table 4 of the paper). It asks a
+harder question than $r$: does the estimate follow the flux from one 5 km segment to the next *along* a leg, or only the
+differences between the flight days? Only the estimate with measured inputs does so clearly.
+
+The two fluxes the reanalyses diagnose themselves overestimate the amplitude (slope above 1) and are biased low. They follow
+the observed variability better than the offline ERA5-only estimate, which the paper attributes to their own internal skin
+temperature and much larger scalar roughness (Sect. 2.2 and the Discussion), but they follow it little along the legs.
+
+## The three bulk estimates against the reference (compare Fig. 6 of the paper)
 '''), ("code", r'''
 fig, axs = plt.subplots(1, 3, figsize=(10, 3.4), sharex=True, sharey=True)
 for ax, key, c in zip(axs, ["H_obs_bulk", "H_rs_bulk", "H_era_bulk"], ["C2", "C1", "C0"]):
@@ -426,7 +451,7 @@ print(f"median within-segment standard deviation of the surface temperature: {me
 **Take-away.** The surface temperature decides whether a bulk estimate follows the observed variability.
 ERA5's surface temperature cannot represent leads and thin ice inside a grid cell; on heterogeneous segments its flux
 is even anti-correlated with the measurement, and this is where replacing it by the MODIS surface temperature changes the most.
-How firmly this rests on 91 segments that come from a handful of legs is the subject of Chapter 6.
+How firmly this rests on 90 segments that come from a handful of legs is the subject of Chapter 6.
 ''')]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -481,7 +506,9 @@ pd.DataFrame({g: {"slope, measured inputs": rng(S[m].obs_slope), "r, measured in
                   "slope, MODIS + ERA5": rng(S[m].rs_slope), "r, MODIS + ERA5": rng(S[m].rs_r)} for g, m in groups.items()}).T
 '''), ("md", r'''
 No choice in the transfer coefficient changes the correlation. Among them only the roughness lengths change the amplitude
-appreciably; the eight stability schemes are practically indistinguishable, because the sampled conditions are close to neutral (Chapter 3).
+appreciably. The eight stability schemes are practically indistinguishable: they all use the same functions in unstable
+stratification and differ only in stable stratification, where the flux is small (Chapter 3; Chapter 6 shows how large the
+stability correction itself is).
 
 ## Sensitivity to the inputs
 '''), ("code", r'''
@@ -492,8 +519,8 @@ pd.DataFrame({name: {"per +1 K in (theta_air - theta_s)   (W m-2)": q(central_di
               for k, name in (("obs", "measured inputs"), ("rs", "MODIS + ERA5"))}).T
 '''), ("md", r'''
 (median and inter-quartile range over the segments.) One kelvin in the temperature difference matters far more than one
-metre per second in wind — and the typical temperature *difference* between air and surface is itself only about one
-kelvin, the same size as the uncertainty of a satellite surface temperature. This is why the surface temperature product is decisive (Chapter 4).
+metre per second in wind — and the typical temperature *difference* between air and surface is itself only one to two
+kelvin, the size of the uncertainty of a satellite surface temperature. This is why the surface temperature product is decisive (Chapter 4).
 
 ## Uncertainty budget (Table 2 of the paper)
 
@@ -508,18 +535,19 @@ pd.DataFrame({name: [np.nanmedian(U[k]), np.nanpercentile(U[k], 25), np.nanperce
              index=["median (W m-2)", "25th percentile", "75th percentile"]).round(1).T
 '''), ("md", r'''
 **Take-away.** The measured reference is known to about 1 W m⁻². A bulk estimate driven by satellite and reanalysis
-inputs is uncertain by several W m⁻² — more than the typical flux itself — and most of that comes from the
-temperature difference. Improving pan-Arctic flux estimates is therefore first of all a question of better surface
-temperatures, and only then of better transfer coefficients.
+inputs is uncertain by several W m⁻², more than the typical flux itself; surface temperature, air temperature and the
+large ERA5 wind uncertainty contribute comparably. Whether an estimate follows the observed variability, however, is
+decided by the surface temperature (Chapter 4), and its amplitude by the transfer coefficient; the paper concludes that
+improving pan-Arctic flux estimates needs both.
 ''')]
 
 # ═════════════════════════════════════════════════════════════════════════════
 NB6 = [("md", r'''
 # 6 · How robust is the result?
 
-91 segments, four flight days, one instrument: every conclusion of the previous chapters rests on a small sample.
+90 segments, four flight days, one instrument: every conclusion of the previous chapters rests on a small sample.
 This chapter takes the objections a critical reader raises, one at a time, and checks each against the data.
-Some conclusions come out unchanged; others are weaker than a naive count of 91 segments suggests.
+Some conclusions come out unchanged; others are weaker than a naive count of 90 segments suggests.
 
 > [!NOTE]
 > **In the paper:** these checks answer review comments and are not (yet) part of the text. **In the code:**
@@ -602,8 +630,9 @@ for unit in units:
     print(f"  resampling {unit:<12}: 95 % interval [{np.percentile(g, 2.5):+.1f}, {np.percentile(g, 97.5):+.1f}], "
           f"resamples without gain: {np.mean(g <= 0) * 100:.1f} %")
 '''), ("md", r'''
-Resampling segments or short blocks, a zero gain practically never occurs. With whole legs as the unit it does in a few
-per cent of the resamples: the heterogeneous segments come from only a few legs, and most of them from two days.
+Resampling segments or short blocks, a zero gain practically never occurs. With whole legs as the unit it does in a
+noticeable share of the resamples (printed above): the heterogeneous segments come from only a few legs, and most of them
+from two days.
 The gain is large and consistent in sign, but "highly significant" is a statement about segments, not about legs.
 
 ## Does one flight day carry the result?
@@ -660,7 +689,7 @@ cut-offs.
 from scipy.signal import detrend
 from fluxpy.eddy_covariance import band_covariance
 from fluxpy.util import CP, add_theta, air_density
-TB =xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
+TB = xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
 cutoffs = [0.0, 0.05, 0.1, 0.2, 0.5]                                   # lower edge of the band [Hz]; upper edge 20 Hz
 H_band = np.zeros((len(cutoffs), EC.size))
 for j, (t0, t1) in enumerate(zip(SEG.start_time.values, SEG.end_time.values)):
@@ -683,7 +712,7 @@ Moving the lower edge changes the flux amplitude, and the regression slopes foll
 (`pixi run ec-bands` prints them). The slope of the measured-input estimate — the "overestimation of the amplitude" of
 Chapter 4 — shrinks when slower motions are counted as flux. It is therefore a statement about the flux carried by eddies
 of up to about 600 m, the scale that the band selects; whether the slower part is turbulence cannot be decided from a
-5 km segment of about 85 s.
+5 km segment of about 83 s.
 
 ## How strong is the stability correction?
 
@@ -710,29 +739,29 @@ The correction itself is not small: on the median stable segment it roughly halv
 median unstable segment it raises it by about 40 %. What makes the choice of scheme immaterial is that the schemes *agree* where the flux is
 large: all use the same unstable functions, and they differ only on the stable side, where the flux is small anyway.
 
-## A segment that is not at one level
+## Is every segment flown at one level?
 
-The segments are meant to be flown at constant height. The 100 Hz height record shows whether that holds.
+The flux of a segment is meant to be measured at one height. The segmentation (`fluxpy.aggregate`) therefore rejects a
+segment whose T-Bird height varies by more than 30 m (paper Appendix A1); the raw 100 Hz height also moves with the
+towed body and the ice below it.
 '''), ("code", r'''
 # (code collapsed on the website)
-height_range = []
-for t0, t1 in zip(SEG.start_time.values, SEG.end_time.values):
-    h = pd.Series(TB.h.sel(time=slice(t0, t1)).values.astype(float)).rolling(1000, center=True).mean()
-    height_range.append(h.max() - h.min())
-height_range = np.asarray(height_range)
-worst, typical = int(np.argmax(height_range)), int(np.argsort(height_range)[EC.size // 2])
-fig, ax = plt.subplots(figsize=(7, 2.8))
-for j, label in ((worst, "largest height change"), (typical, "typical segment")):
-    h = TB.h.sel(time=slice(SEG.start_time.values[j], SEG.end_time.values[j]))
-    ax.plot((h.time - h.time[0]) / np.timedelta64(1, "s"), h, label=f"{label}: {pd.Timestamp(SEG.start_time.values[j]):%d %b %H:%M}")
-ax.set_xlabel("time in the segment (s)"); ax.set_ylabel("T-Bird height (m)"); ax.legend(fontsize=8)
-level = height_range <= 20
-print(f"segments whose height changes by more than 20 m: {(~level).sum()}")
-print("without them: " + "   ".join(f"{name} b {b:.1f}, r {r:.1f}" for key, (name, _) in EST.items()
-                                   for b, r in [slope_r(EC[level], FIG[key].values[level])]))
+height_range = np.asarray([float(TB.h.sel(time=slice(t0, t1)).max() - TB.h.sel(time=slice(t0, t1)).min())
+                           for t0, t1 in zip(SEG.start_time.values, SEG.end_time.values)])
+legs = pd.read_csv(AR / "analysis_ready_polar6_legs_metadata.csv", sep="\t", parse_dates=["start_time", "end_time"])
+first = legs[legs.start_time.dt.strftime("%d %b") == "13 Apr"].iloc[0]           # a leg that started while the T-Bird was winched up
+h13 = TB.h.sel(time=slice(first.start_time, first.start_time + pd.Timedelta("180s")))
+fig, axs = plt.subplots(1, 2, figsize=(9, 3))
+axs[0].hist(height_range, bins=np.arange(0, 34, 2), color="0.4"); axs[0].axvline(30, color="C3", ls="--")
+axs[0].set_xlabel("T-Bird height range within a segment (m)"); axs[0].set_ylabel("segments")
+first_5km_s = 5000 / float(TB.tas.sel(time=slice(first.start_time, first.end_time)).mean())    # as fluxpy.aggregate cuts
+axs[1].plot((h13.time - h13.time[0]) / np.timedelta64(1, "s"), h13, color="C3"); axs[1].axvline(first_5km_s, color="0.5", ls=":")
+axs[1].set_xlabel(f"seconds after {first.start_time:%d %b %H:%M} UTC"); axs[1].set_ylabel("T-Bird height (m)")
+print(f"largest height range of the {EC.size} segments: {height_range.max():.0f} m (limit 30 m)")
 '''), ("md", r'''
-One segment was flown while the T-Bird was being winched up; it also sets the maximum segment height of the data set.
-Leaving it out changes none of the results.
+All segments of the comparison stay below the limit (left). It matters once: at the start of a leg on 13 April the T-Bird
+was still being winched up (right; the dotted line marks the end of the first 5 km). That segment is not used, and the
+rest of the leg lies above the 50 m that the comparison admits.
 
 **Take-away.** The measured-input estimate keeps the best correlation under every test, and its amplitude overestimation
 survives resampling whole legs, although its size depends on which eddies are counted as flux. The satellite benefit
