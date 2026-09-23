@@ -1,16 +1,14 @@
-"""Generate the manuscript LaTeX tables from the pipeline output.
+"""The data-derived table bodies of the manuscript, written to tables_manuscript/.
 
-Writes table bodies that are pasted into manuscript.tex, so the printed tables
-can never drift from the analysis:
+    table_sensitivity_summary.tex   Table 3  (Sect. 4.2): range of slope and r over each sensitivity axis
+    table_sensitivity_full.tex      Table C1 (Appendix C): every configuration, slope and r of both pathways
+    table_uncertainty_budget.tex    Table 2  (Sect. 3.2): flux-uncertainty budget
 
-  * ``table_sensitivity_summary.tex`` -- Table 3 (summary of experiments),
-    reported in the slope/correlation framework.
-  * ``table_sensitivity_full.tex``    -- Table C1 (full matrix), now carrying
-    slope and r instead of RMSE/bias alone.
+The bodies are pasted into manuscript.tex, so the printed tables cannot drift
+from the analysis. (Table A1 is written by scripts/ec_quality.py.)
 
-Run:  pixi run python scripts/make_manuscript_tables.py
+Run:  pixi run tables
 """
-
 import sys
 from pathlib import Path
 
@@ -20,57 +18,54 @@ import xarray as xr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from fluxpy.sensitivity import skill_metrics  # noqa: E402
+from fluxpy.uncertainty import uncertainty_budget  # noqa: E402
 
 OUT = REPO / "tables_manuscript"
 OUT.mkdir(exist_ok=True)
-df = pd.read_csv(REPO / "data/model_output/sensitivity_summary_table.csv")
+SUMMARY = pd.read_csv(REPO / "data/model_output/sensitivity_summary_table.csv")   # one row per configuration
 FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")
-EC = np.asarray(FIG["H_obs_ec"])
 
 
-def rng_str(sub, col, fmt="{:.1f}"):
-    """min--max across a set of runs."""
-    v = sub[col].astype(float)
+def write(name: str, body: str) -> None:
+    (OUT / name).write_text(body + "\n", encoding="utf-8", newline="\n")
+
+
+# ── Table 3: range over each sensitivity axis ─────────────────────────────────
+
+def value_range(rows, column, fmt="{:.1f}"):
+    """min--max of a metric across a set of configurations."""
+    v = rows[column].astype(float)
     return f"{fmt.format(v.min())}--{fmt.format(v.max())}"
 
 
-# ── Table 3: summary of the sensitivity experiments ──────────────────────────
-schemes = df[df.label.str.endswith("_ref") & ~df.label.str.contains("era5only")]
-alpha = df[df.label.str.contains("ztr")& ~df.label.str.contains("era5only")]
-alpha = alpha[alpha.zt_ratio.between(1e-4, 1e-1)]
-rough = df[df.label.str.contains("mosaic|sheba|nschnier") & ~df.label.str.contains("era5only")]
-const = df[df.label.str.contains("z0c") & ~df.label.str.contains("era5only")]
-
-rows = [
-    ("Stability scheme (8 schemes)", schemes),
-    (r"$\alpha_T$ ($10^{-4}$--$10^{-1}$)", alpha),
-    ("Momentum roughness set", rough),
-    (r"Constant $z_{0,m}$", const),
+modis_forcing = SUMMARY[~SUMMARY.label.str.contains("era5only")]        # Table 3 uses the ERA5-MODIS runs
+axes = [
+    ("Stability scheme (8 schemes)", modis_forcing[modis_forcing.label.str.endswith("_ref")]),
+    (r"$\alpha_T$ ($10^{-4}$--$10^{-1}$)", modis_forcing[modis_forcing.label.str.contains("ztr")
+                                                          & modis_forcing.zt_ratio.between(1e-4, 1e-1)]),
+    ("Momentum roughness set", modis_forcing[modis_forcing.label.str.contains("mosaic|sheba|nschnier")]),
+    (r"Constant $z_{0,m}$", modis_forcing[modis_forcing.label.str.contains("z0c")]),
 ]
-lines = []
-for name, sub in rows:
-    lines.append(
-        f"{name} & {rng_str(sub, 'obs_slope')} & {rng_str(sub, 'obs_r')} & "
-        f"{rng_str(sub, 'rs_slope')} & {rng_str(sub, 'rs_r')} \\\\")
-tbl3 = "\n".join(lines)
-(OUT / "table_sensitivity_summary.tex").write_text(tbl3 + "\n", encoding="utf-8", newline="\n")
-print("── Table 3 body ──\n" + tbl3 + "\n")
+table3 = "\n".join(f"{name} & {value_range(rows, 'obs_slope')} & {value_range(rows, 'obs_r')} & "
+                   f"{value_range(rows, 'rs_slope')} & {value_range(rows, 'rs_r')} \\\\" for name, rows in axes)
+write("table_sensitivity_summary.tex", table3)
+print("── Table 3 body ──\n" + table3 + "\n")
 
-# ── Table C1: full matrix with slope and r ───────────────────────────────────
+
+# ── Table C1: every configuration ─────────────────────────────────────────────
+
 GROUPS = [
     ("Reference configuration (conventional $\\alpha_T$)", ["GLGS20_ref"]),
     ("Amplitude-matched configuration", ["GLGS20_ztr1e-04"]),
     ("Stability scheme (all other settings at reference)",
      ["BD_ref", "HB88_ref", "BH91_ref", "CB05_ref", "GAFGP07_ref", "ZE07-I_ref", "ZE07-II_ref"]),
-    ("Scalar roughness ratio $\\alpha_T$ (GLGS20)",
-     [f"GLGS20_ztr1e-0{k}" for k in (2, 3, 5, 6, 7)]),
+    ("Scalar roughness ratio $\\alpha_T$ (GLGS20)", [f"GLGS20_ztr1e-0{k}" for k in (2, 3, 5, 6, 7)]),
     ("Momentum roughness set (GLGS20)", ["GLGS20_mosaic", "GLGS20_sheba", "GLGS20_nschnier"]),
     ("Constant (surface-type-independent) $z_{0,m}$ (GLGS20)",
      ["GLGS20_z0c1e-04", "GLGS20_z0c2e-04", "GLGS20_z0c4e-04"]),
 ]
-SCHEME_CITE = {
-    "GLGS20_ref": r"\citet{gryanik_new_2020}", "GLGS20_ztr1e-04": "GLGS20",
+SCHEME_CITATION = {
+    "GLGS20_ref": r"\citet{gryanik_new_2020}",
     "BD_ref": r"\citet{businger_flux-profile_1971,dyer_review_1974}",
     "HB88_ref": r"\citet{holtslag_applied_1988}",
     "BH91_ref": r"\citet{beljaars_flux_1991}",
@@ -79,69 +74,75 @@ SCHEME_CITE = {
     "ZE07-I_ref": r"\citet{zilitinkevich_similarity_2007}",
     "ZE07-II_ref": r"\citet{zilitinkevich_similarity_2007}",
 }
-out = []
+ROUGHNESS_COLUMN = {      # z0m of open water / thin ice / snow-covered ice, as printed
+    "GLGS20_ref": r"$2{\times}10^{-4}$ / $1{\times}10^{-4}$ / $4{\times}10^{-4}$",
+    "GLGS20_mosaic": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $3.3{\times}10^{-4}$",
+    "GLGS20_sheba": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $2.3{\times}10^{-4}$",
+    "GLGS20_nschnier": r"$1{\times}10^{-4}$ / $1{\times}10^{-4}$ / $5{\times}10^{-3}$",
+}
+
+
+def roughness_cell(label: str, z0_constant) -> str:
+    if label in ROUGHNESS_COLUMN:
+        return ROUGHNESS_COLUMN[label]
+    if "z0c" in label:
+        exponent = int(np.floor(np.log10(z0_constant)))
+        mantissa = z0_constant / 10.0 ** exponent
+        return rf"$z_{{0,m}} = {mantissa:.0f}{{\times}}10^{{{exponent}}}$" + r"\,m (uniform)"
+    return "Ref."
+
+
+lines = []
 for title, labels in GROUPS:
-    out.append(r"\multicolumn{8}{l}{\textit{" + title + r"}} \\")
-    for lab in labels:
-        r = df[df.label == lab]
-        if r.empty:
-            print(f"  ! missing run: {lab}")
+    lines.append(r"\multicolumn{8}{l}{\textit{" + title + r"}} \\")
+    for label in labels:
+        match = SUMMARY[SUMMARY.label == label]
+        if match.empty:
+            print(f"  ! missing run: {label}")
             continue
-        r = r.iloc[0]
-        bold = lab in ("GLGS20_ref", "GLGS20_ztr1e-04")
-        w = (lambda s: r"\textbf{" + s + "}") if bold else (lambda s: s)
-        scheme = SCHEME_CITE.get(lab, "GLGS20")
-        a = f"{r.zt_ratio:.0e}".replace("e-0", "e-")
-        z0 = "Ref." if lab not in ("GLGS20_ref",) and "z0c" not in lab and lab not in (
-            "GLGS20_mosaic", "GLGS20_sheba", "GLGS20_nschnier") else ""
-        if lab == "GLGS20_ref":
-            z0 = r"$2{\times}10^{-4}$ / $1{\times}10^{-4}$ / $4{\times}10^{-4}$"
-        elif "z0c" in lab:
-            exp = int(np.floor(np.log10(r.z0_constant)))
-            mant = r.z0_constant / 10.0 ** exp
-            z0 = (rf"$z_{{0,m}} = {mant:.0f}{{\times}}10^{{{exp}}}$" + r"\,m (uniform)")
-        elif lab in ("GLGS20_mosaic", "GLGS20_sheba", "GLGS20_nschnier"):
-            z0 = {"GLGS20_mosaic": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $3.3{\times}10^{-4}$",
-                  "GLGS20_sheba": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $2.3{\times}10^{-4}$",
-                  "GLGS20_nschnier": r"$1{\times}10^{-4}$ / $1{\times}10^{-4}$ / $5{\times}10^{-3}$"}[lab]
-        out.append(
-            f"\\texttt{{{lab.replace('_', chr(92) + '_')}}} & {scheme} & {w(a)} & {z0} & "
-            f"{w(f'{r.obs_slope:.1f}')} & {w(f'{r.obs_r:.1f}')} & "
-            f"{w(f'{r.rs_slope:.1f}')} & {w(f'{r.rs_r:.1f}')} \\\\")
-    out.append(r"\hline")
-tblC = "\n".join(out)
-(OUT / "table_sensitivity_full.tex").write_text(tblC + "\n", encoding="utf-8", newline="\n")
+        row = match.iloc[0]
+        bold = label in ("GLGS20_ref", "GLGS20_ztr1e-04")
+        emph = (lambda s: r"\textbf{" + s + "}") if bold else (lambda s: s)
+        alpha = f"{row.zt_ratio:.0e}".replace("e-0", "e-")
+        lines.append(
+            f"\\texttt{{{label.replace('_', chr(92) + '_')}}} & {SCHEME_CITATION.get(label, 'GLGS20')} & {emph(alpha)} & "
+            f"{roughness_cell(label, row.z0_constant)} & "
+            f"{emph(f'{row.obs_slope:.1f}')} & {emph(f'{row.obs_r:.1f}')} & "
+            f"{emph(f'{row.rs_slope:.1f}')} & {emph(f'{row.rs_r:.1f}')} \\\\")
+    lines.append(r"\hline")
+tableC1 = "\n".join(lines)
+write("table_sensitivity_full.tex", tableC1)
 print("-- Table C1 body written --")
-print(tblC[:1200])
+print(tableC1[:1200])
 
 
-# ── Table (tab:bulk_unc): flux-uncertainty budget ────────────────────────────
-from fluxpy.uncertainty import uncertainty_budget  # noqa: E402
+# ── Table 2: flux-uncertainty budget ─────────────────────────────────────────
 
-UNC = uncertainty_budget(FIG)
+BUDGET = uncertainty_budget(FIG)
 H_ec = np.asarray(FIG["H_obs_ec"], dtype=float)
 
 
-def _stat(x):
-    v = x[np.isfinite(x)]
+def absolute(sigma):
+    v = sigma[np.isfinite(sigma)]
     return f"{np.median(v):.1f} [{np.percentile(v, 25):.1f}--{np.percentile(v, 75):.1f}]"
 
 
-def _rel_stat(sig, flux, floor=2.0):
-    rel = sig / np.abs(flux) * 100
+def relative(sigma, flux, floor=2.0):
+    """sigma / |H| in %, over the segments with |H| >= 2 W m-2."""
+    rel = sigma / np.abs(flux) * 100
     v = rel[np.isfinite(rel) & (np.abs(flux) >= floor)]
     return f"{np.median(v):.0f} [{np.percentile(v, 25):.0f}--{np.percentile(v, 75):.0f}]"
 
 
-unc_rows = [
-    (r"$H_\mathrm{S,obs,EC}$ total", UNC["ec_total"], H_ec),
-    (r"\quad Random (sampling) error", UNC["ec_random"], H_ec),
-    (r"\quad Instrument", UNC["ec_instrument"], H_ec),
-    (r"\quad \textit{cross-check: segment placement}", UNC["ec_placement"], H_ec),
-    (r"$H_\mathrm{S,obs,bulk}$", UNC["obs_bulk"], np.asarray(FIG["H_obs_bulk"], dtype=float)),
-    (r"$H_\mathrm{S,RS,bulk}$", UNC["rs_bulk"], np.asarray(FIG["H_rs_bulk"], dtype=float)),
+budget_rows = [
+    (r"$H_\mathrm{S,obs,EC}$ total", BUDGET["ec_total"], H_ec),
+    (r"\quad Random (sampling) error", BUDGET["ec_random"], H_ec),
+    (r"\quad Instrument", BUDGET["ec_instrument"], H_ec),
+    (r"\quad \textit{cross-check: segment placement}", BUDGET["ec_placement"], H_ec),
+    (r"$H_\mathrm{S,obs,bulk}$", BUDGET["obs_bulk"], np.asarray(FIG["H_obs_bulk"], dtype=float)),
+    (r"$H_\mathrm{S,RS,bulk}$", BUDGET["rs_bulk"], np.asarray(FIG["H_rs_bulk"], dtype=float)),
 ]
-tblU = "\n".join(f"{name} & {_stat(sig)} & {_rel_stat(sig, flux)} \\\\" for name, sig, flux in unc_rows)
-(OUT / "table_uncertainty_budget.tex").write_text(tblU + "\n", encoding="utf-8", newline="\n")
+table2 = "\n".join(f"{name} & {absolute(sigma)} & {relative(sigma, flux)} \\\\" for name, sigma, flux in budget_rows)
+write("table_uncertainty_budget.tex", table2)
 print("\n% tab:bulk_unc  (sigma median [p25--p75] in W m-2 | sigma/|H| in %, |H| > 2 W m-2)")
-print(tblU)
+print(table2)

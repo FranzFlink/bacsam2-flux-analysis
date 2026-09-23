@@ -13,7 +13,7 @@ paper that is derived from data:
 | `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 2); part of `all-from-raw` | ~2 min each |
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
 | `verify-cache` | The MODIS and ERA5 values at the segments follow from the shipped gridded fields | ~5 s |
-| `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~15 s |
+| `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
 | `check` | The key numbers equal the committed reference `expected_numbers.txt` | ~15 s |
 | `tables` | LaTeX bodies of the data-derived tables → `tables_manuscript/` | ~5 s |
 | `figures` | All manuscript figures → `figures_manuscript/output/` | ~3 min |
@@ -46,12 +46,27 @@ rewrites all EC products (segments, placement uncertainty, window-length experim
 Re-running rewrites the output files with a new time stamp; `git status` will then list
 them as modified although the numbers are identical.
 
+## Where is what in the paper?
+
+| Paper | Code |
+|-------|------|
+| Sect. 3.1 Eddy-covariance method, Eq. (1) | `fluxpy/eddy_covariance.py` (band-limited covariance, random error, `segment_flux`); the 5 km segments: `fluxpy/aggregate.py`, `scripts/run_ec_aggregation.py` |
+| Sect. 3.1 window length (Fig. 2), placement spread | `scripts/ec_window_length.py`, `scripts/ec_segment_placement.py` |
+| Sect. 3.2 and Appendix B Bulk method, Eq. (2) | `fluxpy/bulk.py` (B1 Richardson number, B2 roughness, B3 transfer coefficient), `fluxpy/stability.py` (Eq. B2, effective wind), `fluxpy/stability_lib.py` (stability functions) |
+| Table 2 uncertainty budget | `fluxpy/uncertainty.py`, `scripts/make_manuscript_tables.py` |
+| Sect. 4.1 comparison, Table 4, Figs. 3-5 | `scripts/calc_bulk_and_ec_fluxes.py` (all estimates on the segments), `scripts/manuscript_numbers.py`, `figures_manuscript/fig03-05` |
+| Sect. 4.2 sensitivity, Table 3, Fig. 6, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig06_sensitivity.py` |
+| Appendix A quality of the EC reference, Fig. A1, Table A1 | `fluxpy/qc.py` (integrity check), `scripts/ec_quality.py`, `figures_manuscript/figA1_spectral_qc.py` |
+| every number in the text | `scripts/manuscript_numbers.py` and `scripts/ec_quality.py`, whose output is committed as `expected_numbers.txt` |
+
+Every module starts with a docstring that names the manuscript section it implements.
+
 ## What is where
 
 | Path | Content |
 |------|---------|
 | `fluxpy/` | **All physics**: EC flux and random error (`eddy_covariance.py`), integrity check and spectra (`qc.py`), 5 km segments (`aggregate.py`), bulk flux (`bulk.py`), bulk Richardson number (`stability.py`), stability functions and transfer coefficients (`stability_lib.py`), sensitivity sweep and skill metrics (`sensitivity.py`), uncertainty budget (`uncertainty.py`) |
-| `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments |
+| `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments (`fluxpy/aggregate.py`) |
 | `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 2) |
 | `scripts/ec_quality.py` | Quality of the EC reference (Appendix A) → `tables_manuscript/table_qc_robustness.tex` |
 | `scripts/verify_ec_reproduction.py` | Recomputes the EC segments and compares with the shipped segment file |
@@ -59,8 +74,8 @@ them as modified although the numbers are identical.
 | `scripts/manuscript_numbers.py` | Prints the numbers quoted in the text and in the comparison table |
 | `scripts/make_manuscript_tables.py` | Sensitivity tables and the uncertainty-budget table |
 | `figures_manuscript/` | One script per manuscript figure (see its README) |
-| `tests/` | Unit tests; `test_most_schemes.py` checks the physics against independent references (numerical integration of the published stability functions, log-law limit, sign convention, QC thresholds of Appendix A) |
-| `preprocessing/` | How the shipped data files were produced from the raw archives (documentation; needs the raw data) |
+| `tests/` | Unit tests; `test_most_schemes.py` checks the physics against independent references (numerical integration of the published stability functions, log-law limit, sign convention, integrity threshold of Appendix A, Monte-Carlo check of the random error); `test_constants_and_theta.py` pins the constants to the values stated in the paper |
+| `preprocessing/` | How the shipped data files were produced from the raw archives, including the leg table (documentation; needs the raw data) |
 | `book/` | A step-by-step, executable walk through the method (see below) |
 | `DATA.md` | Description, units and origin of every data file |
 

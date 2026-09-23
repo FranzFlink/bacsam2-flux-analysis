@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use this code or data, please cite the paper below."
 title: "BACSAM-II sensible-heat-flux analysis (code and data)"
 type: software
+version: "1.4.0"
 authors:
   - family-names: Müller
     given-names: Joshua J.
