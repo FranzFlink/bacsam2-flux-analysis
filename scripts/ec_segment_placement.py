@@ -25,8 +25,8 @@ from tqdm import tqdm
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from fluxpy.flux_processing import get_cov   # noqa: E402
-from fluxpy.meteorology import add_theta     # noqa: E402
+from fluxpy.eddy_covariance import segment_flux   # noqa: E402
+from fluxpy.meteorology import add_theta          # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -47,8 +47,8 @@ legs = legs[legs["platform"].str.lower().str.contains("polar", na=False)
 
 
 def _flux(ds):
-    _, h = get_cov(ds.copy(), "theta", heat_flux=True, time_dim="distance", fs=FS, highpass=False)
-    return float(h)
+    """EC flux of one window, same estimator as the segment fluxes."""
+    return segment_flux(ds, fs=FS).flux
 
 
 rows = []

@@ -50,7 +50,7 @@ them as modified although the numbers are identical.
 
 | Path | Content |
 |------|---------|
-| `fluxpy/` | **All physics**: bulk flux (`bulk.py`), stability functions and transfer coefficients (`stability_lib.py`, `stability.py`), EC covariance and spectra (`flux_processing.py`, `ec.py`), spectral quality control (`qc.py`), segment aggregation (`aggregate.py`), sensitivity sweep and skill metrics (`sensitivity.py`) |
+| `fluxpy/` | **All physics**: EC flux and random error (`eddy_covariance.py`), integrity check and spectra (`qc.py`), 5 km segments (`aggregate.py`), bulk flux (`bulk.py`), bulk Richardson number (`stability.py`), stability functions and transfer coefficients (`stability_lib.py`), sensitivity sweep and skill metrics (`sensitivity.py`), uncertainty budget (`uncertainty.py`) |
 | `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments |
 | `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 2) |
 | `scripts/ec_quality.py` | Quality of the EC reference (Appendix A) → `tables_manuscript/table_qc_robustness.tex` |
@@ -86,7 +86,7 @@ Two implementation details worth knowing:
   the surface) because no surface pressure measurement exists.
 * The EC covariance is the part of the w–θ covariance carried by frequencies between 0.1 and
   20 Hz: linear detrend, cospectrum of the full segment, summed over the band
-  (`fluxpy.flux_processing.band_covariance`; frequency resolution ≈ 0.012 Hz).
+  (`fluxpy.eddy_covariance.band_covariance`; frequency resolution ≈ 0.012 Hz).
 
 ## What cannot be reproduced from this repository
 

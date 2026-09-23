@@ -1,372 +1,151 @@
 r"""
 fluxpy.qc
 =========
-Spectral quality control of the eddy-covariance segments.
+Quality of the eddy-covariance reference (manuscript Appendix A).
 
-Quality of the eddy-covariance segments (manuscript Appendix A).
+The paper separates two things:
 
-A quality control of a flux *reference* must test the measurement, not the
-measurand. Over compact sea ice most fluxes are close to zero, and every
-criterion that is a ratio to the flux (signal-to-noise ratios, relative
-stationarity tests, the R2 of the cumulative covariance) then fails for small
-fluxes and passes for large ones: on the 91 segments of the paper such criteria
-correlate with |H| at |rho| = 0.6-0.7 and would censor the near-zero fluxes.
-They are therefore not used to discard data. Instead:
+* **A1, integrity check (pass / fail).** The turbulence must be resolved: the
+  power spectrum of the vertical wind has to follow the inertial-subrange slope,
+  ``|s_w + 5/3| <= 0.4`` between 0.1 and 20 Hz (Kolmogorov, 1941).
+  -> :func:`spectral_slope`, :func:`turbulence_resolved`.
+  Data completeness and a constant flight level are enforced when the segments
+  are cut (``fluxpy.aggregate``).
+* **A2, random error of every flux.** Reported, never used to discard data
+  (``fluxpy.eddy_covariance.band_covariance_random_error``).
 
-* **Integrity check (pass/fail).** The turbulence must be resolved: the power
-  spectrum of the vertical wind has to follow the inertial-subrange slope,
-  $|s_w + 5/3| \le 0.4$ between 0.1 and 20 Hz (Kolmogorov, 1941). Data
-  completeness and constant flight level are enforced when the segments are cut
-  (``fluxpy.aggregate``).
-* **Random error and detection limit.** Every flux carries its own random
-  error (``flux_processing.band_covariance_random_error``; Finkelstein and
-  Sims, 2001). The paper reports how many fluxes exceed 1, 2 and 3 times this
-  error. Fluxes that do not are valid measurements of a small flux and
-  are kept (Langford et al., 2015).
+No criterion that is a ratio to the flux is applied (A3): over compact sea ice
+most fluxes are close to zero, and such criteria fail for small fluxes and pass
+for large ones (on the 91 segments they correlate with |H| at |rho| = 0.6).
+``scripts/ec_quality.py`` evaluates them anyway to show that the results do not
+depend on them (Table A1).
 
-``qc_leg`` still returns the spectra, the cospectrum, the ogive and the
-cumulative covariance, which are shown in Fig. A1 and used by
-``scripts/ec_quality.py`` for the robustness table.
+:func:`segment_spectra` returns the spectra, cospectrum and ogive of Fig. A1
+together with the slope of the integrity check.
 
-Public API
-----------
-highpass(x, fs, fc, order)             – 4th-order Butterworth high-pass filter
-cospectrum(w, x, fs, ...)              – cross-power spectral density (real part)
-powerspec(x, fs, ...)                  – one-sided power spectral density (Welch)
-ogive_from_cospec(f, Co)               – cumulative ogive (high → low frequency)
-qc_leg(w, theta, u, v, fs, x_dist)     – per-segment spectral metrics
-turbulence_resolved(slope_w)           – inertial-subrange integrity check
+All diagnostics are calculated from the 100 Hz series after linear detrending.
 """
-
 from __future__ import annotations
 
 import numpy as np
-from scipy.signal import butter, filtfilt, detrend, csd, welch, get_window
+from scipy.signal import csd, detrend, get_window, welch
 
-__all__ = [
-    "highpass",
-    "cospectrum",
-    "powerspec",
-    "ogive_from_cospec",
-    "qc_leg",
-    "turbulence_resolved",
-]
+__all__ = ["INERTIAL_SLOPE", "SLOPE_TOLERANCE", "SLOPE_BAND_HZ",
+           "spectral_slope", "turbulence_resolved", "segment_spectra"]
 
-
-# ---------------------------------------------------------------------------
-# Signal processing primitives
-# ---------------------------------------------------------------------------
-
-def highpass(x: np.ndarray, fs: float, fc: float = 0.1, order: int = 4) -> np.ndarray:
-    """Zero-phase Butterworth high-pass filter.
-
-    Parameters
-    ----------
-    x     : 1-D array of signal values.
-    fs    : Sampling frequency [Hz].
-    fc    : Cut-off frequency [Hz].  Default 0.1 Hz (Tetzlaff 2015).
-    order : Filter order.  Default 4.
-    """
-    b, a = butter(order, fc / (fs / 2.0), btype="highpass")
-    return filtfilt(b, a, x)
-
-
-def cospectrum(
-    w: np.ndarray,
-    x: np.ndarray,
-    fs: float,
-    nperseg: int | None = None,
-    noverlap: int | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Co-spectral density of (w, x) using Welch / CSD.
-
-    Returns
-    -------
-    f   : Frequency array [Hz].
-    Co  : Real part of cross-PSD.
-    """
-    if nperseg is None:
-        nperseg = int(8 * fs)          # ~8-s segments
-    if noverlap is None:
-        noverlap = nperseg // 2
-    f, Pwx = csd(
-        w, x,
-        fs=fs,
-        window=get_window("hann", nperseg),
-        nperseg=nperseg,
-        noverlap=noverlap,
-        detrend="linear",
-    )
-    return f, np.real(Pwx)
-
-
-def powerspec(
-    x: np.ndarray,
-    fs: float,
-    nperseg: int | None = None,
-    noverlap: int | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """One-sided power spectral density via Welch method.
-
-    Returns
-    -------
-    f   : Frequency array [Hz].
-    Pxx : Power spectral density.
-    """
-    if nperseg is None:
-        nperseg = int(8 * fs)
-    if noverlap is None:
-        noverlap = nperseg // 2
-    f, Pxx = welch(
-        x,
-        fs=fs,
-        window=get_window("hann", nperseg),
-        nperseg=nperseg,
-        noverlap=noverlap,
-        detrend="linear",
-    )
-    return f, Pxx
-
-
-def ogive_from_cospec(f: np.ndarray, Co: np.ndarray) -> np.ndarray:
-    """Cumulative ogive integral from high to low frequency.
-
-    Og(f₀) = ∫_{f₀}^{∞} Co(f) df   (approximated by cumulative sum)
-    """
-    df = np.diff(f, prepend=f[0])
-    og = np.flip(np.cumsum(np.flip(Co * df)))
-    return og
+#: Kolmogorov inertial-subrange slope of the power spectrum
+INERTIAL_SLOPE = -5.0 / 3.0
+#: a segment passes the integrity check when |s_w - INERTIAL_SLOPE| <= SLOPE_TOLERANCE
+SLOPE_TOLERANCE = 0.4
+#: frequency interval of the slope fit [Hz] (the flux band of Sect. 3.1)
+SLOPE_BAND_HZ = (0.1, 20.0)
 
 
 # ---------------------------------------------------------------------------
-# Private inertial-subrange helpers
+# A1  Integrity check of the resolved turbulence
 # ---------------------------------------------------------------------------
 
-def _band_mask(f: np.ndarray, a: float, b: float) -> np.ndarray:
-    return (f >= a) & (f <= b)
-
-
-def _find_inertial_band(f: np.ndarray, P: np.ndarray, fs: float) -> np.ndarray:
-    """Adaptive inertial-subrange mask.
-
-    Uses the peak of f·P(f) as lower edge, caps upper edge
-    conservatively at min(20 Hz, Nyquist/2). Falls back to
-    generic 0.2–10 Hz band if fewer than 8 points are found.
-    """
-    fp = f[np.argmax(f * P)]
-    f1 = max(0.12, fp)
-    f2 = min(20.0, 0.25 * fs)
-    m = _band_mask(f, f1, f2) & np.isfinite(P) & (P > 0)
-    if m.sum() < 8:
-        m = _band_mask(f, 0.2, min(10.0, 0.25 * fs)) & (P > 0)
-    return m
-
-
-def _log_slope(f: np.ndarray, P: np.ndarray, mask: np.ndarray) -> float:
-    """Log-log slope of P(f) in the masked frequency range."""
-    if mask.sum() < 6:
+def spectral_slope(f: np.ndarray, P: np.ndarray,
+                   fmin: float = SLOPE_BAND_HZ[0], fmax: float = SLOPE_BAND_HZ[1]) -> float:
+    """Log-log slope ``s`` of a power spectrum, ``log10 P = a + s log10 f``,
+    by ordinary least squares over ``fmin <= f <= fmax`` (Appendix A1)."""
+    use = (f >= fmin) & (f <= fmax) & (P > 0)
+    if use.sum() < 5:
         return np.nan
-    return float(np.polyfit(np.log10(f[mask]), np.log10(P[mask]), 1)[0])
-
-
-def _integrated_flux(
-    f: np.ndarray,
-    Co: np.ndarray,
-    m: np.ndarray | None = None,
-) -> float:
-    """Trapezoidal integral of Co(f) over masked region."""
-    if m is None:
-        m = np.isfinite(Co)
-    if not np.any(m):
-        return np.nan
-    return float(np.trapezoid(Co[m], f[m]))
-
-
-def _f_percent_from_high(
-    f: np.ndarray,
-    Co: np.ndarray,
-    frac: float = 0.95,
-) -> float:
-    """Frequency above which *frac* of total flux is contained (from high→low).
-
-    Returns the frequency threshold [Hz] or ``nan`` if the ogive is degenerate.
-    """
-    m = np.isfinite(Co)
-    if not np.any(m):
-        return np.nan
-    total = _integrated_flux(f, Co, m)
-    if np.isclose(total, 0.0):
-        return np.nan
-    order = np.argsort(f[m])[::-1]
-    ff = f[m][order]
-    cc = Co[m][order]
-    df = np.abs(np.diff(ff, append=ff[-1]))
-    cum = np.cumsum(cc * df)
-    target = frac * np.abs(total)
-    idx = np.argmax(np.abs(cum) >= target)
-    return float(ff[idx])
-
-
-def _cospec_peak_snr(
-    f: np.ndarray,
-    fwC: np.ndarray,
-    peak_band: tuple | None = None,
-    noise_bands: tuple | None = None,
-    peak: tuple | None = None,
-    noise: tuple | None = None,
-) -> float:
-    """Cospectral SNR: max |f·Co| in peak band / median |f·Co| in noise bands.
-
-    Accepts both ``(peak_band, noise_bands)`` and ``(peak, noise)`` naming
-    for backward compatibility.
-    """
-    if peak is None:
-        peak = peak_band if peak_band is not None else (0.1, 2.0)
-    if noise is None:
-        noise = noise_bands if noise_bands is not None else ((0.01, 0.05), (5.0, 20.0))
-
-    m_peak = _band_mask(f, *peak)
-    if not np.any(m_peak):
-        return np.nan
-    peak_val = float(np.nanmax(np.abs(fwC[m_peak])))
-
-    noise_vals = []
-    for a, b in noise:
-        m = _band_mask(f, a, b)
-        if np.any(m):
-            noise_vals.append(float(np.median(np.abs(fwC[m]))))
-    if not noise_vals:
-        return np.nan
-    noise_med = float(np.median(noise_vals))
-    if not np.isfinite(noise_med) or noise_med == 0.0:
-        return np.nan
-    return peak_val / noise_med
-
-
-# ---------------------------------------------------------------------------
-# Per-leg spectral QC
-# ---------------------------------------------------------------------------
-
-def qc_leg(
-    w: np.ndarray,
-    theta: np.ndarray,
-    u: np.ndarray,
-    v: np.ndarray,
-    fs: float,
-    x_dist: np.ndarray | None = None,
-) -> dict:
-    """Compute spectral QC metrics for a single flight leg.
-
-    Parameters
-    ----------
-    w, theta, u, v : 1-D arrays of detrended time series (raw – detrending
-                     is applied internally).
-    fs             : Sampling frequency [Hz].
-    x_dist         : Along-track distance array [km].  If None,
-                     fractional distance [0, 1] is used.
-
-    Returns
-    -------
-    dict with keys:
-    ``f``, ``Pth``, ``Pw``, ``Pu``, ``Pv``,
-    ``Cwth``, ``fwCwth``,
-    ``og_th_norm``, ``cum_frac``, ``cum_cov_norm``,
-    ``slope_th``, ``slope_w``, ``tv_og``, ``R2``, ``max_dev``
-    """
-    # 1. Linear detrend only (no high-pass; manuscript Appendix A)
-    w  = detrend(w,     type="linear")
-    th = detrend(theta, type="linear")
-    uu = detrend(u,     type="linear")
-    vv = detrend(v,     type="linear")
-
-    # 2. Power spectra
-    f, Pth = powerspec(th, fs)
-    f, Pw  = powerspec(w,  fs)
-    f, Pu  = powerspec(uu, fs)
-    f, Pv  = powerspec(vv, fs)
-
-    # 3. Welch co-spectrum and normalised ogive (used for SNR / fwC diagnostics)
-    f, Cwth    = cospectrum(w, th, fs)
-    og_th      = ogive_from_cospec(f, Cwth)
-    denom      = np.mean((w - w.mean()) * (th - th.mean()))
-    og_th_norm = og_th / denom if denom != 0 else og_th * np.nan
-    # Self-normalised ogive: og_th / og_th[0]  (Welch integral as denominator).
-    # og_self[0] = 1 by construction, shape-only, unaffected by flux magnitude.
-    og_th_self = og_th / og_th[0] if abs(og_th[0]) > 1e-12 else og_th * np.nan
-
-    # 3b. Single-realisation FFT ogive (resolves down to 1/T_leg ≈ 0.02 Hz).
-    # Zero-pad to next power-of-2 for speed; use a Hann window to suppress
-    # spectral leakage.  Shown in Fig. A1e; not used as a QC criterion.
-    N_fft   = len(w)
-    N_pad   = int(2 ** np.ceil(np.log2(N_fft)))   # next power-of-2
-    hann    = np.hanning(N_fft)
-    # Factor to normalise Hann window (preserves RMS amplitude)
-    hann_nf = np.sqrt(np.mean(hann**2))
-    Ww  = np.fft.rfft(w  * hann / hann_nf, n=N_pad)
-    Wth = np.fft.rfft(th * hann / hann_nf, n=N_pad)
-    f_fft   = np.fft.rfftfreq(N_pad, d=1.0/fs)
-    df_fft  = f_fft[1]                             # frequency resolution [Hz]
-    Co_fft  = np.real(Ww * np.conj(Wth)) / (N_pad * fs)  # two-sided → one-sided below
-    Co_fft[1:-1] *= 2.0                            # double non-DC/Nyquist bins
-    og_fft  = ogive_from_cospec(f_fft, Co_fft)
-    # Self-normalise by the FFT total flux estimate (og_fft[0])
-    og_fft_norm = og_fft / og_fft[0] if abs(og_fft[0]) > 1e-12 else og_fft * np.nan
-    # 4. Frequency-weighted co-spectrum
-    fwCwth = f * Cwth
-
-    # 5. Cumulative co-variance vs along-track distance (stationarity check)
-    if x_dist is None:
-        x_dist = np.linspace(0.0, 1.0, len(w))
-    w_p  = w  - w.mean()
-    th_p = th - th.mean()
-    cum_cov      = np.cumsum(w_p * th_p)
-    cum_cov_norm = cum_cov / cum_cov[-1] if cum_cov[-1] != 0 else cum_cov * np.nan
-    frac = (x_dist - x_dist.min()) / (x_dist.max() - x_dist.min())
-
-    # 6. Inertial-subrange spectral slopes (log-log, 0.1–20 Hz)
-    def _slope_in_band(P, f1=0.1, f2=20.0):
-        m = (f >= f1) & (f <= f2) & (P > 0)
-        if m.sum() < 5:
-            return np.nan
-        return float(np.polyfit(np.log10(f[m]), np.log10(P[m]), 1)[0])
-
-    slope_th = _slope_in_band(Pth)
-    slope_w  = _slope_in_band(Pw)
-
-    # 7. Ogive total variation in 0.1–5 Hz (smoothness).
-    # Computed on the self-normalised ogive so it is flux-magnitude independent.
-    m_og      = (f >= 0.1) & (f <= 5.0)
-    tv_og     = float(np.abs(np.diff(og_th_norm[m_og])).sum())   # legacy (time-domain denom)
-    tv_og_self = float(np.abs(np.diff(og_th_self[m_og])).sum())  # Welch-self-normalised
-
-    # 8. Homogeneity: linear fit R² and max |residual|
-    coef  = np.polyfit(frac, cum_cov_norm, 1)
-    fit   = np.polyval(coef, frac)
-    resid = cum_cov_norm - fit
-    SS_res = float(np.sum(resid ** 2))
-    SS_tot = float(np.sum((cum_cov_norm - cum_cov_norm.mean()) ** 2))
-    R2      = (1.0 - SS_res / SS_tot) if SS_tot > 0 else np.nan
-    max_dev = float(np.max(np.abs(resid)))
-
-    return dict(
-        f=f, Pth=Pth, Pw=Pw, Pu=Pu, Pv=Pv,
-        Cwth=Cwth, fwCwth=fwCwth,
-        og_th_norm=og_th_norm, og_th_self=og_th_self,
-        f_fft=f_fft, og_fft_norm=og_fft_norm,
-        cum_frac=frac, cum_cov_norm=cum_cov_norm,
-        slope_th=slope_th, slope_w=slope_w,
-        tv_og=tv_og, tv_og_self=tv_og_self, R2=R2, max_dev=max_dev,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Integrity check
-# ---------------------------------------------------------------------------
-
-SLOPE_TOL = 0.4          # |s_w + 5/3| <= SLOPE_TOL
+    return float(np.polyfit(np.log10(f[use]), np.log10(P[use]), 1)[0])
 
 
 def turbulence_resolved(slope_w: float) -> bool:
-    """True when the w power spectrum follows the inertial-subrange slope,
-    |s_w + 5/3| <= 0.4 (the only pass/fail criterion; see the module docstring)."""
-    return bool(np.isfinite(slope_w) and abs(slope_w + 5.0 / 3.0) <= SLOPE_TOL)
+    """Integrity check: True when the w power spectrum follows the inertial-subrange
+    slope, ``|s_w + 5/3| <= 0.4``. The only pass/fail criterion of the paper."""
+    return bool(np.isfinite(slope_w) and abs(slope_w - INERTIAL_SLOPE) <= SLOPE_TOLERANCE)
+
+
+# ---------------------------------------------------------------------------
+# Spectral diagnostics of one segment (Fig. A1, Table A1)
+# ---------------------------------------------------------------------------
+
+def _welch_spectrum(x: np.ndarray, fs: float) -> tuple[np.ndarray, np.ndarray]:
+    """One-sided power spectral density, Welch method, 8 s Hann windows, 50 % overlap."""
+    nperseg = int(8 * fs)
+    return welch(x, fs=fs, window=get_window("hann", nperseg), nperseg=nperseg,
+                 noverlap=nperseg // 2, detrend="linear")
+
+
+def _welch_cospectrum(x: np.ndarray, y: np.ndarray, fs: float) -> tuple[np.ndarray, np.ndarray]:
+    """Real part of the cross-spectral density (same Welch settings as the spectra)."""
+    nperseg = int(8 * fs)
+    f, Pxy = csd(x, y, fs=fs, window=get_window("hann", nperseg), nperseg=nperseg,
+                 noverlap=nperseg // 2, detrend="linear")
+    return f, np.real(Pxy)
+
+
+def _ogive(f: np.ndarray, cospectrum: np.ndarray) -> np.ndarray:
+    """Cumulative cospectrum from high to low frequency, Og(f0) = sum_{f >= f0} Co(f) df."""
+    df = np.diff(f, prepend=f[0])
+    return np.flip(np.cumsum(np.flip(cospectrum * df)))
+
+
+def segment_spectra(w: np.ndarray, theta: np.ndarray, u: np.ndarray, v: np.ndarray,
+                    fs: float) -> dict:
+    """Spectra of one segment as shown in Fig. A1, plus the integrity-check slope.
+
+    Parameters
+    ----------
+    w, theta, u, v : 100 Hz series of the segment (raw; detrended here).
+    fs             : sampling frequency [Hz].
+
+    Returns
+    -------
+    dict with
+    ``f``                  Welch frequency axis [Hz]
+    ``P_theta``, ``P_w``, ``P_u``, ``P_v``   one-sided power spectra (Fig. A1a-d)
+    ``f_cospectrum``       f * Co_w,theta, the frequency-weighted cospectrum (Fig. A1e)
+    ``f_fft``, ``ogive_norm``   frequency axis and normalised ogive of the full-record
+                           FFT cospectrum (Fig. A1f); resolves down to 1/T_segment
+    ``slope_w``            inertial-subrange slope of P_w (Appendix A1)
+    ``r2_cumulative_covariance``   R^2 of a straight line through the cumulative
+                           covariance along the segment; one of the relative
+                           criteria evaluated, and not applied, in Appendix A3
+    """
+    w = detrend(np.asarray(w, dtype=float), type="linear")
+    theta = detrend(np.asarray(theta, dtype=float), type="linear")
+    u = detrend(np.asarray(u, dtype=float), type="linear")
+    v = detrend(np.asarray(v, dtype=float), type="linear")
+
+    # power spectra and Welch cospectrum (Fig. A1a-e)
+    f, P_theta = _welch_spectrum(theta, fs)
+    _, P_w = _welch_spectrum(w, fs)
+    _, P_u = _welch_spectrum(u, fs)
+    _, P_v = _welch_spectrum(v, fs)
+    _, cospectrum = _welch_cospectrum(w, theta, fs)
+
+    # full-record FFT cospectrum and its ogive (Fig. A1f): Hann taper, zero-padded
+    # to the next power of two, normalised so that Og(0) = 1
+    n = w.size
+    n_fft = int(2 ** np.ceil(np.log2(n)))
+    taper = np.hanning(n)
+    taper /= np.sqrt(np.mean(taper ** 2))                    # keep the RMS amplitude
+    W = np.fft.rfft(w * taper, n=n_fft)
+    TH = np.fft.rfft(theta * taper, n=n_fft)
+    f_fft = np.fft.rfftfreq(n_fft, d=1.0 / fs)
+    co_fft = np.real(W * np.conj(TH)) / (n_fft * fs)
+    co_fft[1:-1] *= 2.0                                      # two-sided -> one-sided
+    ogive = _ogive(f_fft, co_fft)
+    ogive_norm = ogive / ogive[0] if abs(ogive[0]) > 1e-12 else ogive * np.nan
+
+    # cumulative covariance along the segment vs a straight line (Appendix A3)
+    cum_cov = np.cumsum((w - w.mean()) * (theta - theta.mean()))
+    cum_cov_norm = cum_cov / cum_cov[-1] if cum_cov[-1] != 0 else cum_cov * np.nan
+    fraction = np.linspace(0.0, 1.0, n)
+    residual = cum_cov_norm - np.polyval(np.polyfit(fraction, cum_cov_norm, 1), fraction)
+    ss_tot = float(np.sum((cum_cov_norm - cum_cov_norm.mean()) ** 2))
+    r2 = 1.0 - float(np.sum(residual ** 2)) / ss_tot if ss_tot > 0 else np.nan
+
+    return dict(
+        f=f, P_theta=P_theta, P_w=P_w, P_u=P_u, P_v=P_v,
+        f_cospectrum=f * cospectrum,
+        f_fft=f_fft, ogive_norm=ogive_norm,
+        slope_w=spectral_slope(f, P_w),
+        r2_cumulative_covariance=r2,
+    )

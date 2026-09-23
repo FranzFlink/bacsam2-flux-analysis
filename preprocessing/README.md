@@ -13,3 +13,4 @@ outputs were removed.
 | `preprocess_carra.ipynb`, `carra_write_subset.py` | CARRA crops |
 | `ERA5_STN_dl.py` | ERA5 download (Copernicus Climate Data Store; needs your own CDS account) |
 | `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region, period and flux-leg time windows shipped here |
+| `flight_segments.py` | how the leg table `analysis_ready_polar6_legs_metadata.csv` was cut from the flight-separation file `config/flight_sep_BACSAM-II_MASTER.json` and the full Polar 6 archive |

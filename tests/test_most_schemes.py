@@ -106,7 +106,7 @@ def test_integrity_check_threshold():
 def test_random_error_matches_monte_carlo():
     """Finkelstein-Sims random error of the band covariance vs the spread of the
     covariance over many independent realisations of the same process."""
-    from fluxpy.flux_processing import band_covariance, band_covariance_random_error
+    from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error
 
     rng = np.random.default_rng(3)
     n, fs = 8000, 100.0
@@ -121,7 +121,7 @@ def test_random_error_matches_monte_carlo():
 def test_band_covariance_parseval_and_band_selection():
     """The band-limited covariance (EC flux estimator) must (i) sum to the ordinary
     covariance over the full band and (ii) keep only the in-band part of a two-tone signal."""
-    from fluxpy.flux_processing import band_covariance
+    from fluxpy.eddy_covariance import band_covariance
 
     rng = np.random.default_rng(0)
     n, fs = 8200, 100.0

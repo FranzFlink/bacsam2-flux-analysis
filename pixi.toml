@@ -38,7 +38,7 @@ test          = "pytest tests -q"
 # EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
 verify-ec     = "python scripts/verify_ec_reproduction.py"
 verify-cache  = "python scripts/verify_along_track_cache.py"
-ec-segments   = "python scripts/run_ec_aggregation.py --out-csv \"\""
+ec-segments   = "python scripts/run_ec_aggregation.py"
 placement     = "python scripts/ec_segment_placement.py"
 window-length = "python scripts/ec_window_length.py"
 ec-quality    = { cmd = "python scripts/ec_quality.py", depends-on = ["precompute"] }

@@ -95,7 +95,7 @@ $$H_\mathrm{S} = \rho\, c_p\, \overline{w'\theta'}$$
 This chapter computes it for **one 5 km segment, step by step**, and arrives at the value stored in the data file.
 '''), ("code", SETUP + r'''
 from fluxpy.meteorology import add_theta
-from fluxpy.flux_processing import band_covariance, get_cov
+from fluxpy.eddy_covariance import band_covariance, segment_flux
 from fluxpy.util import CP
 
 TB = xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
@@ -147,7 +147,7 @@ print(f"covariance inside 0.1-20 Hz: {in_band:.4f} K m/s = {in_band / np.mean(w 
 '''), ("code", r'''
 rho = float((seg.p * 100 / (287.05 * (seg["T"] + 273.15))).mean())        # dry-air density from p (hPa) and T (degC)
 H_by_hand = rho * CP * in_band
-_, H_fluxpy = get_cov(seg.copy(), "theta", heat_flux=True, time_dim="time", highpass=False)
+H_fluxpy = segment_flux(seg).flux
 print(f"rho = {rho:.2f} kg m-3, c_p = {CP:.0f} J kg-1 K-1")
 print(f"H by hand         : {H_by_hand:6.2f} W m-2")
 print(f"H from fluxpy     : {float(H_fluxpy):6.2f} W m-2")
@@ -170,9 +170,9 @@ result; throwing these segments away would leave only the large fluxes and bias 
 does not use criteria that are ratios to the flux (such as signal-to-noise ratios): they fail for small fluxes and pass for
 large ones, whatever the quality of the measurement.
 '''), ("code", r'''
-from fluxpy.qc import qc_leg, turbulence_resolved
-from fluxpy.flux_processing import band_covariance_random_error, C_P
-slope = qc_leg(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0)["slope_w"]
+from fluxpy.qc import segment_spectra, turbulence_resolved
+from fluxpy.eddy_covariance import band_covariance_random_error, C_P
+slope = segment_spectra(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0)["slope_w"]
 sigma = rho * C_P * band_covariance_random_error(w, th, fs)
 print(f"this segment: spectral slope of w = {slope:.2f} -> turbulence resolved: {turbulence_resolved(slope)}")
 print(f"              flux {float(H_fluxpy):.1f} +- {sigma:.1f} W m-2 (random error) -> {abs(float(H_fluxpy)) / sigma:.0f} sigma")

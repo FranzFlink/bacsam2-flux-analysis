@@ -23,9 +23,9 @@ from matplotlib.lines import Line2D
 from scipy.signal import detrend
 
 from fluxpy import figstyle as fs
-from fluxpy.flux_processing import band_covariance, band_covariance_random_error
+from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error
 from fluxpy.meteorology import add_theta
-from fluxpy.qc import qc_leg
+from fluxpy.qc import segment_spectra
 
 fs.apply()
 
@@ -49,8 +49,8 @@ ds_tb = xr.open_dataset(
 list_of_qcs, detectable = [], []
 for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
     data = add_theta(ds_tb.sel(time=slice(t0, t1))).dropna(dim="time", how="any")
-    list_of_qcs.append(qc_leg(w=data["w"].values, theta=data["theta"].values,
-                              u=data["u"].values, v=data["v"].values, fs=FS))
+    list_of_qcs.append(segment_spectra(w=data["w"].values, theta=data["theta"].values,
+                                       u=data["u"].values, v=data["v"].values, fs=FS))
     w, th = detrend(data["w"].values), detrend(data["theta"].values)
     detectable.append(bool(abs(band_covariance(w, th, FS))
                            > 2.0 * band_covariance_random_error(w, th, FS)))
@@ -86,10 +86,10 @@ def _plot_lines(ax, x_key, y_key, scale=1.0, only_detectable=False):
 fig, axs = plt.subplot_mosaic("AABB\nCCDD\nEEFF", figsize=(fs.FULL_W, 15.0 * fs.CM))
 
 for key, p_key, var_label, ylabel in [
-    ("A", "Pth", r"$\theta$", r"$P_\theta\;(K^2\,s)$"),
-    ("B", "Pw",  r"$w$",      r"$P_w\;(m^2\,s^{-1})$"),
-    ("C", "Pu",  r"$u$",      r"$P_u\;(m^2\,s^{-1})$"),
-    ("D", "Pv",  r"$v$",      r"$P_v\;(m^2\,s^{-1})$"),
+    ("A", "P_theta", r"$\theta$", r"$P_\theta\;(K^2\,s)$"),
+    ("B", "P_w",     r"$w$",      r"$P_w\;(m^2\,s^{-1})$"),
+    ("C", "P_u",     r"$u$",      r"$P_u\;(m^2\,s^{-1})$"),
+    ("D", "P_v",     r"$v$",      r"$P_v\;(m^2\,s^{-1})$"),
 ]:
     ax = axs[key]
     ax.set_xscale("log")
@@ -109,7 +109,7 @@ ax.set_xscale("log")
 ax.set_xlim(1e-2, 100.0)
 _add_flux_band(ax)
 ax.axhline(0, color="0.3", lw=0.7)
-_plot_lines(ax, "f", "fwCwth", scale=1000.0)
+_plot_lines(ax, "f", "f_cospectrum", scale=1000.0)
 ax.set_xlabel("f (Hz)")
 ax.set_ylabel(r"$f\,C_{w\theta}\;(m\,K\,s^{-1})$")
 
@@ -121,7 +121,7 @@ ax.set_ylim(-0.5, 2.0)
 _add_flux_band(ax)
 ax.axhline(0.0, color="0.3", lw=0.7)
 ax.axhline(1.0, color="0.3", lw=0.7)
-_plot_lines(ax, "f_fft", "og_fft_norm", only_detectable=True)
+_plot_lines(ax, "f_fft", "ogive_norm", only_detectable=True)
 ax.set_xlabel("f (Hz)")
 ax.set_ylabel(r"norm. $O_{w\theta}$")
 

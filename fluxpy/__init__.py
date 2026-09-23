@@ -1,53 +1,38 @@
 """
 fluxpy
 ======
-Turbulent surface flux library for BACSAM-II.
+All physics of Müller et al., "Evaluation of reanalysis and satellite products
+of sensible heat flux over Arctic sea ice against airborne eddy-covariance
+measurements" (AMT). Every module names the manuscript section it implements.
 
-Modules
--------
-util          Physical constants and unit helpers.
-stability     MOST schemes; classic 2-pt bulk Ri_b (the only Richardson
-              number in the code base — manuscript Eq. rib).
-ec            Eddy-covariance flux wrappers (spectral, scalar output).
-bulk          MOST bulk flux; BulkConfig; classic 2-pt Ri_b throughout.
-qc            Spectral QC: per-leg diagnostics and soft verdict classification.
-aggregate     Parameterised aggregation pipeline and xarray export.
-sensitivity   Sensitivity sweep, skill metrics.
+Module map (paper section -> module)
+-----------------------------------
+Sect. 3.1  Eddy-covariance method, Eq. (1) ...... eddy_covariance   band-limited covariance,
+                                                                    random error, segment_flux
+Sect. 2.1 / 3.1  5 km segments .................. aggregate         100 Hz legs -> one row per segment
+Appendix A  Quality of the EC reference ......... qc                integrity check, Fig. A1 spectra
+Sect. 3.2 / Appendix B  Bulk method, Eq. (2) .... bulk              H = rho c_p C_h U (theta_s - theta_air)
+Appendix B1  Bulk Richardson number, Eq. (B2) ... stability         2-point Ri_b, effective wind
+Appendix B3  Transfer coefficient, f_h .......... stability_lib     MOST schemes of Gryanik and Lüpkes (2023)
+Sect. 4.2 / Appendix C  Sensitivity ............. sensitivity       configuration matrix, skill metrics
+Table 2  Uncertainty budget ..................... uncertainty
+constants, theta, rho, surface classes .......... util
+figure style and variable names ................. figstyle, naming
 
 Quick start
 -----------
-    import fluxpy
-    from fluxpy import stability, ec, bulk, qc, aggregate
-
-    # Classic 2-pt bulk Richardson number (manuscript Eq. rib):
-    # surface (no-slip) -> measurement level, layer-mean theta_ref
-    Ri_b = stability.bulk_richardson_2pt(dtheta=th1 - th0, dz=z1,
-                                         du=u1, dv=v1,
-                                         theta_ref=0.5 * (th0 + th1))
-
-    # Bulk SHF with T-Bird as intermediate level
-    cfg = bulk.reference_config()
-    ds_bulk = bulk.compute_bulk_shf_obs(ds_obs, cfg, ds_tbird=ds_tbird)
-
-    # EC flux from a raw leg dataset
-    H_obs_ec = ec.sensible_heat_flux(leg_ds)
-
-    # Full aggregation pipeline (parameterised bin length etc.)
-    acfg = aggregate.AggConfig(bin_length_km=5.0, min_samples=5000)
-    df   = aggregate.process_legs(legs, df_meta, ds_rad, ds_tbird, ds_obs,
-                                  ds_sic, ds_track, ds_ar, cfg=acfg)
-    ds   = aggregate.to_xarray(df)
-
-    # Full sensitivity sweep
-    stacked, summary = sensitivity.run_sensitivity(ds_obs, ds_rs, ds_modis)
+    from fluxpy.eddy_covariance import segment_flux          # one 5 km segment -> H, sigma_rand
+    from fluxpy.bulk import reference_config, compute_bulk_shf_obs
+    from fluxpy.sensitivity import skill_metrics              # slope, r, bias, RMSE against the EC flux
 """
-from . import util, stability, ec, bulk, qc, aggregate, sensitivity   # noqa: F401
+from . import util, stability, bulk, qc, aggregate, sensitivity, eddy_covariance   # noqa: F401
 
-from .util       import potential_temperature, air_density                 # noqa: F401
-from .stability  import bulk_richardson_2pt, bulk_richardson  # noqa: F401
-from .bulk       import BulkConfig, reference_config, amplitude_matched_config  # noqa: F401
-from .qc         import qc_leg, turbulence_resolved                         # noqa: F401
-from .aggregate  import AggConfig, process_legs, to_xarray                 # noqa: F401
+from .util import potential_temperature, air_density                          # noqa: F401
+from .stability import bulk_richardson_2pt                                    # noqa: F401
+from .bulk import BulkConfig, reference_config, amplitude_matched_config     # noqa: F401
+from .qc import segment_spectra, turbulence_resolved                          # noqa: F401
+from .eddy_covariance import segment_flux                                     # noqa: F401
+from .aggregate import SegmentConfig, process_legs, to_xarray                 # noqa: F401
 from .sensitivity import skill_metrics, amplitude_metrics, slope_bootstrap_ci  # noqa: F401
 
-__version__ = "0.2.0"
+__version__ = "1.4.0"

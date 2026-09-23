@@ -27,9 +27,9 @@ from scipy.stats import spearmanr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from fluxpy.flux_processing import C_P, R, _band_pass, band_covariance, band_covariance_random_error  # noqa: E402
+from fluxpy.eddy_covariance import C_P, R, band_covariance, band_covariance_random_error, band_pass  # noqa: E402
 from fluxpy.meteorology import add_theta  # noqa: E402
-from fluxpy.qc import qc_leg  # noqa: E402
+from fluxpy.qc import segment_spectra  # noqa: E402
 
 warnings.filterwarnings("ignore")
 FS = 100.0
@@ -58,10 +58,10 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
     n = w.size
     k = float((s["p"] * 100.0 / (R * (s["T"] + 273.15))).mean()) * C_P
     H, H_total = k * band_covariance(w, th, FS), k * np.mean(w * th)
-    wb, tb = _band_pass(w, FS, 0.1, 20.0), _band_pass(th, FS, 0.1, 20.0)
+    wb, tb = band_pass(w, FS, 0.1, 20.0), band_pass(th, FS, 0.1, 20.0)
 
     # alternative screening metrics (all of them ratios to the flux, or built on the total covariance)
-    qc = qc_leg(w=s["w"].values, theta=s["theta"].values, u=s["u"].values, v=s["v"].values, fs=FS)
+    qc = segment_spectra(w=s["w"].values, theta=s["theta"].values, u=s["u"].values, v=s["v"].values, fs=FS)
     sub = [np.mean(detrend(a) * detrend(b)) for a, b in zip(np.array_split(w, 5), np.array_split(th, 5))]
     h1, h2 = (k * band_covariance(detrend(a), detrend(b), FS) for a, b in zip(np.array_split(w, 2), np.array_split(th, 2)))
 
@@ -78,7 +78,7 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
     dens = b / np.log(RES_EDGES[1:] / RES_EDGES[:-1])
     H_interp = H - b[1] + 0.5 * (dens[0] + dens[2]) * np.log(RES_EDGES[2] / RES_EDGES[1])
 
-    rows.append(dict(H=H, H_total=H_total, R2=qc["R2"], fw_rel=abs((k * np.mean(sub) - H_total) / H_total),
+    rows.append(dict(H=H, H_total=H_total, R2=qc["r2_cumulative_covariance"], fw_rel=abs((k * np.mean(sub) - H_total) / H_total),
                      half_diff=abs(h1 - h2), sigma_fs=sigma_fs, sigma_m5=sigma_m[0], sigma_m30=sigma_m[1], sigma_sur=sigma_sur, r_wt=abs(r_wt),
                      H_interp=H_interp, dens_res=dens[1], dens_nb=0.5 * (dens[0] + dens[2]),
                      peak_w=_peak(s["w"].values), peak_theta=_peak(s["theta"].values), peak_pitch=_peak(s["pitch"].values)))

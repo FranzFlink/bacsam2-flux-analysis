@@ -22,9 +22,8 @@ import xarray as xr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from scipy.signal import detrend                                          # noqa: E402
-from fluxpy.flux_processing import C_P, R, band_covariance_random_error, get_cov  # noqa: E402
-from fluxpy.meteorology import add_theta                                  # noqa: E402
+from fluxpy.eddy_covariance import segment_flux   # noqa: E402
+from fluxpy.meteorology import add_theta          # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -58,8 +57,8 @@ def along_track_km(leg):
 
 
 def flux(ds):
-    _, h = get_cov(ds, "theta", heat_flux=True, time_dim="time", fs=FS, highpass=False)
-    return float(h)
+    """EC flux of a window, same estimator as the segment fluxes."""
+    return segment_flux(ds, fs=FS).flux
 
 
 detailed, parents, windows = [], [], []
@@ -83,10 +82,10 @@ for i, meta in enumerate(legs.itertuples()):
             sub = leg.isel(time=sel).dropna(dim="time", subset=["w", "theta", "T", "p"])
             if sub.time.size < min_samples(L):
                 continue
-            H_sub.append(flux(sub))
-            rho = float((sub["p"] * 100.0 / (R * (sub["T"] + 273.15))).mean())
-            sig.append(rho * C_P * band_covariance_random_error(
-                detrend(sub["w"].values), detrend(sub["theta"].values), FS, max_lag_s=min(10.0, 0.25 * sub.time.size / FS)))
+            # lag range of the random error: 10 s, or a quarter of a short window
+            ec = segment_flux(sub, fs=FS, max_lag_s=min(10.0, 0.25 * sub.time.size / FS))
+            H_sub.append(ec.flux)
+            sig.append(ec.random_error)
         if not H_sub:
             continue
         H_sub, sig = np.asarray(H_sub), np.asarray(sig)
