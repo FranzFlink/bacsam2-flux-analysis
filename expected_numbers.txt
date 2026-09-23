@@ -75,6 +75,8 @@ FURTHER NUMBERS QUOTED IN THE TEXT
 input sensitivities, median [IQR] over segments (central difference with +-0.5 K and +-0.5 m/s about the unperturbed state):
   T-Bird bulk      dH/d(dtheta) = -4.3 [-5.7, -1.0] W m-2 K-1    dH/dU = +0.0 [-0.3, +3.7] W m-2 (m/s)-1
   ERA5-MODIS bulk  dH/d(dtheta) = -2.1 [-5.1, -0.4] W m-2 K-1    dH/dU = +0.2 [-0.8, +3.9] W m-2 (m/s)-1
+  T-Bird bulk      slope across the eight stability schemes 1.59-1.62 (within 0.03 of each other)
+  ERA5-MODIS bulk  slope across the eight stability schemes 0.73-0.78 (within 0.05 of each other)
 model-diagnosed fluxes on the common CARRA subset (n = 73):
   H_S,ERA,diag: slope 1.3   r 0.6   bias -3.3
   H_S,CAR,diag: slope 1.2   r 0.6   bias -3.6
@@ -86,6 +88,7 @@ SAMPLE AND FLIGHT FACTS (abstract, Sect. 2.1, 3.1, 4, Discussion)
 90 segments, 450 km, 4 flight days, 6 legs (a new leg after a gap > 10 min; segments per leg 17, 22, 13, 13, 12, 13)
 T-Bird height, segment means: mean 24 m, range 17-34 m; 0 segment(s) not at one level (height changes by > 20 m), without them 17-34 m
 true airspeed, mean over the segments 60 m/s; segment duration median 83 s; 0.1-20 Hz corresponds to about 3-600 m along the track
+theta_s with the T-Bird pressure instead of the hydrostatic surface pressure: too warm by a median 0.22 K (g z / c_p at the mean height: 0.23 K)
 Polar 6 level, mean height 73 m; northernmost segment 85.3 N (13 Apr)
   13 Apr: EC flux +0.0 to +3.2 W m-2;  lowest H_S,ERA,diag -0.2, lowest H_S,CAR,diag (no CARRA)
   15 Apr: EC flux +1.3 to +13.1 W m-2;  lowest H_S,ERA,diag +6.4, lowest H_S,CAR,diag +1.5

@@ -51,7 +51,7 @@ def potential_temperature(T, p, p0: float = P0) -> np.ndarray:
 
 def surface_pressure_hypsometric(p_z, z, T_mean) -> np.ndarray:
     r"""Surface pressure from the pressure ``p_z`` measured at height ``z`` [m] above
-    the surface (hypsometric equation for dry air; manuscript App. B1),
+    the surface (hypsometric equation for dry air; manuscript App. B1, Eq. B2),
 
     $$ p_\mathrm{s} = p_z \exp\!\left( \frac{g\, z}{R_d\, \bar T} \right), $$
 

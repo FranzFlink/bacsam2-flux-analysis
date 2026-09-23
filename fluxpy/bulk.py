@@ -16,7 +16,7 @@ Steps inside each (Appendix B):
   B1  potential temperatures from T and p; bulk Richardson number Ri_b between the
       surface (no-slip) and the measurement level (:mod:`fluxpy.stability`)
   B2  effective roughness of the segment from its surface composition,
-      z0m_eff = fraction-weighted geometric mean (Eq. B3); z0T = alpha_T * z0m
+      z0m_eff = fraction-weighted geometric mean (Eq. B4); z0T = alpha_T * z0m
   B3  transfer coefficient C_h = C_hn * f_h(Ri_b, z/z0m, z/z0T) (:mod:`fluxpy.stability_lib`)
 
 Each potential temperature is computed with the pressure at its own height. In
@@ -64,7 +64,8 @@ class BulkConfig:
     T_thresh_thick: float = -20.0    #: KT-19 T_s at or below this: snow-covered ice [degC]
     ri_eps_wind2: float = 1e-4       #: shear regularisation eps of the in-situ Ri_b [m2 s-2] (App. B1)
     ri_clip: float = np.inf          #: |Ri_b| bound; inf = none, as in the paper ("no further limitation").
-                                     #: The flux statistics change by < 0.03 W m-2 for any bound >= 1 (App. B1).
+                                     #: The flux statistics change by < 0.01 W m-2 for any bound >= 1 (App. B1;
+                                     #: scripts/manuscript_numbers.py block richardson_number).
     label: str = "default"
 
     def __post_init__(self):
@@ -98,7 +99,7 @@ def amplitude_matched_config() -> BulkConfig:
 # ── B2  roughness ─────────────────────────────────────────────────────────────
 
 def effective_roughness(f_open, f_thin, f_thick, cfg: BulkConfig) -> tuple[np.ndarray, np.ndarray]:
-    r"""Effective roughness lengths of each segment from its surface fractions (Eq. B3),
+    r"""Effective roughness lengths of each segment from its surface fractions (Eq. B4),
 
     $$ \ln z_{0,m}^\mathrm{eff} = \sum_i f_i \ln z_{0,m,i}, \qquad
        z_{0,T}^\mathrm{eff} = \alpha_T z_{0,m}^\mathrm{eff}, $$
@@ -120,7 +121,7 @@ def effective_roughness(f_open, f_thin, f_thick, cfg: BulkConfig) -> tuple[np.nd
 
 def _roughness(ds_fractions: xr.Dataset, T_sfc_degC: np.ndarray, cfg: BulkConfig) -> tuple[np.ndarray, np.ndarray, str]:
     """(z0m, z0T, method): a constant z0m if the configuration says so, otherwise the
-    fraction-weighted blend of Eq. (B3); if the fractions are missing, the class of
+    fraction-weighted blend of Eq. (B4); if the fractions are missing, the class of
     the segment-mean surface temperature."""
     n = len(T_sfc_degC)
     if cfg.z0_constant is not None:
@@ -139,7 +140,7 @@ def _roughness(ds_fractions: xr.Dataset, T_sfc_degC: np.ndarray, cfg: BulkConfig
 # ── B1  bulk Richardson number ────────────────────────────────────────────────
 
 def bulk_richardson_in_situ(theta_sfc, theta_air, u, v, z, cfg: BulkConfig) -> np.ndarray:
-    """Ri_b of the in-situ pathway (Eq. B2): surface (no-slip) to T-Bird level, from the
+    """Ri_b of the in-situ pathway (Eq. B3): surface (no-slip) to T-Bird level, from the
     segment-mean theta, wind components and height that also enter the flux; the
     measured wind with the regularisation eps in the shear denominator."""
     Ri = bulk_richardson_2pt(dtheta=theta_air - theta_sfc, dz=z, du=u, dv=v,
@@ -148,7 +149,7 @@ def bulk_richardson_in_situ(theta_sfc, theta_air, u, v, z, cfg: BulkConfig) -> n
 
 
 def bulk_richardson_remote(theta_sfc, theta_air, wind_speed, z, cfg: BulkConfig) -> np.ndarray:
-    """Ri_b of the reanalysis-driven pathways (Eq. B2): surface to the ERA5 level, with the
+    """Ri_b of the reanalysis-driven pathways (Eq. B3): surface to the ERA5 level, with the
     effective wind speed of Jordan et al. (1999) / Fairall et al. (1996) in the shear,
     which bounds Ri_b at vanishing wind; no eps, no further limitation."""
     dtheta = theta_air - theta_sfc
@@ -181,7 +182,7 @@ def transfer_coefficients(Ri, z, z0, zt, scheme_name: str) -> tuple[np.ndarray, 
 def _as_dataset(fields: dict, start_time, suffix: str, cfg: BulkConfig, method: str) -> xr.Dataset:
     """Pack the per-segment arrays into a Dataset with units; variable names get the pathway suffix."""
     units = {"H": ("W m-2", "Bulk sensible heat flux, positive upward"),
-             "Ri": ("1", "Bulk Richardson number, surface to measurement level (Eq. B2)"),
+             "Ri": ("1", "Bulk Richardson number, surface to measurement level (Eq. B3)"),
              "z0": ("m", "Effective momentum roughness length"),
              "zt": ("m", "Scalar roughness length, alpha_T * z0"),
              "Cd": ("1", "Drag coefficient"), "Ch": ("1", "Heat transfer coefficient"),

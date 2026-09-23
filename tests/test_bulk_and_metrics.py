@@ -11,7 +11,7 @@ from fluxpy.stability import bulk_richardson_2pt, effective_wind_speed
 from fluxpy.util import G
 
 
-# ── Eq. (B2): the two-point bulk Richardson number ───────────────────────────
+# ── Eq. (B3): the two-point bulk Richardson number ───────────────────────────
 
 def test_bulk_richardson_2pt_matches_manuscript_equation():
     dtheta, dz, du, dv, th_bar = 2.5, 31.0, 3.0, -1.5, 258.0
@@ -74,7 +74,7 @@ def test_remote_ri_is_finite_in_dead_calm_without_a_bound():
     assert np.all(np.isfinite(ri)) and ri[0] > 0.0 > ri[1]
 
 
-# ── Eq. (B3): effective roughness ────────────────────────────────────────────
+# ── Eq. (B4): effective roughness ────────────────────────────────────────────
 
 def test_effective_roughness_is_the_fraction_weighted_geometric_mean():
     cfg = reference_config()

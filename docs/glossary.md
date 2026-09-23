@@ -30,7 +30,7 @@ the variable names in `data/model_output/sensitivity_figure_data.nc` (`fluxpy/na
 | $f_h$ | stability factor, $C_\mathrm{h} = C_\mathrm{h,n}\, f_h$ |
 | $z_{0,m}$, $z_{0,T}$ | roughness lengths for momentum and heat |
 | $\alpha_T$ | scalar roughness ratio $z_{0,T}/z_{0,m}$; $10^{-1}$ in the reference configuration, $10^{-4}$ in the amplitude-matched one |
-| $Ri_\mathrm{b}$ | two-point bulk Richardson number between the surface and the measurement level (Eq. B2); positive is stable |
+| $Ri_\mathrm{b}$ | two-point bulk Richardson number between the surface and the measurement level (Eq. B3); positive is stable |
 | $\sigma_\mathrm{rand}$ | random (sampling) error of an EC flux (Finkelstein and Sims, 2001), 1σ |
 | $b$ | slope of the ordinary-least-squares regression of an estimate on the EC flux: the **amplitude** it recovers (ideal 1) |
 | $r$ | Pearson correlation with the EC flux: whether the estimate is large where the measurement is large (ideal 1) |

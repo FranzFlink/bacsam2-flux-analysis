@@ -354,8 +354,8 @@ def run_all(extract_only: bool = False, no_cache: bool = False, verbose: bool = 
             "T_sfc_era_C": var("leg", ds_surface_era5["IST"] - 273.15, "degC", "Surface skin temperature, ERA5"),
             "T_air_C":    var("leg", ds_obs["T_mean"], "degC", "Air temperature, T-Bird segment mean"),
             "T_air_era_C": var("leg", ds_column["t"], "degC", "Air temperature, ERA5 model level 136"),
-            "Ri_obs":     var("leg", reference_run["Ri_obs"], "1", "Bulk Richardson number, surface to T-Bird (Eq. B2)"),
-            "Ri_rs":      var("leg", reference_run["Ri_rs"], "1", "Bulk Richardson number, surface to ERA5 level 136, effective wind (Eq. B2)"),
+            "Ri_obs":     var("leg", reference_run["Ri_obs"], "1", "Bulk Richardson number, surface to T-Bird (Eq. B3)"),
+            "Ri_rs":      var("leg", reference_run["Ri_rs"], "1", "Bulk Richardson number, surface to ERA5 level 136, effective wind (Eq. B3)"),
             "lead_frac":  var("leg", ds_obs["lead_frac"], "1", "Fraction of KT-19 samples warmer than -5 degC"),
             "sic":        var("leg", ds_obs["sic"], "%", "Sea-ice concentration along the segment (merged MODIS-AMSR2)"),
             # uncertainties of the EC flux (Table 2)

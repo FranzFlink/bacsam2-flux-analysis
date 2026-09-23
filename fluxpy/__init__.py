@@ -12,7 +12,7 @@ Sect. 3.1  Eddy-covariance method, Eq. (1) ...... eddy_covariance   band-limited
 Sect. 2.1 / 3.1  5 km segments .................. aggregate         100 Hz legs -> one row per segment
 Appendix A  Quality of the EC reference ......... qc                integrity check, Fig. A1 spectra
 Sect. 3.2 / Appendix B  Bulk method, Eq. (2) .... bulk              H = rho c_p C_h U (theta_s - theta_air)
-Appendix B1  Bulk Richardson number, Eq. (B2) ... stability         2-point Ri_b, effective wind
+Appendix B1  Bulk Richardson number, Eq. (B3) ... stability        2-point Ri_b, effective wind
 Appendix B3  Transfer coefficient, f_h .......... stability_lib     MOST schemes of Gryanik and Lüpkes (2023)
 Sect. 4.2 / Appendix C  Sensitivity ............. sensitivity       configuration matrix, skill metrics
 Table 2  Uncertainty budget ..................... uncertainty

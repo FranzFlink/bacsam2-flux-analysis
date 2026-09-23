@@ -1,7 +1,7 @@
 r"""
 fluxpy.stability
 ================
-Near-surface stability of the bulk method (manuscript Appendix B1, Eq. B2).
+Near-surface stability of the bulk method (manuscript Appendix B1, Eq. B3).
 
 * :func:`bulk_richardson_2pt` is THE Richardson number of the paper: the classic
   two-point bulk Richardson number between the surface (no-slip) and the
@@ -35,7 +35,7 @@ EPSILON_DEFAULT = 1e-4
 
 def bulk_richardson_2pt(dtheta, dz, du=None, dv=None, theta_ref=None,
                         eps_wind2: float = EPSILON_DEFAULT, *, wspd=None) -> np.ndarray:
-    r"""Two-point bulk Richardson number (manuscript Eq. B2),
+    r"""Two-point bulk Richardson number (manuscript Eq. B3),
 
     $$ Ri_b = \frac{g}{\bar\theta}\,
               \frac{\Delta\theta / \Delta z}{(\Delta U / \Delta z)^2 + \varepsilon}. $$

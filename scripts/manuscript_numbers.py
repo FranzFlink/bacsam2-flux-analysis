@@ -239,6 +239,12 @@ def further_numbers(split):
         print(f"  {name:<16} dH/d(dtheta) = {quartiles(central_difference(FIG, f'H_{k}_dTair', 'dT')[keep])} W m-2 K-1    "
               f"dH/dU = {quartiles(central_difference(FIG, f'H_{k}_dU', 'dU')[keep])} W m-2 (m/s)-1")
 
+    schemes = [i for i, run in enumerate(RUNS_OBS) if run.endswith("_ref")]
+    for name, H_all in (("T-Bird bulk", H_OBS_ALL), ("ERA5-MODIS bulk", H_RS_ALL)):
+        slopes = [skill_metrics(EC, H_all[i], "")["slope"] for i in schemes]
+        print(f"  {name:<16} slope across the eight stability schemes {min(slopes):.2f}-{max(slopes):.2f} "
+              f"(within {max(slopes) - min(slopes):.2f} of each other)")
+
     car, erad = np.asarray(FIG["H_car_diag"], float), np.asarray(FIG["H_era_diag"], float)
     m = keep & np.isfinite(car)
     print(f"model-diagnosed fluxes on the common CARRA subset (n = {m.sum()}):")
@@ -284,6 +290,12 @@ def sample_and_flight_facts():
           f"{(~level).sum()} segment(s) not at one level (height changes by > 20 m), without them {z[level].min():.0f}-{z[level].max():.0f} m")
     print(f"true airspeed, mean over the segments {tas.mean():.0f} m/s; segment duration median {np.median(duration):.0f} s; "
           f"0.1-20 Hz corresponds to about {tas.mean() / 20:.0f}-{round(tas.mean() / 0.1, -1):.0f} m along the track")
+    from fluxpy.util import potential_temperature, surface_pressure_hypsometric
+    T_s, T_a, p_z = (np.asarray(seg[v], dtype=float) for v in ("t_kt19", "T_mean", "p_mean"))
+    p_s = surface_pressure_hypsometric(p_z, z, 0.5 * (T_s + T_a))
+    offset = potential_temperature(T_s, p_z) - potential_temperature(T_s, p_s)
+    print(f"theta_s with the T-Bird pressure instead of the hydrostatic surface pressure: too warm by a median {np.median(offset):.2f} K "
+          f"(g z / c_p at the mean height: {9.80665 * z.mean() / 1004.0:.2f} K)")
     polar6 = xr.open_dataset(REPO / "data/observations/ar/polar6_level_at_segments.nc").reindex(start_time=FIG["start_time"].values)
     print(f"Polar 6 level, mean height {float(polar6['z_polar6'].mean()):.0f} m; "
           f"northernmost segment {float(seg['latitude'].max()):.1f} N ({days[int(np.argmax(seg['latitude'].values))]})")
