@@ -4,7 +4,7 @@ EC REFERENCE (91 of 91 low-level 5 km segments pass the integrity check)
 ======================================================================================================================
 integrity check (inertial-subrange slope of w): 91 of 91 pass; slope median -1.5, range -1.7 to -1.3
 random error: median 0.7 W m-2 [0.2-1.5]
-   |H| > 1 sigma_rand: 67 of 91  (expected by chance if every true flux were zero: 28.9);  per day: 13 Apr: 14/18, 15 Apr: 22/22, 17 Apr: 16/26, 23 Apr: 15/25
+   |H| > 1 sigma_rand: 68 of 91  (expected by chance if every true flux were zero: 28.9);  per day: 13 Apr: 14/18, 15 Apr: 22/22, 17 Apr: 16/26, 23 Apr: 16/25
    |H| > 2 sigma_rand: 46 of 91  (expected by chance if every true flux were zero: 4.1);  per day: 13 Apr: 8/18, 15 Apr: 22/22, 17 Apr: 13/26, 23 Apr: 3/25
    |H| > 3 sigma_rand: 33 of 91  (expected by chance if every true flux were zero: 0.2);  per day: 13 Apr: 7/18, 15 Apr: 22/22, 17 Apr: 4/26, 23 Apr: 0/25
 median 0.4   mean 2.1   max 13.1   min -5.8   |H|<2 W/m2: 56 % of segments
@@ -15,9 +15,9 @@ REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)
 estimate                   slope      r    r2 r_within    bias   RMSE  cRMSE    n
 H_S,obs,bulk                 1.6    0.7   0.5      0.5    +2.2    6.6    6.2   91   OLS 95% CI [1.4, 1.9]
 H_S,RS,bulk                  0.7    0.5   0.3      0.0    -1.5    4.7    4.4   91   OLS 95% CI [0.4, 1.1]
-H_S,ERA,bulk                 0.2    0.3   0.1     -0.1    -3.6    5.0    3.6   91
+H_S,ERA,bulk                 0.2    0.3   0.1     -0.1    -3.5    5.0    3.6   91
 H_S,ERA,diag                 1.2    0.6   0.3     -0.1    -2.8    6.7    6.1   91
-H_S,CAR,diag                 1.2    0.6   0.3      0.3    -3.7    7.5    6.6   73
+H_S,CAR,diag                 1.2    0.6   0.3      0.3    -3.6    7.5    6.6   73
 
 ======================================================================================================================
 AMPLITUDE-MATCHED CONFIGURATION  alpha_T = 1e-4  (Schroeder et al., 2003)
@@ -55,7 +55,7 @@ ALPHA_T IS A WEAK, LOGARITHMIC KNOB
 EC WINDOW-LENGTH EXPERIMENT (Fig. 2)  -- scripts/ec_window_length.py
 ======================================================================================================================
 6 low-level legs, median length 81.5 km
-     1 km windows: H_sub/H_full = 1.0 +- 0.1   random error 1.5 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 57 / 32 / 12 %
+     1 km windows: H_sub/H_full = 1.0 +- 0.1   random error 1.4 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 57 / 32 / 12 %
      5 km windows: H_sub/H_full = 1.0 +- 0.0   random error 0.8 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 71 / 48 / 36 %
     10 km windows: H_sub/H_full = 1.0 +- 0.1   random error 0.6 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 82 / 61 / 43 %
 
@@ -77,7 +77,7 @@ input sensitivities, median [IQR] over segments (central difference about the un
   ERA5-MODIS bulk  dH/d(dtheta) = -2.0 [-5.6, -0.4] W m-2 K-1    dH/dU = +0.8 [-0.6, +4.3] W m-2 (m/s)-1
 model-diagnosed fluxes on the common CARRA subset (n = 73):
   H_S,ERA,diag: slope 1.3   r 0.6   bias -3.3
-  H_S,CAR,diag: slope 1.2   r 0.6   bias -3.7
+  H_S,CAR,diag: slope 1.2   r 0.6   bias -3.6
 heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = +0.8, paired-bootstrap 95 % CI [+0.5, +1.1], fraction of resamples <= 0: 0.0000
 
 ==============================================================================================================
@@ -110,7 +110,7 @@ median |correlation of w and theta| in the flux band: 0.08  -> factor sqrt((1+r^
 ==============================================================================================================
 4. PHYSICAL CONSISTENCY: DIRECTION OF THE FLUX vs MEASURED TEMPERATURE DIFFERENCE
 ==============================================================================================================
-fluxes above 1 sigma_rand: 67; direction agrees with sign(theta_s - theta_air) for 52 (78 %); of the 15 others, 13 are smaller than 0.5 W m-2
+fluxes above 1 sigma_rand: 68; direction agrees with sign(theta_s - theta_air) for 52 (76 %); of the 16 others, 13 are smaller than 0.5 W m-2
 fluxes above 2 sigma_rand: 46; direction agrees with sign(theta_s - theta_air) for 38 (83 %); of the 8 others, 7 are smaller than 0.5 W m-2
 fluxes above 3 sigma_rand: 33; direction agrees with sign(theta_s - theta_air) for 30 (91 %); of the 3 others, 3 are smaller than 0.5 W m-2
 

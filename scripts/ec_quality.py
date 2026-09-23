@@ -27,9 +27,9 @@ from scipy.stats import spearmanr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from fluxpy.eddy_covariance import C_P, R, band_covariance, band_covariance_random_error, band_pass  # noqa: E402
-from fluxpy.meteorology import add_theta  # noqa: E402
+from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error, band_pass  # noqa: E402
 from fluxpy.qc import segment_spectra  # noqa: E402
+from fluxpy.util import CP, add_theta, air_density  # noqa: E402
 
 warnings.filterwarnings("ignore")
 FS = 100.0
@@ -56,7 +56,7 @@ for t0, t1 in zip(SEG["start_time"].values, SEG["end_time"].values):
     s = add_theta(TB.sel(time=slice(t0, t1))).dropna("time", how="any")
     w, th = detrend(s["w"].values), detrend(s["theta"].values)
     n = w.size
-    k = float((s["p"] * 100.0 / (R * (s["T"] + 273.15))).mean()) * C_P
+    k = float(np.mean(air_density(s["T"].values, s["p"].values))) * CP     # rho * c_p: covariance -> W m-2
     H, H_total = k * band_covariance(w, th, FS), k * np.mean(w * th)
     wb, tb = band_pass(w, FS, 0.1, 20.0), band_pass(th, FS, 0.1, 20.0)
 

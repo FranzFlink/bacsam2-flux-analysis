@@ -33,8 +33,8 @@ import xarray as xr
 from tqdm import tqdm
 
 from .eddy_covariance import SAMPLING_HZ, segment_flux
-from .meteorology import add_theta
 from .qc import segment_spectra, turbulence_resolved
+from .util import add_theta
 
 __all__ = ["SegmentConfig", "process_legs", "to_xarray"]
 

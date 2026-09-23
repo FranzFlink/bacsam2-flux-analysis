@@ -4,9 +4,9 @@ import pytest
 import xarray as xr
 from scipy.signal import detrend
 
-from fluxpy.eddy_covariance import (C_P, FLUX_BAND_HZ, band_covariance,
+from fluxpy.eddy_covariance import (FLUX_BAND_HZ, band_covariance,
                                     band_covariance_random_error, segment_flux)
-from fluxpy.util import air_density
+from fluxpy.util import CP as C_P, air_density
 
 
 def _synthetic_segment(n=8200, fs=100.0, seed=7):

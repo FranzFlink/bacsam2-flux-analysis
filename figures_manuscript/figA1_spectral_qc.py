@@ -24,8 +24,8 @@ from scipy.signal import detrend
 
 from fluxpy import figstyle as fs
 from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error
-from fluxpy.meteorology import add_theta
 from fluxpy.qc import segment_spectra
+from fluxpy.util import add_theta
 
 fs.apply()
 

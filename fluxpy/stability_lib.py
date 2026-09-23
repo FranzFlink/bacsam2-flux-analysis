@@ -26,13 +26,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict
 import logging
 
-
-# ---------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------
-
-KAPPA = 0.4
-G = 9.80665  # m s^-2
+from .util import G, KAPPA   # single source of the constants (manuscript App. B3: kappa = 0.40)
 
 logger = logging.getLogger(__name__)
 

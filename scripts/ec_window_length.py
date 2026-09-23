@@ -23,7 +23,7 @@ import xarray as xr
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 from fluxpy.eddy_covariance import segment_flux   # noqa: E402
-from fluxpy.meteorology import add_theta          # noqa: E402
+from fluxpy.util import add_theta                 # noqa: E402
 
 warnings.filterwarnings("ignore")
 

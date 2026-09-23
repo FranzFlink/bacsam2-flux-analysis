@@ -32,10 +32,10 @@ import numpy as np
 import xarray as xr
 from scipy.signal import detrend
 
-from .util import RD, air_density
+from .util import CP, air_density
 
 __all__ = [
-    "FLUX_BAND_HZ", "SAMPLING_HZ", "C_P",
+    "FLUX_BAND_HZ", "SAMPLING_HZ", "RANDOM_ERROR_MAX_LAG_S",
     "band_covariance", "band_pass", "band_covariance_random_error",
     "SegmentFlux", "segment_flux",
 ]
@@ -46,13 +46,6 @@ FLUX_BAND_HZ = (0.1, 20.0)
 SAMPLING_HZ = 100.0
 #: lag range of the random-error estimator [s] (Appendix A2: m corresponds to 10 s)
 RANDOM_ERROR_MAX_LAG_S = 10.0
-
-# Specific heat of dry air used on the EC side [J kg-1 K-1].
-# NOTE: differs from fluxpy.util.CP (1004.0, used by the bulk fluxes and stated
-# in the manuscript); the two are unified in the next commit so that this
-# commit changes no number.
-C_P = 1004.67
-R = RD
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +158,7 @@ def segment_flux(segment: xr.Dataset, fs: float = SAMPLING_HZ,
     ``segment`` holds the 100 Hz series of the segment: vertical wind ``w``
     [m s-1], potential temperature ``theta`` [K], air temperature ``T`` [degC]
     and static pressure ``p`` [hPa] (the T-Bird file as shipped, with ``theta``
-    added by ``fluxpy.meteorology.add_theta``). Steps, as in Sect. 3.1:
+    added by ``fluxpy.util.add_theta``). Steps, as in Sect. 3.1:
 
     1. linear detrend of ``w`` and ``theta``          ->  w', theta'
     2. covariance carried by 0.1-20 Hz                 ->  :func:`band_covariance`
@@ -178,5 +171,5 @@ def segment_flux(segment: xr.Dataset, fs: float = SAMPLING_HZ,
                                     np.asarray(segment[p], dtype=float))))
     cov = band_covariance(w_prime, theta_prime, fs, *band)
     sigma_cov = band_covariance_random_error(w_prime, theta_prime, fs, *band, max_lag_s=max_lag_s)
-    return SegmentFlux(flux=rho * C_P * cov, random_error=rho * C_P * sigma_cov,
+    return SegmentFlux(flux=rho * CP * cov, random_error=rho * CP * sigma_cov,
                        covariance=cov, air_density=rho, n_samples=int(w_prime.size))
