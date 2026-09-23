@@ -186,7 +186,7 @@ On 15 April, the day with open leads and the largest fluxes, every flux stands o
 temperature contrast most fluxes are statistically zero. That is a property of the Arctic surface, not a defect of the data —
 and it is the reason why the correlations in Chapter 4 cannot be high for *any* estimate.
 
-## Is 5 km long enough? (Fig. 2)
+## Is 5 km long enough? (Fig. 3)
 
 A short window might miss the larger eddies; a long one blurs leads and ice together. The experiment cuts each of the six
 low-level legs into sub-windows of different length and compares their mean flux with the flux of the complete leg
@@ -346,7 +346,7 @@ pd.DataFrame(rows).T.round(1)
 '''), ("md", r'''
 (CARRA is not available on 13 April, hence the smaller *n*.)
 
-## The three bulk estimates against the reference (Fig. 5)
+## The three bulk estimates against the reference (Fig. 6)
 '''), ("code", r'''
 fig, axs = plt.subplots(1, 3, figsize=(10, 3.4), sharex=True, sharey=True)
 for ax, key, c in zip(axs, ["H_obs_bulk", "H_rs_bulk", "H_era_bulk"], ["C2", "C1", "C0"]):

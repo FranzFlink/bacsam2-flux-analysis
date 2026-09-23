@@ -1,0 +1,211 @@
+"""Fig. 2 (fig:bulk_methods_overview) -- thermodynamic inputs of the bulk flux estimates.
+
+Manuscript Sect. 2.3. For the 91 segments of the four low-level flight days:
+(a) pseudo profiles of potential temperature per flight day: the surface value
+    theta_s and theta_air at the T-Bird (~24 m) and Polar 6 (~70 m) levels for the
+    observations, and the corresponding levels of ERA5 (with ERA5 or MODIS T_s) and
+    CARRA; thin lines are single segments, thick lines the daily median;
+(b) distributions of the surface temperature T_s of the four sources;
+(c) distributions of the near-surface stratification, theta at ~30 m minus theta_s.
+
+Inputs (all shipped): the segment file (KT-19 T_s, T-Bird T, p, height), the Polar 6
+aircraft-level side file, MODIS IST, ERA5 model levels 134-137 and single levels,
+CARRA surface and 30 / 75 m height levels. MODIS and ERA5 are colocated with the
+same functions as the bulk fluxes (scripts/calc_bulk_and_ec_fluxes.py); the
+potential temperature is fluxpy.util.potential_temperature with the pressure of
+each level.
+
+Run:  pixi run python figures_manuscript/fig02_meteo_overview.py
+"""
+import logging
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(REPO / "scripts"))
+logging.getLogger("fontTools").setLevel(logging.WARNING)
+
+import numpy as np
+import pandas as pd
+import xarray as xr
+from matplotlib.patches import Patch
+
+from fluxpy import figstyle as fs
+from fluxpy.util import potential_temperature
+from calc_bulk_and_ec_fluxes import load_era5_sl, load_modis, load_obs  # noqa: E402
+
+fs.apply()
+
+# ── colours: one per data source, from the flux palette ─────────────────────
+C_OBS = fs.C["H_obs_bulk"]     # KT-19 / T-Bird / Polar 6
+C_MOD = fs.C["H_rs_bulk"]      # MODIS T_s on the ERA5 column
+C_ERA = fs.C["H_era_diag"]     # ERA5
+C_CAR = fs.C["H_car_diag"]     # CARRA
+
+_CARRA = REPO / "data" / "reanalysis" / "carra"
+_ERA5_ML = REPO / "data" / "reanalysis" / "era5" / "ERA5_model_levels" / "era5_ml.nc"
+_POLAR6_LEVEL = REPO / "data" / "observations" / "ar" / "polar6_level_at_segments.nc"
+
+# ERA5 model levels closest to the surface and their standard-atmosphere heights [m]
+# (ECMWF L137 definitions). The level pressure is sigma * surface pressure with sigma
+# the mean of the two half-level b coefficients; the a term (< 0.02 hPa) is neglected.
+ERA5_LEVELS = {137: (10.0, 0.998815), 136: (31.0, 0.996317), 135: (54.0, 0.993618), 134: (79.0, 0.990448)}
+CARRA_LEVELS_M = (30.0, 75.0)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Data: the 91 segments and every source colocated to them
+# ═════════════════════════════════════════════════════════════════════════════
+obs = load_obs()
+start_times = pd.DatetimeIndex(obs["start_time"].values)
+flight_days = sorted(set(start_times.date))
+t_seg = xr.DataArray(start_times, dims="leg")
+lat_seg = xr.DataArray(np.asarray(obs["latitude"]), dims="leg")
+lon_seg = xr.DataArray(np.asarray(obs["longitude"]), dims="leg")
+
+# observations: KT-19 surface, T-Bird level (both with the T-Bird pressure, as in the
+# in-situ bulk flux), Polar 6 level from the aircraft-level side file
+T_kt19 = np.asarray(obs["t_kt19"], dtype=float)
+p_tbird = np.asarray(obs["p_mean"], dtype=float)
+theta_sfc_obs = potential_temperature(T_kt19, p_tbird)
+theta_tbird = potential_temperature(np.asarray(obs["T_mean"], dtype=float), p_tbird)
+z_tbird = np.asarray(obs["altitude"], dtype=float)
+polar6 = xr.open_dataset(_POLAR6_LEVEL).reindex(start_time=obs["start_time"].values)
+theta_polar6 = np.asarray(polar6["theta_polar6"], dtype=float)
+z_polar6 = np.asarray(polar6["z_polar6"], dtype=float)
+
+# ERA5: skin temperature and surface pressure, model levels 134-137; MODIS T_s gap-filled with ERA5 skt
+era5_sl = load_era5_sl(obs)
+p_sfc_hPa = era5_sl["sp_Pa"] / 100.0
+theta_sfc_era5 = potential_temperature(era5_sl["skt_K"], p_sfc_hPa)
+ist = np.asarray(load_modis(obs)["IST"], dtype=float)
+ist = np.where(np.isnan(ist), era5_sl["skt_K"], ist)
+theta_sfc_modis = potential_temperature(ist, p_sfc_hPa)
+era5_ml = xr.open_dataset(_ERA5_ML).sel(time=t_seg, latitude=lat_seg, longitude=lon_seg, method="nearest")
+theta_era5 = {level: potential_temperature(era5_ml["t"].sel(model_level=level).values, sigma * p_sfc_hPa)
+              for level, (_, sigma) in ERA5_LEVELS.items()}
+
+
+def load_carra(ds_obs: xr.Dataset) -> dict:
+    """CARRA skin temperature and surface pressure, and T and p at 30 and 75 m, at the segments."""
+    surface = xr.open_dataset(_CARRA / "carra_east_latlon0p05.nc")[["skt", "sp"]]
+    surface = surface.sel(time=t_seg, lat=lat_seg, lon=lon_seg, method="nearest")
+    levels = xr.open_dataset(_CARRA / "height_level" / "carra_latlon0p05.nc")[["t", "pres"]]
+    levels = levels.sel(valid_time=t_seg, lat=lat_seg, lon=lon_seg, method="nearest")
+    out = {"skt_K": surface["skt"].values.astype(float), "sp_Pa": surface["sp"].values.astype(float)}
+    for z in CARRA_LEVELS_M:
+        at_z = levels.sel(heightAboveGround=z)
+        out[f"T{z:.0f}_K"] = at_z["t"].values.astype(float)
+        out[f"p{z:.0f}_Pa"] = at_z["pres"].values.astype(float)
+    return out
+
+
+carra = load_carra(obs)
+theta_sfc_carra = potential_temperature(carra["skt_K"], carra["sp_Pa"] / 100.0)
+theta_carra = {z: potential_temperature(carra[f"T{z:.0f}_K"], carra[f"p{z:.0f}_Pa"] / 100.0) for z in CARRA_LEVELS_M}
+
+# series of panels (b) and (c): surface temperature [degC] and stratification theta(~30 m) - theta_s [K]
+T_sfc_series = [(T_kt19, C_OBS), (ist - 273.15, C_MOD), (era5_sl["skt_K"] - 273.15, C_ERA), (carra["skt_K"] - 273.15, C_CAR)]
+dtheta_series = [(theta_tbird - theta_sfc_obs, C_OBS),
+                 (theta_era5[136] - theta_sfc_modis, C_MOD),
+                 (theta_era5[136] - theta_sfc_era5, C_ERA),
+                 (theta_carra[30.0] - theta_sfc_carra, C_CAR)]
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Figure: four profile columns (a) on top, the two histograms (b), (c) below
+# ═════════════════════════════════════════════════════════════════════════════
+fig = fs.gridfig(width=fs.COL_W, aspect=1.75)
+gs = fig.add_gridspec(3, 4, height_ratios=[2.1, 1, 1])
+axs_prof = []
+for i in range(4):
+    axs_prof.append(fig.add_subplot(gs[0, i], sharey=axs_prof[0] if i else None))
+ax_tsfc = fig.add_subplot(gs[1, :])
+ax_dtheta = fig.add_subplot(gs[2, :])
+
+# ── (a) profiles ─────────────────────────────────────────────────────────────
+Y_TOP = 100
+valid = ((z_polar6 > 0) & (z_polar6 < 200) & (z_tbird > 0) & (z_tbird < 200)
+         & np.isfinite(theta_sfc_obs) & np.isfinite(theta_tbird) & np.isfinite(theta_polar6))
+z_tbird_mean, z_polar6_mean = np.nanmean(z_tbird[valid]), np.nanmean(z_polar6[valid])
+
+# (colour, theta at the levels, heights of the levels (per segment or fixed), marker,
+#  line style of single segments, line style of the median)
+Z_ERA5 = [0.0] + [ERA5_LEVELS[k][0] for k in (137, 136, 135, 134)]
+sources = [
+    (C_OBS, [theta_sfc_obs, theta_tbird, theta_polar6], [np.zeros_like(z_tbird), z_tbird, z_polar6], "o", "-", "--"),
+    (C_ERA, [theta_sfc_era5] + [theta_era5[k] for k in (137, 136, 135, 134)], Z_ERA5, "^", "-", "--"),
+    (C_MOD, [theta_sfc_modis, theta_era5[136]], [0.0, ERA5_LEVELS[136][0]], "^", ":", ":"),
+    (C_CAR, [theta_sfc_carra, theta_carra[30.0], theta_carra[75.0]], [0.0, 30.0, 75.0], "s", "-", "--"),
+]
+X_LIMITS = [(240, 255), (240, 260), (245, 260), (265, 275)]
+
+for i_day, (ax, day) in enumerate(zip(axs_prof, flight_days)):
+    ax.axhline(z_tbird_mean, color="0.75", lw=0.6, ls="--", zorder=0)
+    ax.axhline(z_polar6_mean, color="0.75", lw=0.6, ls="--", zorder=0)
+    of_day = valid & (start_times.date == day)
+    for colour, thetas, heights, marker, ls_single, ls_median in sources:
+        per_segment = isinstance(heights[0], np.ndarray)
+        for j in np.where(of_day)[0]:                                   # single segments
+            z_j = [z[j] for z in heights] if per_segment else heights
+            ax.plot([th[j] for th in thetas], z_j, color=colour, lw=0.5, ls=ls_single, alpha=0.1, zorder=1)
+        theta_median = [np.nanmedian(th[of_day]) for th in thetas]        # daily median profile
+        z_median = [np.nanmedian(z[of_day]) for z in heights] if per_segment else heights
+        ax.plot(theta_median, z_median, marker=marker, color=colour, lw=1.6, ls=ls_median, alpha=0.9,
+                markeredgewidth=0.25, markeredgecolor="0.3", markerfacecolor=colour, zorder=4)
+
+    x0, x1 = X_LIMITS[i_day]
+    ax.set_ylim(-10, Y_TOP)
+    ax.set_xlim(x0, x1)
+    ax.set_xlabel(r"$\theta$ (K)")
+    ax.set_title(pd.Timestamp(day).strftime("%d %b"), fontweight="bold")
+    major = np.arange(x0, x1 + 1, 10)                                     # labelled every 10 K, minor every 5 K
+    ax.set_xticks(major)
+    ax.set_xticks(np.arange(x0, x1 + 1, 5), minor=True)
+    not_last = i_day < 3                                                  # blank the label on a shared column edge
+    ax.set_xticklabels(["" if (not_last and t == x1) else f"{t:.0f}" for t in major])
+    if i_day > 0:
+        ax.tick_params(axis="y", which="both", left=False, labelleft=False)
+
+axs_prof[0].set_ylabel("Height (m)")
+fig.legend(handles=[Patch(facecolor=c, edgecolor="0.3", lw=0.4, label=name)
+                    for c, name in [(C_OBS, "Obs"), (C_MOD, "MODIS"), (C_ERA, "ERA5"), (C_CAR, "CARRA")]],
+           loc="outside upper center", ncol=4, columnspacing=1.0, handlelength=1.1, handletextpad=0.4)
+fs.panel_label(axs_prof[0], "(a)")
+for z, text, dy in [(z_tbird_mean, "T-Bird", 4), (z_polar6_mean, "Polar 6", -7)]:   # instrument levels
+    axs_prof[0].text(-.8, (z + dy) / Y_TOP, text, transform=axs_prof[0].transAxes, va="bottom", ha="left",
+                     color="0.5", fontsize=fs.FONT_SIZE - 1, zorder=5,
+                     bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5))
+
+# ── (b), (c) histograms ──────────────────────────────────────────────────────
+fill = dict(density=True, alpha=0.2, linewidth=0, zorder=1)
+step = dict(density=True, histtype="step", linewidth=0.8, alpha=0.9, zorder=2)
+panels = [
+    (ax_tsfc, T_sfc_series, np.linspace(-35, 5, 20), (-35, 5), [-1.8, -20],
+     [(-1.8, 5, "#fffde7"), (-20, -1.8, "#e3f2fd"), (-35, -20, "#e8eaf6")],
+     [(-27.5, "snow-covered\nsea-ice"), (-10.9, "thin\nsea-ice"), (1.6, "sea-ice\nfree")],
+     r"$T_\mathrm{sfc}$ (°C)", "(b)"),
+    (ax_dtheta, dtheta_series, np.linspace(-6, 6, 20), (-8, 8), [0],
+     [(-8, 0, "#fff3e0"), (0, 8, "#e8eaf6")],
+     [(-4, "unstable\nstratification"), (4, "stable\nstratification")],
+     r"$\theta_\mathrm{air} - \theta_{\mathrm{sfc}}$ (K)", "(c)"),
+]
+for ax, series, bins, xlim, vlines, bands, labels, xlabel, letter in panels:
+    for x0, x1, colour in bands:                                          # surface classes / stability regimes
+        ax.axvspan(x0, x1, color=colour, alpha=0.25, zorder=0, lw=0)
+    for x, colour in series:
+        x = x[np.isfinite(x)]
+        ax.hist(x, bins=bins, color=colour, **fill)
+        ax.hist(x, bins=bins, color=colour, **step)
+    for xv in vlines:
+        ax.axvline(xv, color="0.5", lw=0.8, ls=":", zorder=4)
+    ax.set_ylim(0, ax.get_ylim()[1] * 1.3)                                # headroom for the labels
+    for xc, label in labels:
+        x_axes = min(max((xc - xlim[0]) / (xlim[1] - xlim[0]), 0.13), 0.85)
+        ax.text(x_axes, 0.97, label, transform=ax.transAxes, va="top", ha="center",
+                color="0.45", multialignment="center", zorder=5)
+    ax.set_xlim(*xlim)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Density")
+    fs.panel_label(ax, letter)
+
+fs.save(fig, "fig02_meteo_overview")

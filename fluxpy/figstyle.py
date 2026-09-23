@@ -35,7 +35,7 @@ Typical figure script::
     fig, ax = fs.figure(width=fs.COL_W, aspect=0.8)
     ax.plot(x, y, color=fs.C["H_obs_bulk"], label=fs.L["H_obs_bulk"])
     fs.panel_label(ax, "(a)")
-    fs.save(fig, "fig05_flux_scatter")
+    fs.save(fig, "fig06_flux_scatter")
 """
 from __future__ import annotations
 

@@ -10,7 +10,7 @@ paper that is derived from data:
 | Step | What it shows | Time |
 |------|---------------|------|
 | `verify-ec` | The eddy-covariance (EC) reference fluxes follow from the 100 Hz T-Bird measurements | ~30 s |
-| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 2); part of `all-from-raw` | ~2 min each |
+| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 3); part of `all-from-raw` | ~2 min each |
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
 | `verify-cache` | The MODIS and ERA5 values at the segments follow from the shipped gridded fields | ~5 s |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
@@ -36,7 +36,7 @@ paper that is derived from data:
 
    The first call downloads the Python environment (a few minutes). `verify-ec` and `check`
    end with a `RESULT:` line; the run stops with an error if anything does not match.
-   Figures 1 and 4 download coastline data on first use, so an internet connection is needed once.
+   Figures 1, 4 and 5 download map data on first use, so an internet connection is needed once.
 
 Single steps: `pixi run test`, `pixi run verify-ec`, `pixi run precompute`, `pixi run check`,
 `pixi run numbers`, `pixi run tables`, `pixi run figures`. `pixi run all-from-raw` additionally
@@ -51,11 +51,12 @@ them as modified although the numbers are identical.
 | Paper | Code |
 |-------|------|
 | Sect. 3.1 Eddy-covariance method, Eq. (1) | `fluxpy/eddy_covariance.py` (band-limited covariance, random error, `segment_flux`); the 5 km segments: `fluxpy/aggregate.py`, `scripts/run_ec_aggregation.py` |
-| Sect. 3.1 window length (Fig. 2), placement spread | `scripts/ec_window_length.py`, `scripts/ec_segment_placement.py` |
+| Sect. 2.3 thermodynamic inputs of the bulk estimates (Fig. 2) | `figures_manuscript/fig02_meteo_overview.py` |
+| Sect. 3.1 window length (Fig. 3), placement spread | `scripts/ec_window_length.py`, `scripts/ec_segment_placement.py` |
 | Sect. 3.2 and Appendix B Bulk method, Eq. (2) | `fluxpy/bulk.py` (B1 Richardson number, B2 roughness, B3 transfer coefficient), `fluxpy/stability.py` (Eq. B2, effective wind), `fluxpy/stability_lib.py` (stability functions) |
 | Table 2 uncertainty budget | `fluxpy/uncertainty.py`, `scripts/make_manuscript_tables.py` |
-| Sect. 4.1 comparison, Table 4, Figs. 3-5 | `scripts/calc_bulk_and_ec_fluxes.py` (all estimates on the segments), `scripts/manuscript_numbers.py`, `figures_manuscript/fig03-05` |
-| Sect. 4.2 sensitivity, Table 3, Fig. 6, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig06_sensitivity.py` |
+| Sect. 4.1 comparison, Table 4, Figs. 4-6 | `scripts/calc_bulk_and_ec_fluxes.py` (all estimates on the segments), `scripts/manuscript_numbers.py`, `figures_manuscript/fig04-06` |
+| Sect. 4.2 sensitivity, Table 3, Fig. 7, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig07_sensitivity.py` |
 | Appendix A quality of the EC reference, Fig. A1, Table A1 | `fluxpy/qc.py` (integrity check), `scripts/ec_quality.py`, `figures_manuscript/figA1_spectral_qc.py` |
 | every number in the text | `scripts/manuscript_numbers.py` and `scripts/ec_quality.py`, whose output is committed as `expected_numbers.txt` |
 
@@ -67,7 +68,7 @@ Every module starts with a docstring that names the manuscript section it implem
 |------|---------|
 | `fluxpy/` | **All physics**: EC flux and random error (`eddy_covariance.py`), integrity check and spectra (`qc.py`), 5 km segments (`aggregate.py`), bulk flux (`bulk.py`), bulk Richardson number (`stability.py`), stability functions and transfer coefficients (`stability_lib.py`), sensitivity sweep and skill metrics (`sensitivity.py`), uncertainty budget (`uncertainty.py`) |
 | `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments (`fluxpy/aggregate.py`) |
-| `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 2) |
+| `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 3) |
 | `scripts/ec_quality.py` | Quality of the EC reference (Appendix A) → `tables_manuscript/table_qc_robustness.tex` |
 | `scripts/verify_ec_reproduction.py` | Recomputes the EC segments and compares with the shipped segment file |
 | `scripts/calc_bulk_and_ec_fluxes.py` | Bulk fluxes + sensitivity sweep → `data/model_output/` |
@@ -108,6 +109,9 @@ Two implementation details worth knowing:
 * The CARRA surface sensible heat flux at the segments is shipped in `along_track_inputs.nc`;
   the CARRA forecast file it was extracted from is not part of the repository. (The MODIS and
   ERA5 entries of that file are reproducible from the shipped gridded files.)
+* The Polar 6 aircraft-level temperature and height per segment (Fig. 2a) are shipped in
+  `polar6_level_at_segments.nc`; the Polar 6 nose-boom archive they come from is not part of the
+  repository.
 
 Raw data are available from the authors on request.
 
