@@ -8,10 +8,10 @@ Blocks (in the order printed) and where they appear in the manuscript
     EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
     reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
     amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-4)
-    alpha_T sweep ....................... Sect. 4.2, Fig. 6, Table C1
+    alpha_T sweep ....................... Sect. 4.2, Fig. 7, Table C1
     satellite T_s benefit ............... Sect. 4.1, Discussion (heterogeneous vs homogeneous half)
     alpha_T is a weak knob .............. Discussion
-    window-length experiment ............ Sect. 3.1, Fig. 2
+    window-length experiment ............ Sect. 3.1, Fig. 3
     uncertainty budget .................. Table 2
     further numbers ..................... input sensitivities (Sect. 4.2), CARRA subset (Sect. 4.1), paired bootstrap
 
@@ -128,7 +128,7 @@ def amplitude_matched_configuration():
 
 
 def alpha_sweep():
-    """Sect. 4.2, Fig. 6 and Table C1: slope and r over alpha_T; r does not depend on alpha_T."""
+    """Sect. 4.2, Fig. 7 and Table C1: slope and r over alpha_T; r does not depend on alpha_T."""
     print("\n" + RULE)
     print("alpha_T SWEEP  (slope / r / bias / RMSE)   -- note r is INVARIANT to alpha_T")
     print(RULE)
@@ -197,9 +197,9 @@ def alpha_is_a_weak_knob():
 
 
 def window_length_experiment():
-    """Sect. 3.1 and Fig. 2: sub-window flux, random error and fluxes above 1/2/3 sigma vs window length."""
+    """Sect. 3.1 and Fig. 3: sub-window flux, random error and fluxes above 1/2/3 sigma vs window length."""
     print(RULE)
-    print("EC WINDOW-LENGTH EXPERIMENT (Fig. 2)  -- scripts/ec_window_length.py")
+    print("EC WINDOW-LENGTH EXPERIMENT (Fig. 3)  -- scripts/ec_window_length.py")
     print(RULE)
     wl = pd.read_csv(REPO / "data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv")
     print(f"{int(wl.loc[0, 'n_legs'])} low-level legs, median length {wl.loc[0, 'length_km']:.1f} km")

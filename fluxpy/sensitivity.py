@@ -2,7 +2,7 @@ r"""
 fluxpy.sensitivity
 ==================
 Sensitivity of the bulk fluxes to the configuration, and the skill metrics
-(manuscript Sect. 4.1, Table 4; Sect. 4.2, Table 3, Fig. 6; Appendix C, Table C1).
+(manuscript Sect. 4.1, Table 4; Sect. 4.2, Table 3, Fig. 7; Appendix C, Table C1).
 
 * :func:`sensitivity_matrix` builds the tested configurations, one axis at a time
   about the reference: stability scheme, scalar roughness ratio alpha_T,
@@ -33,7 +33,7 @@ __all__ = ["sensitivity_matrix", "skill_metrics", "amplitude_metrics", "slope_bo
 
 #: the seven schemes tested against the reference GLGS20 (Table C1)
 ALTERNATIVE_SCHEMES = ["BD", "HB88", "BH91", "CB05", "GAFGP07", "ZE07-I", "ZE07-II"]
-#: alpha_T values of the sweep (Table C1 lists 1e-7 ... 1e-1; Fig. 6 and Table 3 use 1e-4 ... 1e-1)
+#: alpha_T values of the sweep (Table C1 lists 1e-7 ... 1e-1; Fig. 7 and Table 3 use 1e-4 ... 1e-1)
 ZT_RATIOS = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
 #: alternative momentum roughness sets (open water, thin ice, snow-covered ice) [m]
 ROUGHNESS_SETS = {

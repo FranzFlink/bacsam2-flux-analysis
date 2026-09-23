@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EC window-length experiment (manuscript Fig. 2).
+"""EC window-length experiment (manuscript Fig. 3).
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
 (0.5 ... 50 km). For every L the EC flux of the sub-windows is compared with
