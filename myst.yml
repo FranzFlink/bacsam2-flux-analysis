@@ -16,6 +16,8 @@ project:
       affiliations:
         - Leipzig Institute for Meteorology (LIM), Leipzig University
   github: https://github.com/FranzFlink/bacsam2-flux-analysis
+  license:
+    code: MIT
   numbering:
     headings: false
   exclude:

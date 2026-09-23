@@ -135,6 +135,10 @@ Two implementation details worth knowing:
 
 Raw data are available from the authors on request.
 
-## Citation
+## Citation and license
 
-See `CITATION.cff`.
+Please cite the paper; `CITATION.cff` has the reference.
+
+The code is released under the [MIT License](LICENSE). The files in `data/` are not covered by it:
+third-party products (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS
+imagery) remain under the licences of their providers, see `DATA.md`.

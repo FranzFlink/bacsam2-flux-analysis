@@ -35,4 +35,4 @@ from .eddy_covariance import segment_flux                                     # 
 from .aggregate import SegmentConfig, process_legs, to_xarray                 # noqa: F401
 from .sensitivity import skill_metrics, amplitude_metrics, slope_bootstrap_ci  # noqa: F401
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
