@@ -44,6 +44,7 @@ pixi run all          # tests, EC reproduction, cache check, numbers, tables, fi
 pixi run numbers      # print the numbers of the text
 pixi run robustness   # checks asked for in review (dependence, baselines, MODIS subset, ...)
 pixi run book         # re-execute the didactic notebooks in book/
+pixi run site         # build the website (docs/ + book/) into _build/html; site-serve for a live preview
 ```
 
 ## Conventions that are decisions, not accidents

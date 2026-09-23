@@ -1,0 +1,51 @@
+# Website of the repository (MyST, the engine of Jupyter Book 2).
+#   build:   pixi run site          -> _build/html (static files, open _build/html/index.html via a web server)
+#   preview: pixi run site-serve    -> live preview at http://localhost:3000
+# The chapters in book/ are executed by `pixi run book`; the site only renders them.
+version: 1
+project:
+  id: bacsam2-flux-analysis
+  title: "BACSAM-II: sensible heat flux over Arctic sea ice, measured and estimated"
+  description: >-
+    Airborne eddy-covariance sensible heat flux from the towed T-Bird as the reference for bulk estimates
+    driven by in-situ, satellite and reanalysis inputs (Müller et al., AMT, submitted): the method step by
+    step, and how to reproduce and review every number of the paper.
+  keywords: [sensible heat flux, eddy covariance, Arctic sea ice, bulk formula, ERA5, MODIS, CARRA, airborne measurements]
+  authors:
+    - name: Joshua J. Müller
+      affiliations:
+        - Leipzig Institute for Meteorology (LIM), Leipzig University
+  github: https://github.com/FranzFlink/bacsam2-flux-analysis
+  numbering:
+    headings: false
+  exclude:
+    - _build/**
+    - .pixi/**
+    - preprocessing/**
+    - paper/**
+    - data/**
+  toc:
+    - file: docs/index.md
+    - title: The method, step by step
+      children:
+        - file: book/01_overview.ipynb
+        - file: book/02_eddy_covariance.ipynb
+        - file: book/03_bulk_method.ipynb
+        - file: book/04_comparison.ipynb
+        - file: book/05_sensitivity_and_uncertainty.ipynb
+        - file: book/06_robustness.ipynb
+    - title: Reproduce and review
+      children:
+        - file: docs/reproduce.md
+        - file: docs/paper_to_code.md
+        - file: docs/data.md
+        - file: docs/glossary.md
+        - file: docs/changelog.md
+site:
+  template: book-theme
+  options:
+    logo_text: BACSAM-II fluxes
+    folders: true
+  actions:
+    - title: Code on GitHub
+      url: https://github.com/FranzFlink/bacsam2-flux-analysis

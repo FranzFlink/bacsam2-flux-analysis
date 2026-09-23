@@ -1,6 +1,6 @@
 # The method, step by step
 
-Five short notebooks that follow the structure of the paper and recompute its central numbers from the shipped
+Six short notebooks that follow the structure of the paper and recompute its central numbers from the shipped
 data with the same `fluxpy` functions the pipeline uses. They are meant for readers who want to *understand* the
 method — open them directly on GitHub (outputs are included) or run them yourself.
 
@@ -11,12 +11,17 @@ method — open them directly on GitHub (outputs are included) or run them yours
 | [3 · The bulk method](03_bulk_method.ipynb) | bulk method, Appendix B | one bulk flux by hand (Δθ, Ri_b, roughness, C_h), stability functions, the role of α_T |
 | [4 · How well do the estimates reproduce the measured flux?](04_comparison.ipynb) | results, Fig. 6, comparison table | why slope and correlation instead of RMSE, the comparison, where the satellite surface temperature helps |
 | [5 · What does the result depend on — and how uncertain is it?](05_sensitivity_and_uncertainty.ipynb) | sensitivity, Fig. 7, uncertainty table | α_T changes the amplitude but not the correlation, everything else is secondary, uncertainty budget |
+| [6 · How robust is the result?](06_robustness.ipynb) | checks asked for in review | neighbouring segments are not independent, one day left out, where MODIS really sees the surface, the frequency band of the EC flux, the size of the stability correction, a segment that is not at one level |
 
 The notebooks are generated and executed by [`build_book.py`](build_book.py):
 
 ```
 pixi run book
 ```
+
+The same chapters, with the landing page, the reproduction guide, the paper-to-code map and a glossary from `docs/`,
+form the website of the repository: `pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live
+preview); on GitHub it is published by `.github/workflows/site.yml`.
 
 Every hand calculation is checked against the pipeline output inside the notebook (e.g. the EC flux computed in
 chapter 2 equals the value in the data file; the bulk flux computed in chapter 3 equals the pipeline's).

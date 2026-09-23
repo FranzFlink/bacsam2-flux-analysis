@@ -1,0 +1,45 @@
+# Builds the website (MyST: docs/ + the executed chapters in book/) and publishes it with GitHub Pages.
+# The notebooks are executed locally by `pixi run book` and committed with their outputs, so this job
+# only renders them and needs neither the data nor the analysis environment.
+# One-time setting on GitHub: Settings -> Pages -> Source: "GitHub Actions".
+name: website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          environments: docs
+      - name: Build the site
+        env:
+          BASE_URL: /${{ github.event.repository.name }}   # the site lives under <user>.github.io/<repository>
+        run: pixi run -e docs site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _build/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

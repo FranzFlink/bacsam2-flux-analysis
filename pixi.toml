@@ -57,3 +57,16 @@ paper         = "python paper/export_clean_manuscript.py"
 all           = { depends-on = ["test", "verify-ec", "verify-cache", "check", "tables", "figures"] }
 # everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
 all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "verify-cache", "check", "tables", "figures"] }
+
+# ── website: the book and the docs as a static site (MyST / Jupyter Book 2) ──
+# Separate environment so that the analysis environment stays lean. The notebooks are
+# executed by `pixi run book`; the site build only renders them.
+[feature.docs.dependencies]
+mystmd = "*"
+
+[feature.docs.tasks]
+site       = "myst build --html"
+site-serve = "myst start"
+
+[environments]
+docs = { features = ["docs"], no-default-feature = true }

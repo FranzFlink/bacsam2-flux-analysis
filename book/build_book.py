@@ -55,7 +55,17 @@ Going down the table, measured inputs are replaced step by step by products that
 Whatever skill is lost on the way can then be attributed to the input that was replaced.
 
 The chapters follow the paper: **2** how the EC reference is measured · **3** how the bulk method works ·
-**4** how the estimates compare · **5** what the result depends on, and how uncertain it is.
+**4** how the estimates compare · **5** what the result depends on, and how uncertain it is ·
+**6** how robust all of this is with 91 segments from four flight days.
+
+> [!NOTE]
+> **How to read this book.** Every chapter computes its numbers live from the files in `data/`, with the same
+> `fluxpy` functions that produce the paper, and checks its hand calculations against the pipeline output.
+> Symbols are explained in the glossary of the website (`docs/glossary.md`). The code cells can be run in
+> Jupyter from the `book/` folder (`pixi run jupyter lab`).
+>
+> **In the paper:** Sects. 1–2, Table 1, Fig. 1. **In the code:** `scripts/calc_bulk_and_ec_fluxes.py` puts all six
+> estimates on the segments and writes `data/model_output/sensitivity_figure_data.nc`, which this chapter reads.
 '''), ("code", SETUP), ("md", r'''
 ## The segments
 
@@ -93,6 +103,11 @@ air. The sensible heat flux is this covariance, scaled by the heat capacity of a
 $$H_\mathrm{S} = \rho\, c_p\, \overline{w'\theta'}$$
 
 This chapter computes it for **one 5 km segment, step by step**, and arrives at the value stored in the data file.
+
+> [!NOTE]
+> **In the paper:** Sect. 3.1, Eq. (1), Fig. 3, Appendix A. **In the code:** `fluxpy/eddy_covariance.py`
+> (`band_covariance`, `band_covariance_random_error`, `segment_flux`), `fluxpy/qc.py` (integrity check),
+> `scripts/ec_window_length.py` (Fig. 3), `scripts/ec_quality.py` (every number of Appendix A).
 '''), ("code", SETUP + r'''
 from fluxpy.eddy_covariance import band_covariance, segment_flux
 from fluxpy.util import CP, RD, add_theta
@@ -235,6 +250,11 @@ $C_\mathrm{h}$ that says how efficiently turbulence mixes. Everything difficult 
   ($Ri_\mathrm{b} > 0$, cold surface) suppresses turbulence, unstable stratification enhances it.
 
 This chapter computes $H_\mathrm{S,obs,bulk}$ for one segment by hand and then shows how $C_\mathrm{h}$ reacts to stability and to $\alpha_T$.
+
+> [!NOTE]
+> **In the paper:** Sect. 3.2, Eq. (2), Appendix B, Table B1. **In the code:** `fluxpy/bulk.py` (the steps B1–B3),
+> `fluxpy/stability.py` (Eq. B2), `fluxpy/stability_lib.py` (the eight stability schemes), `fluxpy/util.py`
+> (constants, potential temperature, pressures).
 '''), ("code", SETUP + r'''
 from fluxpy.util import potential_temperature, air_density, CP, G
 from fluxpy.stability import bulk_richardson_2pt, Cd_Ch_noniterative
@@ -254,6 +274,8 @@ $$p_\mathrm{s} = p_z \exp\!\left(\frac{g\,z}{R_d\,\bar T}\right),$$
 
 about 3 hPa more than at the T-Bird. It looks negligible, but it is not: using $p_z$ at the surface would make
 $\theta_\mathrm{s}$ too warm by $g z / c_p \approx 0.23$ K, and the typical temperature difference is only about 1 K.
+The reanalysis-driven estimates follow the same rule the other way round: the surface pressure is known, and the
+air temperature of ERA5 model level 136 (about 31 m) gets the pressure of that level (`fluxpy.util.era5_level_pressure`).
 '''), ("code", r'''
 from fluxpy.util import surface_pressure_hypsometric
 T_s, T_a, p, z = float(s.t_kt19), float(s.T_mean), float(s.p_mean), float(s.altitude)
@@ -336,13 +358,20 @@ NB4 = [("md", r'''
 ## Why not simply the RMSE?
 
 Most measured fluxes are within a few W m⁻² of zero (Chapter 1). An estimate that is *always close to zero* then has a
-small RMSE although it contains no information. The table below shows exactly this: the ERA5-only bulk flux has the
-**smallest** centred RMSE of all estimates — and at the same time the smallest amplitude and the lowest correlation.
+small error although it contains no information. The table below makes the point with a forecast that contains no information at
+all: $H = 0$ on every segment. Compare its mean absolute error (MAE) and RMSE with those of the real estimates.
 
 The paper therefore uses two separate measures:
 
 * **slope $b$** of the regression of the estimate on the EC flux — the fraction of the observed *amplitude* that is recovered (ideal: 1),
 * **correlation $r$** — whether the estimate is large where the measurement is large (ideal: 1).
+
+The two are linked: the slope equals $r$ times the ratio of the standard deviations of estimate and reference. A slope near 1
+can therefore mean "right amplitude and good correlation" or "too much variance and poor correlation"; read $b$ and $r$ together.
+
+> [!NOTE]
+> **In the paper:** Sect. 4.1, Table 4, Figs. 4–6. **In the code:** `fluxpy/sensitivity.py` (`skill_metrics`),
+> `scripts/manuscript_numbers.py` (every number of Sect. 4.1), `figures_manuscript/fig06_flux_scatter.py`.
 '''), ("code", SETUP + r'''
 from fluxpy.sensitivity import skill_metrics
 import logging; logging.disable(logging.INFO)
@@ -350,11 +379,17 @@ NAMES = {"H_obs_bulk": "H_S,obs,bulk  (measured inputs)", "H_rs_bulk": "H_S,RS,b
          "H_era_bulk": "H_S,ERA,bulk  (ERA5 only)", "H_era_diag": "H_S,ERA,diag  (ERA5's own flux)", "H_car_diag": "H_S,CAR,diag  (CARRA's own flux)"}
 rows = {}
 for key, name in NAMES.items():
-    m = skill_metrics(EC, FIG[key].values, key)
-    rows[name] = {"slope b": m["slope"], "r": m["r"], "bias (W m-2)": m["bias"], "centred RMSE (W m-2)": m["crmse"], "n": m["n"]}
-pd.DataFrame(rows).T.round(1)
+    h = FIG[key].values; ok = np.isfinite(h)
+    m = skill_metrics(EC, h, key)
+    rows[name] = {"slope b": m["slope"], "r": m["r"], "sd ratio": m["std_ratio"], "bias (W m-2)": m["bias"],
+                  "MAE (W m-2)": np.mean(np.abs(h[ok] - EC[ok])), "RMSE (W m-2)": m["rmse"], "n": m["n"]}
+rows["zero flux  (H = 0 everywhere)"] = {"bias (W m-2)": -EC.mean(), "MAE (W m-2)": np.mean(np.abs(EC)),
+                                        "RMSE (W m-2)": np.sqrt(np.mean(EC ** 2)), "n": EC.size}
+table = pd.DataFrame(rows).T.round(1); table["n"] = table["n"].astype(int)
+table.fillna("–")
 '''), ("md", r'''
-(CARRA is not available on 13 April, hence the smaller *n*.)
+(CARRA is not available on 13 April, hence the smaller *n*.) The forecast "no flux anywhere" has a smaller MAE and RMSE than
+every estimate in the table: in this weak-flux regime the error measures reward caution, not skill.
 
 ## The three bulk estimates against the reference (Fig. 6)
 '''), ("code", r'''
@@ -367,10 +402,10 @@ for ax, key, c in zip(axs, ["H_obs_bulk", "H_rs_bulk", "H_era_bulk"], ["C2", "C1
     ax.set_xlabel("EC flux (W m$^{-2}$)"); ax.set_xlim(-8, 14); ax.set_ylim(-30, 30)
 axs[0].set_ylabel("bulk flux (W m$^{-2}$)");
 '''), ("md", r'''
-Reading the three panels from right to left is reading the paper's main result:
+Reading the three panels from right to left is reading the paper's main result (the numbers are in the panel titles):
 
-* **ERA5 only** — the points lie on an almost horizontal line: only about a quarter of the amplitude is recovered and the correlation is weak.
-* **MODIS surface temperature instead of ERA5's** — the amplitude rises to about 70 %, the correlation improves.
+* **ERA5 only** — the points lie on a nearly flat line: only a small part of the amplitude is recovered and the correlation is weak.
+* **MODIS surface temperature instead of ERA5's** — the atmosphere is still ERA5, yet amplitude and correlation both rise.
 * **measured inputs** — the best correlation, but now the amplitude is *over*estimated (slope well above 1).
   With correct inputs the conventional transfer coefficient is too large; Chapter 5 follows this up.
 
@@ -391,6 +426,7 @@ print(f"median within-segment standard deviation of the surface temperature: {me
 **Take-away.** The surface temperature decides whether a bulk estimate follows the observed variability.
 ERA5's surface temperature cannot represent leads and thin ice inside a grid cell; on heterogeneous segments its flux
 is even anti-correlated with the measurement, and this is where replacing it by the MODIS surface temperature changes the most.
+How firmly this rests on 91 segments that come from a handful of legs is the subject of Chapter 6.
 ''')]
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -401,6 +437,11 @@ Chapter 4 ended with a puzzle: with *measured* inputs the bulk method overestima
 Which of the choices hidden in the transfer coefficient is responsible? The paper changes one at a time:
 the stability scheme, the scalar roughness ratio $\alpha_T$, the momentum roughness — and perturbs the two inputs,
 temperature difference and wind.
+
+> [!NOTE]
+> **In the paper:** Sect. 4.2, Table 3, Fig. 7, Appendix C (Table C1), Table 2. **In the code:** `fluxpy/sensitivity.py`
+> (the configurations), `scripts/calc_bulk_and_ec_fluxes.py` (stages 3 and 4), `fluxpy/uncertainty.py` (Table 2),
+> `scripts/make_manuscript_tables.py`.
 '''), ("code", SETUP + r'''
 import logging; logging.disable(logging.INFO)
 S = pd.read_csv(REPO / "data/model_output/sensitivity_summary_table.csv").set_index("label")
@@ -425,7 +466,9 @@ of the paper, three orders of magnitude below the conventional value and close t
 over sea ice found. The correlation does not move at all: as explained in Chapter 3, roughness only rescales the flux.
 
 The paper does **not** read this as a measurement of $z_{0,T}$: any error that scales the flux — for instance in the
-surface temperature — would be absorbed by the same parameter.
+surface temperature — would be absorbed by the same parameter. The figure also shows the price of tuning: the $\alpha_T$ that
+gives the in-situ estimate the right amplitude makes the ERA5–MODIS estimate, which already recovers too little amplitude,
+recover even less. A single $\alpha_T$ cannot correct both.
 
 ## Everything else is secondary
 '''), ("code", r'''
@@ -470,18 +513,264 @@ temperature difference. Improving pan-Arctic flux estimates is therefore first o
 temperatures, and only then of better transfer coefficients.
 ''')]
 
+# ═════════════════════════════════════════════════════════════════════════════
+NB6 = [("md", r'''
+# 6 · How robust is the result?
+
+91 segments, four flight days, one instrument: every conclusion of the previous chapters rests on a small sample.
+This chapter takes the objections a critical reader raises, one at a time, and checks each against the data.
+Some conclusions come out unchanged; others are weaker than a naive count of 91 segments suggests.
+
+> [!NOTE]
+> **In the paper:** these checks answer review comments and are not (yet) part of the text. **In the code:**
+> `scripts/robustness_checks.py` (`pixi run robustness`) and `scripts/ec_band_sensitivity.py` (`pixi run ec-bands`)
+> print every number of this chapter, and `pixi run check` keeps them under version control.
+'''), ("code", SETUP + r'''
+sys.path.insert(0, str(REPO / "scripts"))
+import logging; logging.disable(logging.WARNING)
+T = pd.to_datetime(FIG.start_time.values); DAY = np.asarray(T.strftime("%d %b"))
+LEG = np.cumsum(np.r_[0, np.diff(T.values) / np.timedelta64(1, "m")] > 10)     # a new leg after a gap of > 10 min
+EST = {"H_obs_bulk": ("measured inputs", "C2"), "H_rs_bulk": ("MODIS + ERA5", "C1"), "H_era_bulk": ("ERA5 only", "C0")}
+
+def slope_r(x, y):
+    ok = np.isfinite(x) & np.isfinite(y)
+    return np.polyfit(x[ok], y[ok], 1)[0], np.corrcoef(x[ok], y[ok])[0, 1]
+'''), ("md", r'''
+## Neighbouring segments are not independent
+
+A leg crosses the same ice regime, the same few ERA5 grid cells and the same satellite scene for tens of kilometres,
+so neighbouring 5 km segments resemble each other. Counting them as 91 independent samples overstates how well the
+numbers are known. How strong is the resemblance?
+'''), ("code", r'''
+fig, ax = plt.subplots(figsize=(8, 2.8))
+for leg in np.unique(LEG):
+    m = LEG == leg
+    ax.plot(np.where(m)[0], EC[m], "o-", ms=3, lw=1)
+ax.axhline(0, color="k", lw=0.6); ax.set_xlabel("segment number (one colour per leg)"); ax.set_ylabel("EC flux (W m$^{-2}$)")
+same = LEG[1:] == LEG[:-1]
+rho = np.corrcoef(EC[:-1][same], EC[1:][same])[0, 1]
+print(f"{np.unique(LEG).size} legs; correlation of each EC flux with its neighbour on the same leg: {rho:.1f}")
+print(f"-> effective number of independent samples n (1 - rho) / (1 + rho) = {EC.size * (1 - rho) / (1 + rho):.0f}, not {EC.size}")
+'''), ("md", r'''
+The standard remedy is to resample *blocks* instead of single segments when a confidence interval is bootstrapped:
+blocks of three neighbouring segments (15 km), or whole legs. The intervals widen. Where an interval still excludes
+the value of interest, the conclusion does not depend on counting neighbours twice.
+'''), ("code", r'''
+# (code collapsed on the website)
+rng = np.random.default_rng(7)
+blocks =[np.where(LEG == l)[0][i:i + 3] for l in np.unique(LEG) for i in range(max((LEG == l).sum() - 2, 0))]
+def draw(unit):
+    if unit == "segments":
+        return rng.integers(0, EC.size, EC.size)
+    if unit == "blocks of 3":
+        return np.concatenate([blocks[i] for i in rng.integers(0, len(blocks), EC.size // 3 + 1)])[:EC.size]
+    legs = np.unique(LEG)
+    return np.concatenate([np.where(LEG == l)[0] for l in rng.choice(legs, legs.size)])
+
+units, interval = ["segments", "blocks of 3", "legs"], {}
+fig, ax = plt.subplots(figsize=(7, 3))
+for k, (key, (name, c)) in enumerate(EST.items()):
+    h = FIG[key].values
+    for j, unit in enumerate(units):
+        b = np.array([slope_r(EC[i], h[i])[0] for i in (draw(unit) for _ in range(1000))])
+        interval[key, unit] = np.nanpercentile(b, [2.5, 97.5])
+        ax.plot(interval[key, unit], [k + 0.22 * (j - 1)] * 2, color=c, lw=4 - 1.3 * j, solid_capstyle="butt")
+    ax.plot(slope_r(EC, h)[0], k, "k|", ms=14)
+ax.axvline(1, color="k", ls="--", lw=0.8); ax.axvline(0, color="0.6", lw=0.6)
+ax.set_yticks(range(3)); ax.set_yticklabels([v[0] for v in EST.values()]); ax.set_xlabel("95 % interval of the slope b")
+ax.set_title("resampled: single segments (thick), blocks of 3 (medium), whole legs (thin)", fontsize=9)
+lo, hi = interval["H_obs_bulk", "legs"]
+print(f"measured inputs, whole legs resampled: slope in [{lo:.1f}, {hi:.1f}] -> the overestimation of the amplitude "
+      + ("holds" if lo > 1 else "is not established") + " with legs as the unit")
+for key in ("H_rs_bulk", "H_era_bulk"):
+    lo, hi = interval[key, "legs"]
+    print(f"{EST[key][0]}, whole legs resampled: slope in [{lo:.1f}, {hi:.1f}]" + (" (includes zero)" if lo <= 0 else ""))
+'''), ("md", r'''
+The same question for the satellite benefit of Chapter 4: on the heterogeneous half of the segments, the correlation of
+the ERA5–MODIS estimate exceeds that of the ERA5-only estimate by a wide margin. How often does a resample show no gain?
+'''), ("code", r'''
+# (code collapsed on the website)
+sd = SEG.T_sfc_std.values; hetero = sd > np.nanmedian(sd)
+rs, era = FIG.H_rs_bulk.values, FIG.H_era_bulk.values
+def gain(i):
+    i = i[hetero[i]]
+    return np.corrcoef(EC[i], rs[i])[0, 1] - np.corrcoef(EC[i], era[i])[0, 1]
+print(f"gain in correlation on the heterogeneous half: {gain(np.arange(EC.size)):+.1f}  "
+      f"(heterogeneous segments per day: " + ", ".join(f"{d} {int((hetero & (DAY == d)).sum())}" for d in pd.unique(DAY)) + ")")
+for unit in units:
+    g = np.array([gain(draw(unit)) for _ in range(1000)]); g = g[np.isfinite(g)]
+    print(f"  resampling {unit:<12}: 95 % interval [{np.percentile(g, 2.5):+.1f}, {np.percentile(g, 97.5):+.1f}], "
+          f"resamples without gain: {np.mean(g <= 0) * 100:.1f} %")
+'''), ("md", r'''
+Resampling segments or short blocks, a zero gain practically never occurs. With whole legs as the unit it does in a few
+per cent of the resamples: the heterogeneous segments come from only a few legs, and most of them from two days.
+The gain is large and consistent in sign, but "highly significant" is a statement about segments, not about legs.
+
+## Does one flight day carry the result?
+'''), ("code", r'''
+rows = {}
+for day in pd.unique(DAY):
+    keep = DAY != day
+    rows[f"without {day} (n = {keep.sum()})"] = {f"{name}: b / r": "{:.1f} / {:.1f}".format(*slope_r(EC[keep], FIG[key].values[keep]))
+                                                 for key, (name, _) in EST.items()}
+rows[f"all days (n = {EC.size})"] = {f"{name}: b / r": "{:.1f} / {:.1f}".format(*slope_r(EC, FIG[key].values))
+                                     for key, (name, _) in EST.items()}
+pd.DataFrame(rows).T
+'''), ("md", r'''
+The measured-input estimate keeps the highest correlation whichever day is left out. The two reanalysis-driven estimates
+depend much more on the day: without 15 April, the day with open leads and the largest fluxes, their correlations drop.
+
+## Where MODIS actually sees the surface
+
+MODIS measures only through clear sky. Where a segment is cloud-covered, the ERA5-MODIS forcing falls back on the ERA5 skin
+temperature, and the two reanalysis-driven estimates become identical. How much of the satellite forcing is really satellite?
+'''), ("code", r'''
+# (code collapsed on the website)
+cache = xr.open_dataset(AR / "along_track_inputs.nc")
+genuine = np.isfinite(cache.modis_IST.values)
+print("segments with a cloud-free MODIS value: " + ", ".join(f"{d} {int(genuine[DAY == d].sum())}/{int((DAY == d).sum())}"
+                                                           for d in pd.unique(DAY)) + f", all {genuine.sum()}/{genuine.size}")
+kt19 = FIG.T_sfc_C.values
+fig, axs = plt.subplots(1, 2, figsize=(8, 3.4), sharex=True, sharey=True)
+for ax, (var, name, c) in zip(axs, [("T_sfc_rs_C", "MODIS", "C1"), ("T_sfc_era_C", "ERA5", "C0")]):
+    ts = FIG[var].values
+    ax.scatter(kt19[genuine], ts[genuine], s=12, color=c)
+    ax.plot([-30, 2], [-30, 2], "k--", lw=0.8); ax.set_xlabel("KT-19 surface temperature (°C)")
+    d = ts[genuine] - kt19[genuine]
+    ax.set_title(f"{name}: bias {d.mean():+.1f} K, RMSE {np.sqrt(np.mean(d ** 2)):.1f} K, r {np.corrcoef(kt19[genuine], ts[genuine])[0, 1]:.1f}", fontsize=9)
+axs[0].set_ylabel("product surface temperature (°C)")
+for label, m in (("cloud-free", genuine), ("gap-filled", ~genuine)):
+    print(f"{label} segments (n = {m.sum()}): " + "   ".join(f"{name} b {b:.1f}, r {r:.1f}" for key, (name, _) in EST.items()
+                                                          for b, r in [slope_r(EC[m], FIG[key].values[m])]))
+'''), ("md", r'''
+On the segments MODIS sees, its surface temperature follows the KT-19 much more closely than ERA5's (left vs right) — the
+mechanism behind the satellite benefit. Split by cloud cover, the two reanalysis-driven estimates correlate less well in each
+subset than over all segments together: part of their overall correlation comes from the contrast *between* days (large fluxes on the cloud-free 15 April, small ones on
+the cloudy 23 April), not from the variability within them. On 23 April no segment has a MODIS value, so the ERA5–MODIS and
+ERA5-only estimates coincide there.
+
+## Which eddies count? The frequency band of the EC flux
+
+The EC flux is the covariance carried by 0.1 to 20 Hz (Chapter 2). Slower variations are left out as mesoscale changes
+along the track rather than turbulence. But part of them may be turbulent flux after all, and the choice of the cut-off then
+changes the reference that everything is compared with. Here the flux of every segment is recomputed with other lower
+cut-offs.
+'''), ("code", r'''
+# (code collapsed on the website)
+from scipy.signal import detrend
+from fluxpy.eddy_covariance import band_covariance
+from fluxpy.util import CP, add_theta, air_density
+TB =xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
+cutoffs = [0.0, 0.05, 0.1, 0.2, 0.5]                                   # lower edge of the band [Hz]; upper edge 20 Hz
+H_band = np.zeros((len(cutoffs), EC.size))
+for j, (t0, t1) in enumerate(zip(SEG.start_time.values, SEG.end_time.values)):
+    seg = add_theta(TB.sel(time=slice(t0, t1))).dropna("time", how="any")
+    w, th = detrend(seg.w.values.astype(float)), detrend(seg.theta.values)
+    k = float(np.mean(air_density(seg["T"].values, seg.p.values))) * CP
+    H_band[:, j] = [k * band_covariance(w, th, 100.0, f0, 20.0) for f0 in cutoffs]
+large = np.abs(H_band[2]) > 2
+fig, axs = plt.subplots(1, 2, figsize=(9, 3))
+axs[0].plot(range(len(cutoffs)), [np.median(H_band[i][large] / H_band[2][large]) for i in range(len(cutoffs))], "ko-")
+axs[0].set_ylabel("flux / flux(0.1-20 Hz)\n(median, |H| > 2 W m$^{-2}$)")
+for key, (name, c) in EST.items():
+    axs[1].plot(range(len(cutoffs)), [slope_r(H_band[i], FIG[key].values)[0] for i in range(len(cutoffs))], "o-", color=c, label=name)
+axs[1].axhline(1, color="k", ls="--", lw=0.8); axs[1].set_ylabel("slope b against this EC flux"); axs[1].legend(fontsize=8)
+for ax in axs:
+    ax.set_xticks(range(len(cutoffs))); ax.set_xticklabels(["all < 20", "0.05", "0.1\n(paper)", "0.2", "0.5"])
+    ax.set_xlabel("lower edge of the band (Hz)")
+'''), ("md", r'''
+Moving the lower edge changes the flux amplitude, and the regression slopes follow. The correlations hardly change
+(`pixi run ec-bands` prints them). The slope of the measured-input estimate — the "overestimation of the amplitude" of
+Chapter 4 — shrinks when slower motions are counted as flux. It is therefore a statement about the flux carried by eddies
+of up to about 600 m, the scale that the band selects; whether the slower part is turbulence cannot be decided from a
+5 km segment of about 85 s.
+
+## How strong is the stability correction?
+
+Chapter 3 showed that the stability schemes agree on the unstable side and differ on the stable side. How large is the
+correction $f_h = C_\mathrm{h} / C_\mathrm{h,n}$ on the sampled segments, and how much do the eight schemes differ per segment?
+'''), ("code", r'''
+# (code collapsed on the website)
+from calc_bulk_and_ec_fluxes import load_obs
+from fluxpy.bulk import compute_bulk_shf_obs, reference_config, transfer_coefficients
+obs = load_obs(); run = compute_bulk_shf_obs(obs, reference_config())
+Ri, z0, zt, Ch = (run[v].values for v in ("Ri_obs", "z0_obs", "zt_obs", "Ch_obs"))
+_, Chn = transfer_coefficients(np.zeros_like(Ri), obs.altitude.values, z0, zt, "GLGS20")
+fh = Ch / Chn
+fig, ax = plt.subplots(figsize=(6, 2.8))
+ax.hist(fh[Ri > 0], bins=np.linspace(0, 2, 21), color="C0", alpha=0.7, label=f"stable (n = {(Ri > 0).sum()})")
+ax.hist(fh[Ri <= 0], bins=np.linspace(0, 2, 21), color="C3", alpha=0.7, label=f"unstable (n = {(Ri <= 0).sum()})")
+ax.axvline(1, color="k", ls="--", lw=0.8); ax.set_xlabel("$f_h = C_h / C_{h,n}$ (in situ, reference configuration)"); ax.legend(fontsize=8)
+runs = [str(r) for r in FIG.run_obs.values]
+schemes = FIG.H_obs_bulk_all.values[[i for i, r in enumerate(runs) if r.endswith("_ref")]]
+spread = np.nanmax(schemes, axis=0) - np.nanmin(schemes, axis=0)
+print(f"per-segment spread of the in-situ bulk flux across the eight schemes: median {np.median(spread):.1f}, maximum {spread.max():.1f} W m-2")
+'''), ("md", r'''
+The correction itself is not small: on the median stable segment it roughly halves the transfer coefficient, and on the
+median unstable segment it raises it by about 40 %. What makes the choice of scheme immaterial is that the schemes *agree* where the flux is
+large: all use the same unstable functions, and they differ only on the stable side, where the flux is small anyway.
+
+## A segment that is not at one level
+
+The segments are meant to be flown at constant height. The 100 Hz height record shows whether that holds.
+'''), ("code", r'''
+# (code collapsed on the website)
+height_range = []
+for t0, t1 in zip(SEG.start_time.values, SEG.end_time.values):
+    h = pd.Series(TB.h.sel(time=slice(t0, t1)).values.astype(float)).rolling(1000, center=True).mean()
+    height_range.append(h.max() - h.min())
+height_range = np.asarray(height_range)
+worst, typical = int(np.argmax(height_range)), int(np.argsort(height_range)[EC.size // 2])
+fig, ax = plt.subplots(figsize=(7, 2.8))
+for j, label in ((worst, "largest height change"), (typical, "typical segment")):
+    h = TB.h.sel(time=slice(SEG.start_time.values[j], SEG.end_time.values[j]))
+    ax.plot((h.time - h.time[0]) / np.timedelta64(1, "s"), h, label=f"{label}: {pd.Timestamp(SEG.start_time.values[j]):%d %b %H:%M}")
+ax.set_xlabel("time in the segment (s)"); ax.set_ylabel("T-Bird height (m)"); ax.legend(fontsize=8)
+level = height_range <= 20
+print(f"segments whose height changes by more than 20 m: {(~level).sum()}")
+print("without them: " + "   ".join(f"{name} b {b:.1f}, r {r:.1f}" for key, (name, _) in EST.items()
+                                   for b, r in [slope_r(EC[level], FIG[key].values[level])]))
+'''), ("md", r'''
+One segment was flown while the T-Bird was being winched up; it also sets the maximum segment height of the data set.
+Leaving it out changes none of the results.
+
+**Take-away.** The measured-input estimate keeps the best correlation under every test, and its amplitude overestimation
+survives resampling whole legs, although its size depends on which eddies are counted as flux. The satellite benefit
+is large and has the same sign in every resample, but it rests on few legs and mostly on two days, so its significance is
+best stated with legs, not segments, as the unit. The stability correction is substantial, but it is the same in every scheme
+where it matters.
+''')]
+
 BOOK = {
     "01_overview.ipynb": NB1,
     "02_eddy_covariance.ipynb": NB2,
     "03_bulk_method.ipynb": NB3,
     "04_comparison.ipynb": NB4,
     "05_sensitivity_and_uncertainty.ipynb": NB5,
+    "06_robustness.ipynb": NB6,
 }
 
+
+HIDE = "# (code collapsed on the website)\n"
+
+
+def make_cell(kind: str, src: str):
+    """Markdown or code cell. Code cells that start with the common set-up or with the HIDE line are
+    collapsed on the website (MyST tag ``hide-input``); on GitHub and in Jupyter they look as before."""
+    if kind == "md":
+        return new_markdown_cell(src.strip())
+    hide = src.strip().startswith(SETUP.strip()[:40]) or src.lstrip().startswith(HIDE.strip())
+    return new_code_cell(src.strip(), metadata={"tags": ["hide-input"]} if hide else {})
+
+
 if __name__ == "__main__":
+    import sys
+    only = sys.argv[1:]                                   # e.g. `python book/build_book.py 06` rebuilds chapter 6 only
     for fname, cells in BOOK.items():
+        if only and not any(fname.startswith(o) for o in only):
+            continue
         nb = new_notebook(metadata={"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}})
-        nb.cells = [new_markdown_cell(src.strip()) if kind == "md" else new_code_cell(src.strip()) for kind, src in cells]
+        nb.cells = [make_cell(kind, src) for kind, src in cells]
         NotebookClient(nb, timeout=600, kernel_name="python3", resources={"metadata": {"path": str(HERE)}}).execute()
         nbformat.write(nb, HERE / fname)
         print("built", fname)
