@@ -1,4 +1,14 @@
-"""Fig. 5 (fig:flux_timeseries) — SHF time series (a-f), MODIS IST scenes (g-l), true colour (m-r); manuscript Sect. 4.1."""
+"""Fig. 5 (fig:flux_timeseries) — flux along the low-level legs and MODIS scenes (manuscript Sect. 4.1).
+
+Six rows, one per low-level leg:
+(a-f) EC flux and the five estimates (T-Bird bulk, ERA5-MODIS bulk, ERA5-only bulk,
+      ERA5 and CARRA model-diagnosed) along the leg, reference configuration;
+(g-l) MODIS Terra ice-surface temperature of the day (NASA GIBS) with the flight track;
+(m-r) MODIS Terra true-colour image of the same area, the track coloured by the EC flux.
+The GIBS images are downloaded once and cached in figures_manuscript/_gibs_cache/.
+
+Run:  pixi run python figures_manuscript/fig05_flux_timeseries.py
+"""
 import sys
 from pathlib import Path
 
@@ -79,8 +89,7 @@ mids_full = pd.DatetimeIndex(starts_full.values.astype("int64") + _dur_ns // 2, 
 # Fluxes (sign: positive = upward).
 H_obs_ec_full = ds_turb["sensible_heat_flux"].values.astype(float)
 H_obs_bulk_full = ds_sens_ref["H_obs_bulk"].values.astype(float)
-# H_rs_bulk = ERA5-MODIS forcing. NOT H_era_bulk (the ERA5-only bulk) — a
-# mix-up here once plotted the ERA5-only flux under the ERA5-MODIS label.
+# H_rs_bulk is the ERA5-MODIS estimate, H_era_bulk the ERA5-only estimate.
 H_rs_bulk_full = ds_sens_ref["H_rs_bulk"].values.astype(float)
 H_era_bulk_full = ds_sens_ref["H_era_bulk"].values.astype(float)
 # H_era_diag / H_car_diag are stored positive-upward (sign flipped ONCE in the

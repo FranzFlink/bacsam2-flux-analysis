@@ -1,7 +1,7 @@
 r"""
 fluxpy.uncertainty
 ==================
-Flux-uncertainty budget of manuscript Table 2 (``tab:bulk_unc``; Sect. 3.1 and 3.2).
+Flux-uncertainty budget of manuscript Table 2 (Sect. 3.1 and 3.2).
 
 * **EC flux**: total = random error (Finkelstein and Sims, 2001; Appendix A2)
   (+) instrument error, added in quadrature. The instrument error is taken as

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Robustness of the comparison: checks asked for in review, printed from the pipeline output.
+"""Robustness of the comparison, printed from the pipeline output.
 
-None of these numbers is quoted in the manuscript yet; they show whether its
-statements survive the obvious objections. ``pixi run check`` compares this
-output with ``expected_numbers.txt`` like every other number.
+The checks test the statements of the manuscript against the choice of metric, errors
+in the reference, the dependence between neighbouring segments, the cloud cover of the
+satellite retrieval, the stability correction, the fitting of alpha_T and the
+measurement height. ``pixi run check`` compares this output with
+``expected_numbers.txt`` like every other number.
 
-Blocks (in the order printed) and the objection each one answers
+Blocks (in the order printed) and what each one tests
     1  more metrics ...................... the OLS slope is r times the ratio of standard deviations;
                                            intercept, sd ratio, mean absolute error, and what a
                                            zero-flux or constant forecast would score

@@ -5,11 +5,11 @@
 version: 1
 project:
   id: bacsam2-flux-analysis
-  title: "BACSAM-II: sensible heat flux over Arctic sea ice, measured and estimated"
+  title: "BACSAM-II sensible heat flux over Arctic sea ice: supplement to Müller et al."
   description: >-
-    Airborne eddy-covariance sensible heat flux from the towed T-Bird as the reference for bulk estimates
-    driven by in-situ, satellite and reanalysis inputs (Müller et al., AMT, submitted): the method step by
-    step, and how to reproduce and review every number of the paper.
+    Electronic supplement to Müller et al. (AMT, submitted): airborne eddy-covariance sensible heat flux from
+    the towed T-Bird as the reference for bulk estimates driven by in-situ, satellite and reanalysis inputs.
+    Method, code, API reference and data of every number, table and figure of the paper.
   keywords: [sensible heat flux, eddy covariance, Arctic sea ice, bulk formula, ERA5, MODIS, CARRA, airborne measurements]
   authors:
     - name: Joshua J. Müller
@@ -28,25 +28,49 @@ project:
     - data/**
   toc:
     - file: docs/index.md
-    - title: The method, step by step
+    - title: Method
       children:
         - file: book/01_overview.ipynb
         - file: book/02_eddy_covariance.ipynb
         - file: book/03_bulk_method.ipynb
         - file: book/04_comparison.ipynb
         - file: book/05_sensitivity_and_uncertainty.ipynb
-        - file: book/06_robustness.ipynb
-    - title: Reproduce and review
+    - title: Figures
+      children:
+        - file: docs/figures/index.md
+        - file: docs/figures/fig01_campaign_overview.md
+        - file: docs/figures/fig02_meteo_overview.md
+        - file: docs/figures/fig03_leg_length.md
+        - file: docs/figures/fig04_flux_maps.md
+        - file: docs/figures/fig05_flux_timeseries.md
+        - file: docs/figures/fig06_flux_scatter.md
+        - file: docs/figures/fig07_sensitivity.md
+        - file: docs/figures/figA1_spectral_qc.md
+    - title: Code and data
       children:
         - file: docs/reproduce.md
         - file: docs/paper_to_code.md
         - file: docs/data.md
         - file: docs/glossary.md
-        - file: docs/changelog.md
+    - title: API reference
+      children:
+        - file: docs/api/index.md
+        - file: docs/api/fluxpy.eddy_covariance.md
+        - file: docs/api/fluxpy.aggregate.md
+        - file: docs/api/fluxpy.qc.md
+        - file: docs/api/fluxpy.bulk.md
+        - file: docs/api/fluxpy.stability.md
+        - file: docs/api/fluxpy.stability_lib.md
+        - file: docs/api/fluxpy.sensitivity.md
+        - file: docs/api/fluxpy.uncertainty.md
+        - file: docs/api/fluxpy.util.md
+        - file: docs/api/fluxpy.figstyle.md
+        - file: docs/api/fluxpy.naming.md
+        - file: docs/api/scripts.md
 site:
   template: book-theme
   options:
-    logo_text: BACSAM-II fluxes
+    logo_text: BACSAM-II supplement
     folders: true
   actions:
     - title: Code on GitHub

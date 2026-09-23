@@ -55,15 +55,18 @@ PsiFunc = Callable[[float], float]
 
 @dataclass
 class MOSTScheme:
-    name: str
-    psi_m: PsiFunc
-    psi_h: PsiFunc
+    """One set of stability functions of Monin-Obukhov similarity theory (MOST), with the
+    constants of Table 1 of Gryanik and Lüpkes (2023) that the non-iterative formula needs."""
+    name: str                    #: short name as in the paper (key of SCHEMES)
+    psi_m: PsiFunc               #: integrated stability function for momentum, psi_m(zeta)
+    psi_h: PsiFunc               #: integrated stability function for heat, psi_h(zeta), Pr0 absorbed
     Pr0: float                   #: neutral turbulent Prandtl number
     gamma: float                 #: Table 1, used in the non-iterative formula (Eq. 22a)
     zeta_a: float                #: Table 1, used in the non-iterative formula (Eq. 22a)
     zeta_max: float | None = None   #: nominal validity range of the scheme (documentation)
 
 
+#: the eight stable-branch schemes compared in the paper, by name (filled below)
 SCHEMES: Dict[str, MOSTScheme] = {}
 
 
@@ -210,6 +213,7 @@ def _make_ze07_II() -> MOSTScheme:
 for _scheme in (_make_bd(), _make_hb88(), _make_bh91(), _make_cb05(),
                 _make_gafgp07(), _make_glgs20(), _make_ze07_I(), _make_ze07_II()):
     SCHEMES[_scheme.name] = _scheme
+#: Businger-Dyer with the Paulson (1970) unstable forms, used by every scheme when Ri_b < 0
 UNSTABLE_SCHEME = _make_bd_unstable()
 
 

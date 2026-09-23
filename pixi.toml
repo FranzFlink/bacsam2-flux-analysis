@@ -43,7 +43,7 @@ ec-segments   = "python scripts/run_ec_aggregation.py"
 placement     = "python scripts/ec_segment_placement.py"
 window-length = "python scripts/ec_window_length.py"
 ec-quality    = { cmd = "python scripts/ec_quality.py", depends-on = ["precompute"] }
-# robustness checks asked for in review (dependence, metrics, MODIS subset, stability, EC band)
+# robustness of the comparison (dependence, metrics, MODIS subset, stability, EC band)
 robustness    = { cmd = "python scripts/robustness_checks.py", depends-on = ["precompute"] }
 ec-bands      = { cmd = "python scripts/ec_band_sensitivity.py", depends-on = ["precompute"] }
 # bulk side and paper outputs
@@ -53,8 +53,10 @@ tables        = { cmd = "python scripts/make_manuscript_tables.py", depends-on =
 figures       = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
 check         = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
 book          = { cmd = "python book/build_book.py", depends-on = ["precompute"] }
-# reading copy of the manuscript for reviewers and agents (needs the LaTeX source next to the repo)
+# annotated reading copy of the manuscript (needs the LaTeX source next to the repo)
 paper         = "python paper/export_clean_manuscript.py"
+# API reference (docs/api/) and figure pages (docs/figures/) of the website; tests/test_api_docs.py checks them
+api           = "python docs/build_api.py"
 all           = { depends-on = ["test", "verify-ec", "verify-cache", "check", "tables", "figures"] }
 # everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
 all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "verify-cache", "check", "tables", "figures"] }

@@ -14,17 +14,20 @@ paper that is derived from data:
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
 | `verify-cache` | The MODIS and ERA5 values at the segments follow from the shipped gridded fields | ~5 s |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
-| `robustness`, `ec-bands` | Checks asked for in review: dependent segments, zero-flux baseline, the genuine-MODIS subset, stability correction, the frequency band of the EC flux | ~10 s |
+| `robustness`, `ec-bands` | Robustness of the comparison: dependent segments, zero-flux baseline, the genuine-MODIS subset, stability correction, the frequency band of the EC flux | ~10 s |
 | `check` | Every printed number (text, Table 4, Appendix A, robustness checks) equals the committed reference `expected_numbers.txt` | ~1 min |
 | `tables` | LaTeX bodies of the data-derived tables → `tables_manuscript/` | ~5 s |
 | `figures` | All manuscript figures → `figures_manuscript/output/` | ~3 min |
 
-**Website.** The method, step by step, with the reproduction guide and a map from the paper to
-the code, is also a website: `pixi run site` builds it into `_build/html` (`pixi run site-serve`
-for a live preview); on GitHub it is published from `.github/workflows/site.yml`.
+**Website.** The electronic supplement of the paper (the method, the figures, the reproduction guide,
+a map from the paper to the code and the API reference of `fluxpy` and the scripts) is a website:
+`pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live preview); on GitHub it is
+published from `.github/workflows/site.yml`. `pixi run api` regenerates the API reference and the
+figure pages from the code.
 
-**Reviewing with an AI agent?** Start with [`AGENTS.md`](AGENTS.md); a clean reading copy of the
-manuscript, annotated with the code that produces each part, is in [`paper/`](paper/README.md).
+**Checking the paper against the code** (also with an AI agent): start with [`AGENTS.md`](AGENTS.md); a
+clean reading copy of the manuscript, annotated with the code that produces each part, is in
+[`paper/`](paper/README.md).
 
 ## How to run it (no programming knowledge needed)
 
@@ -48,7 +51,7 @@ manuscript, annotated with the code that produces each part, is in [`paper/`](pa
 
 Single steps: `pixi run test`, `pixi run verify-ec`, `pixi run precompute`, `pixi run check`,
 `pixi run numbers`, `pixi run robustness`, `pixi run tables`, `pixi run figures`, `pixi run book`,
-`pixi run site`. `pixi run all-from-raw` additionally
+`pixi run api`, `pixi run site`. `pixi run all-from-raw` additionally
 rewrites all EC products (segments, placement uncertainty, window-length experiment) from the
 100 Hz data before everything else (~10 min).
 
@@ -68,7 +71,7 @@ them as modified although the numbers are identical.
 | Sect. 4.2 sensitivity, Table 3, Fig. 7, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig07_sensitivity.py` |
 | Appendix A quality of the EC reference, Fig. A1, Table A1 | `fluxpy/qc.py` (integrity check), `scripts/ec_quality.py`, `figures_manuscript/figA1_spectral_qc.py` |
 | every number in the text | `scripts/manuscript_numbers.py` and `scripts/ec_quality.py`, whose output is committed as `expected_numbers.txt` |
-| robustness of the comparison (review) | `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py`, book chapter 6 |
+| robustness of the comparison | `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` |
 
 Every module starts with a docstring that names the manuscript section it implements;
 `paper/manuscript_clean.tex` carries the same map inside the text of the paper.
@@ -85,21 +88,21 @@ Every module starts with a docstring that names the manuscript section it implem
 | `scripts/calc_bulk_and_ec_fluxes.py` | Bulk fluxes + sensitivity sweep → `data/model_output/` |
 | `scripts/manuscript_numbers.py` | Prints the numbers quoted in the text and in the comparison table |
 | `scripts/make_manuscript_tables.py` | Sensitivity tables and the uncertainty-budget table |
-| `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` | Robustness checks asked for in review (not quoted in the paper yet) |
+| `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` | Robustness of the comparison |
 | `figures_manuscript/` | One script per manuscript figure (see its README) |
 | `tests/` | Unit tests; `test_most_schemes.py` checks the physics against independent references (numerical integration of the published stability functions, log-law limit, sign convention, integrity threshold of Appendix A, Monte-Carlo check of the random error); `test_constants_and_theta.py` pins the constants to the values stated in the paper |
 | `preprocessing/` | How the shipped data files were produced from the raw archives, including the leg table (documentation; needs the raw data) |
-| `book/` | A step-by-step, executable walk through the method (see below) |
-| `docs/`, `myst.yml` | The pages of the website around the book (landing page, reproduction guide, paper-to-code map, glossary) |
-| `paper/` | Clean reading copy of the manuscript for reviewers and agents, and the script that writes it |
+| `book/` | Executable chapters on the method (see below) |
+| `docs/`, `myst.yml` | The pages of the website around the book (landing page, reproduction guide, paper-to-code map, glossary); `docs/build_api.py` writes the API reference into `docs/api/` and the figure pages into `docs/figures/` |
+| `paper/` | Annotated reading copy of the manuscript, and the script that writes it |
 | `AGENTS.md` | How to check a claim of the paper against the code; conventions and rules for changes |
 | `DATA.md` | Description, units and origin of every data file |
 
-## Want to understand the method rather than just run it?
+## Method chapters
 
-Read the [book](book/README.md): six short notebooks that walk from the 100 Hz measurements to the
-paper's conclusions, computing one segment by hand at each step, and end with how robust the
-conclusions are. `pixi run book` re-executes them; `pixi run site` turns them into the website.
+The [book](book/README.md) consists of five notebooks that lead from the 100 Hz measurements to the
+paper's conclusions and compute one segment by hand at each step. `pixi run book` re-executes them;
+`pixi run site` turns them into the website.
 
 ## Reference configuration
 

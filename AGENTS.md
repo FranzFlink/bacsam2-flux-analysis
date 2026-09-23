@@ -12,8 +12,8 @@ paper follows from the shipped data. Read this file first, then `README.md`.
   `figures_manuscript/output/*.png`, and `% [code]` lines after each section, equation, figure and
   table that name the code producing it. It is a snapshot; its header says of which version.
 * The authoritative LaTeX source is not in this repository. If the snapshot and the code
-  disagree, check `CHANGELOG.md` first: an "unreleased" section lists numbers that the code has
-  changed and the text does not have yet.
+  disagree, check `git log`: every change of a printed number is a commit of its own, with the
+  numbers before and after in its message.
 
 ## How to check a claim of the paper
 
@@ -42,8 +42,9 @@ pixi run test         # unit and physics tests, 5 s
 pixi run check        # every number against expected_numbers.txt, ~1 min
 pixi run all          # tests, EC reproduction, cache check, numbers, tables, figures, ~5 min
 pixi run numbers      # print the numbers of the text
-pixi run robustness   # checks asked for in review (dependence, baselines, MODIS subset, ...)
+pixi run robustness   # robustness of the comparison (dependence, baselines, MODIS subset, ...)
 pixi run book         # re-execute the didactic notebooks in book/
+pixi run api          # regenerate the API reference docs/api/ and the figure pages docs/figures/ (pixi run test checks them)
 pixi run site         # build the website (docs/ + book/) into _build/html; site-serve for a live preview
 ```
 
@@ -66,8 +67,12 @@ pixi run site         # build the website (docs/ + book/) into _build/html; site
 ## Rules for changing anything
 
 * A change that moves a printed number gets its own commit, with the numbers before and after
-  in the message and an entry in `CHANGELOG.md`; then
+  in the message; then
   `pixi run python scripts/check_expected_numbers.py --update`.
+* A change of a docstring, signature or `#:` comment in `fluxpy/`, of a script or figure script, or a
+  re-export of `paper/manuscript_clean.tex` (figure captions) needs `pixi run api`: the API reference
+  (`docs/api/`) and the figure pages (`docs/figures/`) are generated from them, and `pixi run test`
+  fails otherwise.
 * A refactor must leave `pixi run check` green. Converting float32 input to float64 is not
   neutral (it moved EC fluxes by 4·10⁻⁵ relative once).
 * Do not edit files that contain backslashes (LaTeX, regexes, `"\n"`) with `sed` or shell

@@ -3,7 +3,7 @@
 
 expected_numbers.txt is the committed output of manuscript_numbers.py (text and
 Table 4), ec_quality.py (Appendix A), robustness_checks.py and
-ec_band_sensitivity.py (robustness checks asked for in review) for this version
+ec_band_sensitivity.py (robustness of the comparison) for this version
 of the repository. Numbers are compared with a tolerance of 0.02 (one
 unit in the last printed digit plus rounding) so that harmless floating-point
 differences between operating systems do not raise a false alarm.

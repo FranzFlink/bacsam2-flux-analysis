@@ -4,7 +4,6 @@
 April 2024): MODIS/AMSR-2 daily sea-ice concentration as background, 5 km
 EC segments coloured by H_S,obs,EC (positive = upward), ERA5-level wind
 barbs, and a coloured frame matching the campaign-map focus rectangles.
-Ported from book/notebooks/figures/figure04.ipynb.
 """
 import sys
 from pathlib import Path

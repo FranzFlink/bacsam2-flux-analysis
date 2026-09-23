@@ -1,16 +1,16 @@
 """
-fluxpy.figstyle — THE single styling file for every manuscript figure.
+fluxpy.figstyle — the single styling module of all manuscript figures.
 =====================================================================
 
-All manuscript figure scripts (``figures_manuscript/fig*.py``) import ONLY
-from here.  No figure script sets rcParams, font sizes, or colours itself.
+All manuscript figure scripts (``figures_manuscript/fig*.py``) take their style
+from here only; no figure script sets rcParams, font sizes or colours itself.
 
 Design contract
 ---------------
-1. **Physical size.**  Figures are built at their REAL printed size
-   (Copernicus/AMT two-column layout on DIN A4).  The .tex must include them
-   without scaling (``\\includegraphics{...}``, no ``width=``), then fonts
-   print at exactly the size set here.  Widths:
+1. **Physical size.**  Figures are built at their printed size (Copernicus/AMT
+   two-column layout on DIN A4).  The .tex includes them without scaling
+   (``\\includegraphics{...}``, no ``width=``), so fonts print at exactly the
+   size set here.  Widths:
 
    =========  ========  ==============================
    constant   cm        Copernicus figure class
@@ -20,9 +20,9 @@ Design contract
    FULL_W     17.0      full text width (two columns)
    =========  ========  ==============================
 
-2. **One font size.**  ``FONT_SIZE`` is used for EVERYTHING (labels, ticks,
-   legends, annotations) and equals the journal text size.  Tune the whole
-   manuscript here, never per figure.
+2. **One font size.**  ``FONT_SIZE`` is used for all text (labels, ticks,
+   legends, annotations) and equals the journal text size.  It is set here for
+   the whole manuscript, never per figure.
 
 3. **Exact width.**  ``save()`` writes without a tight bounding box, so the
    PDF keeps the exact physical width.  Use ``layout="constrained"`` (the
@@ -45,16 +45,17 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 # ── Physical geometry (inches; matplotlib wants inches) ─────────────────────
-CM = 1.0 / 2.54
-COL_W = 8.3 * CM        # 3.27 in — single column, the DEFAULT
+CM = 1.0 / 2.54         # one centimetre in inches
+COL_W = 8.3 * CM        # 3.27 in — single column, the default
 MID_W = 12.0 * CM       # 4.72 in — 1.5 column
 FULL_W = 17.0 * CM      # 6.69 in — full text width
 MAX_H = 23.0 * CM       # keep every figure below this (A4 page minus caption)
 
 # ── The one font size (pt).  Copernicus final print body ≈ 9 pt ─────────────
-FONT_SIZE = 9.0
+FONT_SIZE = 9.0         # pt, for every text element of every figure
 
 # ── Semantic colours, keyed by the fluxpy.naming variable names ─────────────
+#: colour of each flux estimate (colour-vision-deficiency safe), keyed by variable name
 C = {
     "H_obs_ec":   "#222222",   # EC reference — near-black
     "H_obs_bulk": "#1b9e75",   # T-Bird bulk — CVD green
@@ -69,13 +70,15 @@ GRID = "0.82"               # zero lines / faint guides
 # Math-text legend/axis labels (single source: fluxpy.naming.PLOT_LABEL)
 from fluxpy.naming import PLOT_LABEL as L          # noqa: E402, N811
 
-FLUX_UNIT = r"(W m$^{-2}$)"
-FLUX_AXIS = r"$H_\mathrm{S}$ (W m$^{-2}$)"
+FLUX_UNIT = r"(W m$^{-2}$)"                      # unit of a flux axis label
+FLUX_AXIS = r"$H_\mathrm{S}$ (W m$^{-2}$)"        # generic flux axis label
 
 # ── Output directory (repo-root/figures_manuscript/output) ──────────────────
+#: where ``save()`` writes the figures: figures_manuscript/output of the repository
 OUT_DIR = Path(__file__).resolve().parents[1] / "figures_manuscript" / "output"
 
 # ── rcParams: everything styling lives HERE ──────────────────────────────────
+#: matplotlib rcParams set by ``apply()``: fonts, axes, ticks, lines, legend, layout, output
 RC = {
     # fonts — ONE size for everything
     "font.family": "sans-serif",
@@ -143,7 +146,7 @@ def figure(width: float = COL_W, aspect: float = 0.75, **kwargs):
 
 
 def gridfig(width: float = COL_W, aspect: float = 0.75, **kwargs):
-    """Bare figure (NO axes) at physical size, for ``fig.add_gridspec`` layouts.
+    """Figure without axes at physical size, for ``fig.add_gridspec`` layouts.
 
     Constrained layout is on via the style, so ``add_gridspec`` +
     ``add_subplot`` compose cleanly::
@@ -162,10 +165,10 @@ def panel_label(ax, label: str, x: float = -0.02, y: float = 1.02) -> None:
 
 
 def save(fig, name: str, png: bool = True) -> Path:
-    """Save ``OUT_DIR/name.pdf`` (+ ``.png``) at EXACT physical size.
+    """Save ``OUT_DIR/name.pdf`` (+ ``.png``) at the exact physical size.
 
-    Deliberately NOT ``bbox_inches='tight'`` — a tight crop changes the
-    physical width and silently rescales the fonts in print.
+    ``bbox_inches='tight'`` is deliberately not used: a tight crop changes the
+    physical width and rescales the fonts in print.
     """
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     pdf = OUT_DIR / f"{name}.pdf"

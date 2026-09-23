@@ -6,13 +6,14 @@ The eddy-covariance (EC) reference flux of the paper and its random error.
 Manuscript: Sect. 3.1 "Eddy-covariance method" (Eq. 1) and Appendix A2
 "Random error".
 
-    H_S,obs,EC = rho * c_p * cov_band(w', theta')        [W m-2, positive upward]
+    $$ H_\mathrm{S,obs,EC} = \rho\, c_p\, \overline{w'\theta'}_{0.1-20\,\mathrm{Hz}}
+       \quad [\mathrm{W\,m^{-2}},\ \text{positive upward}] $$
 
 * ``w'`` and ``theta'`` are the linearly detrended 100 Hz vertical wind and
-  potential temperature of one 5 km segment (about 82 s of flight).
-* ``cov_band`` is the part of their covariance carried by frequencies between
-  0.1 and 20 Hz (``band_covariance``). At 61 m/s true airspeed this band
-  corresponds to eddies of about 3 to 610 m along the track.
+  potential temperature of one 5 km segment (about 83 s of flight).
+* The overbar is the part of their covariance carried by frequencies between
+  0.1 and 20 Hz (``band_covariance``). At the mean true airspeed of 60 m/s this
+  band corresponds to eddies of about 3 to 600 m along the track.
 * ``rho`` is the segment-mean dry-air density, ``c_p`` the specific heat of dry
   air (``fluxpy.util``).
 * Every flux carries a random (sampling) error, the standard deviation the
@@ -96,14 +97,15 @@ def band_pass(x: np.ndarray, fs: float,
 def band_covariance_random_error(x: np.ndarray, y: np.ndarray, fs: float,
                                  fmin: float = FLUX_BAND_HZ[0], fmax: float = FLUX_BAND_HZ[1],
                                  max_lag_s: float = RANDOM_ERROR_MAX_LAG_S) -> float:
-    """Random (sampling) error of the band-limited covariance, 1 sigma.
+    r"""Random (sampling) error of the band-limited covariance, 1 sigma.
 
     Finkelstein and Sims (2001, J. Geophys. Res. 106, 3503-3509), Eq. (8)-(10):
     the variance of a covariance estimated from ``n`` samples is
 
-        var = (1/n) * sum_{p=-m..m} [ g_xx(p) g_yy(p) + g_xy(p) g_yx(p) ]
+        $$ \sigma^2 = \frac{1}{n} \sum_{p=-m}^{m} \left[ \gamma_{xx}(p)\, \gamma_{yy}(p)
+           + \gamma_{xy}(p)\, \gamma_{yx}(p) \right] $$
 
-    with the auto- and cross-covariance functions ``g`` at lag ``p``. They are
+    with the auto- and cross-covariance functions gamma at lag ``p``. They are
     evaluated on the series band-passed to ``[fmin, fmax]`` so that the error
     belongs to the same quantity as :func:`band_covariance`. ``m`` covers
     ``max_lag_s`` seconds, several times the integral time scale; the result

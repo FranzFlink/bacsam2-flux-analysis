@@ -1,12 +1,14 @@
 """Fig. 6 (fig:flux_scatter_comparison) -- bulk vs EC, 2x2 (manuscript Sect. 4.1).
 
-(a) H_S,obs,bulk vs H_S,obs,EC scatter   (b) histograms: EC, T-Bird, ERA5-MODIS
-(c) H_S,RS,bulk  vs H_S,obs,EC scatter   (d) histograms: EC + model-diagnosed
+(a) H_S,obs,bulk against H_S,obs,EC;
+(b) histograms of the EC, T-Bird bulk and ERA5-MODIS bulk fluxes;
+(c) H_S,RS,bulk against H_S,obs,EC;
+(d) histograms of the EC flux and the reanalysis-driven estimates.
 
 Scatter points are coloured by the bulk Richardson number; the error bars are the
 1-sigma uncertainties of Table 2 (fluxpy.uncertainty). The regression slope b,
 correlation r and bias are printed for the caption. All fluxes are positive
-upward (never negate here).
+upward; the model-diagnosed fluxes are already stored with this sign.
 
 Run:  pixi run python figures_manuscript/fig06_flux_scatter.py
 """

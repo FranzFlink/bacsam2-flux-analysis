@@ -1,17 +1,15 @@
-# The method, step by step
+# Method chapters
 
-Six short notebooks that follow the structure of the paper and recompute its central numbers from the shipped
-data with the same `fluxpy` functions the pipeline uses. They are meant for readers who want to *understand* the
-method — open them directly on GitHub (outputs are included) or run them yourself.
+Five notebooks that follow the structure of the paper and recompute its central numbers from the shipped data with
+the same `fluxpy` functions as the pipeline. They can be read on GitHub (outputs are included) or run locally.
 
-| Chapter | Paper section | What you see computed |
+| Chapter | Paper | Content |
 |---|---|---|
-| [1 · What is compared, and on which data](01_overview.ipynb) | Introduction, data | the six flux estimates, the 91 segments, why the fluxes are small |
-| [2 · The reference: eddy covariance](02_eddy_covariance.ipynb) | EC method, Fig. 3, Appendix A | one segment from the 100 Hz signals to W m⁻², the 0.1–20 Hz band, integrity check, random error, window length, EC uncertainty |
-| [3 · The bulk method](03_bulk_method.ipynb) | bulk method, Appendix B | one bulk flux by hand (Δθ, Ri_b, roughness, C_h), stability functions, the role of α_T |
-| [4 · How well do the estimates reproduce the measured flux?](04_comparison.ipynb) | results, Fig. 6, comparison table | why slope and correlation instead of RMSE, the comparison, where the satellite surface temperature helps |
-| [5 · What does the result depend on — and how uncertain is it?](05_sensitivity_and_uncertainty.ipynb) | sensitivity, Fig. 7, uncertainty table | α_T changes the amplitude but not the correlation, everything else is secondary, uncertainty budget |
-| [6 · How robust is the result?](06_robustness.ipynb) | checks asked for in review | neighbouring segments are not independent, one day left out, where MODIS really sees the surface, the frequency band of the EC flux, the size of the stability correction, a segment that is not at one level |
+| [1 · Data and flux estimates](01_overview.ipynb) | Sects. 1–2, Table 1, Fig. 1 | the six flux estimates, the 90 segments, the magnitude of the fluxes |
+| [2 · Eddy-covariance reference flux](02_eddy_covariance.ipynb) | Sect. 3.1, Fig. 3, Appendix A | one segment from the 100 Hz signals to W m⁻², the 0.1–20 Hz band, integrity check, random error, window length, EC uncertainty |
+| [3 · Bulk flux estimates](03_bulk_method.ipynb) | Sect. 3.2, Appendix B | one bulk flux by hand (Δθ, Ri_b, roughness, C_h), stability functions, the role of α_T |
+| [4 · Comparison with the eddy-covariance flux](04_comparison.ipynb) | Sect. 4.1, Table 4, Fig. 6 | skill metrics, the comparison, the effect of the satellite surface temperature |
+| [5 · Sensitivity and uncertainty](05_sensitivity_and_uncertainty.ipynb) | Sect. 4.2, Tables 2–3, Fig. 7 | scalar roughness ratio α_T, stability scheme and momentum roughness, input sensitivity, uncertainty budget |
 
 The notebooks are generated and executed by [`build_book.py`](build_book.py):
 
@@ -19,9 +17,9 @@ The notebooks are generated and executed by [`build_book.py`](build_book.py):
 pixi run book
 ```
 
-The same chapters, with the landing page, the reproduction guide, the paper-to-code map and a glossary from `docs/`,
-form the website of the repository: `pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live
-preview); on GitHub it is published by `.github/workflows/site.yml`.
+Together with the pages in `docs/` and the API reference in `docs/api/`, the chapters form the website of the
+repository: `pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live preview); on GitHub it is
+published by `.github/workflows/site.yml`.
 
 Every hand calculation is checked against the pipeline output inside the notebook (e.g. the EC flux computed in
-chapter 2 equals the value in the data file; the bulk flux computed in chapter 3 equals the pipeline's).
+chapter 2 equals the value in the data file; the bulk flux computed in chapter 3 equals that of the pipeline).

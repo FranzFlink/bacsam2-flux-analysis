@@ -22,8 +22,8 @@ Conventions
 * Diagnostics use the same pathway tokens: ``Ri_obs``, ``Ri_rs``,
   ``dtheta_obs``, ``dtheta_rs``, ``U_obs``, ``U_era`` (``dtheta`` = theta_air -
   theta_s). Every ``Ri_*`` is the two-point bulk Richardson number of Eq. (B3).
-* The segment file uses ``sensible_heat_flux`` for the EC flux (its historical
-  name); the pipeline output uses ``H_obs_ec``.
+* The segment file uses ``sensible_heat_flux`` for the EC flux; the pipeline
+  output uses ``H_obs_ec``.
 """
 from __future__ import annotations
 

@@ -3,29 +3,36 @@ fluxpy.bulk
 ===========
 Bulk sensible heat flux (manuscript Sect. 3.2, Eq. 2, and Appendix B),
 
-    H_S = rho * c_p * C_h * U * (theta_s - theta_air)     [W m-2, positive upward]
+    $$ H_\mathrm{S} = \rho\, c_p\, C_h\, U\, (\theta_\mathrm{s} - \theta_\mathrm{air})
+       \quad [\mathrm{W\,m^{-2}},\ \text{positive upward}], $$
 
 evaluated on the same 5 km segments as the EC reference. The three bulk
 estimates of the paper differ only in their inputs (Table 1):
 
-    compute_bulk_shf_obs      H_S,obs,bulk   KT-19 T_s; T-Bird theta, U, z          (in situ)
-    compute_bulk_shf_remote   H_S,RS,bulk    MODIS T_s; ERA5 theta, U, p (level 136)
-                              H_S,ERA,bulk   ERA5 T_s;  ERA5 theta, U, p (level 136)
+===========================  ============  ==========  =================================
+function                     estimate      T_s         theta_air, U, p
+===========================  ============  ==========  =================================
+``compute_bulk_shf_obs``     H_S,obs,bulk  KT-19       T-Bird (in situ, z of the T-Bird)
+``compute_bulk_shf_remote``  H_S,RS,bulk   MODIS       ERA5 model level 136
+``compute_bulk_shf_remote``  H_S,ERA,bulk  ERA5        ERA5 model level 136
+===========================  ============  ==========  =================================
 
 Steps inside each (Appendix B):
-  B1  potential temperatures from T and p; bulk Richardson number Ri_b between the
-      surface (no-slip) and the measurement level (:mod:`fluxpy.stability`)
-  B2  effective roughness of the segment from its surface composition,
-      z0m_eff = fraction-weighted geometric mean (Eq. B4); z0T = alpha_T * z0m
-  B3  transfer coefficient C_h = C_hn * f_h(Ri_b, z/z0m, z/z0T) (:mod:`fluxpy.stability_lib`)
+
+* B1: potential temperatures from T and p; bulk Richardson number Ri_b between
+  the surface (no-slip) and the measurement level (:mod:`fluxpy.stability`).
+* B2: effective roughness of the segment from its surface composition,
+  z0m_eff = fraction-weighted geometric mean (Eq. B4); z0T = alpha_T * z0m.
+* B3: transfer coefficient C_h = C_hn * f_h(Ri_b, z/z0m, z/z0T)
+  (:mod:`fluxpy.stability_lib`).
 
 Each potential temperature is computed with the pressure at its own height. In
 situ, the surface pressure is reconstructed from the T-Bird pressure with the
-hypsometric equation (no surface pressure is measured; fluxpy.util.
-surface_pressure_hypsometric); using the T-Bird pressure at the surface as well
-would make theta_s too warm by about g z / c_p = 0.23 K at 24 m. Remote, theta_s
-uses the ERA5 surface pressure and theta_air the pressure of model level 136
-(fluxpy.util.era5_level_pressure).
+hypsometric equation (no surface pressure is measured;
+``fluxpy.util.surface_pressure_hypsometric``); using the T-Bird pressure at the
+surface as well would make theta_s too warm by about g z / c_p = 0.23 K at 24 m.
+Remote, theta_s uses the ERA5 surface pressure and theta_air the pressure of
+model level 136 (``fluxpy.util.era5_level_pressure``).
 
 Sign: theta_s > theta_air (warm surface, e.g. a lead) gives H_S > 0, upward.
 """
@@ -233,15 +240,16 @@ def compute_bulk_shf_remote(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.
                             cfg: BulkConfig, z_ref=30.0) -> xr.Dataset:
     """H_S,RS,bulk or H_S,ERA,bulk: the reanalysis-driven bulk estimate (Table 1, rows 3-4).
 
-    ``ds_rs``    the ERA5 column at the level closest to the T-Bird: ``t`` [degC],
-                 ``ws`` [m/s], ``pres`` [Pa or hPa] (surface pressure, for theta_s) and
-                 ``pres_air`` [Pa or hPa] (pressure of the level of ``t``, for theta_air
-                 and the air density).
-    ``ds_modis`` the surface temperature ``IST`` [K] (MODIS, gap-filled with ERA5
-                 skin temperature, or ERA5 skin temperature alone); values outside
-                 150-280 K are masked.
-    ``ds_obs``   the segment file, for the surface fractions of the roughness blend.
-    ``z_ref``    height of the ERA5 level [m], scalar or per segment.
+    ``ds_rs``     the ERA5 column at the level closest to the T-Bird: ``t`` [degC],
+                  ``ws`` [m/s], ``pres`` [Pa or hPa] (surface pressure, for theta_s) and
+                  ``pres_air`` [Pa or hPa] (pressure of the level of ``t``, for theta_air
+                  and the air density).
+    ``ds_modis``  the surface temperature ``IST`` [K] (MODIS, gap-filled with ERA5
+                  skin temperature, or ERA5 skin temperature alone); values outside
+                  150-280 K are masked.
+    ``ds_obs``    the segment file, for the surface fractions of the roughness blend.
+    ``z_ref``     height of the ERA5 level [m], scalar or per segment.
+
     Returns ``H_rs_bulk``, ``Ri_rs``, ``z0_rs``, ``zt_rs``, ``Cd_rs``, ``Ch_rs``,
     ``rho_rs``, ``dtheta_rs``.
     """

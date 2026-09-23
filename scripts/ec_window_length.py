@@ -7,8 +7,6 @@ the EC flux of the complete leg; the random error of the sub-window fluxes and
 the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
-Ported from the exploratory notebook of the same name (see git history).
-
 Output: data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv
 Run:    pixi run window-length      (about 2 minutes)
 """
