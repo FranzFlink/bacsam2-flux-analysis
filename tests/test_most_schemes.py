@@ -12,8 +12,9 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 
-from fluxpy.stability_lib import KAPPA, SCHEMES, Cd_Ch_iterative, Cd_Ch_noniterative
-#TODO: KAPPA does not seem to be defined in stability_lib but rather in utils
+from fluxpy.stability_lib import SCHEMES, Cd_Ch_iterative, Cd_Ch_noniterative
+from fluxpy.util import KAPPA
+
 ZETAS = (0.01, 0.1, 1.0, 5.0, 20.0)
 
 

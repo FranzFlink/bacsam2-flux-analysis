@@ -44,7 +44,7 @@ All estimates are evaluated on the same 5 km flight segments:
 
 | Symbol | Method | Inputs |
 |---|---|---|
-| $H_\mathrm{S,obs,EC}$ | eddy covariance (**reference**) | 100 Hz $w$, $\theta$ from the T-Bird |
+| $H_\mathrm{S,obs,EC}$ | eddy covariance; the reference against which all other estimates are evaluated | 100 Hz $w$, $\theta$ from the T-Bird |
 | $H_\mathrm{S,obs,bulk}$ | bulk formula | measured: KT-19 surface temperature, T-Bird air temperature, wind and pressure |
 | $H_\mathrm{S,RS,bulk}$ | bulk formula | MODIS surface temperature (ERA5 skin temperature under cloud) and ERA5 air temperature, wind and pressure at the model level closest to the T-Bird |
 | $H_\mathrm{S,ERA,bulk}$ | bulk formula | ERA5 only |
@@ -53,7 +53,7 @@ All estimates are evaluated on the same 5 km flight segments:
 From top to bottom, measured inputs are successively replaced by products with pan-Arctic coverage, so that a
 loss of skill can be attributed to the replaced input.
 
-The chapters follow the paper: the EC reference (2), the bulk method (3), the comparison (4), and sensitivity and
+The chapters follow the paper's sections: the EC reference (2), the bulk method (3), the comparison (4), and sensitivity and
 uncertainty (5).
 
 > [!NOTE]
@@ -86,6 +86,8 @@ ax.hist(EC[np.isfinite(EC)], bins=np.arange(-8, 15, 1), color="0.35")
 ax.axvline(0, color="k", lw=0.8); ax.set_xlabel("EC sensible heat flux (W m$^{-2}$, positive upward)"); ax.set_ylabel("segments")
 print(f"median {np.nanmedian(EC):.1f} W m-2, {np.mean(np.abs(EC[np.isfinite(EC)]) < 2) * 100:.0f} % of the segments within +-2 W m-2")
 '''), ("md", r'''
+**Figure 1.1.** Distribution of the EC sensible heat flux over all segments (bins of 1 W m⁻², positive upward).
+'''), ("md", r'''
 Flight tracks (Fig. 1):
 
 ![Fig. 1](../figures_manuscript/output/fig01_campaign_overview.png)
@@ -100,7 +102,10 @@ sinking air. The sensible heat flux is this covariance multiplied by the heat ca
 
 $$H_\mathrm{S} = \rho\, c_p\, \overline{w'\theta'}$$
 
-This chapter derives the flux of one 5 km segment and reproduces the value in the segment file.
+This chapter derives the flux of one 5 km segment from the 100 Hz data and reproduces the value stored for it in the
+segment file `data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc`. That file holds one row per
+5 km segment (EC flux, random error, integrity check and segment means) and is written by
+`scripts/run_ec_aggregation.py`; its variables are listed under [Data files](../docs/data.md).
 
 > [!NOTE]
 > **Paper:** Sect. 3.1, Eq. (1), Fig. 3, Appendix A. **Code:** `fluxpy/eddy_covariance.py`
@@ -119,7 +124,7 @@ print(f"segment {pd.Timestamp(t0):%d %b %Y %H:%M:%S} UTC: {seg.time.size} sample
 '''), ("md", r'''
 ## Detrended time series
 
-Vertical wind $w$ and potential temperature $\theta$ at 100 Hz. The platform motion has been removed from the wind
+Vertical wind $w$ and potential temperature $\theta$ are measured at 100 Hz. The platform motion has been removed from the wind
 with the inertial navigation data; the potential rather than the virtual potential temperature is used because the
 air is cold and dry (paper Sect. 3.1). Removing a linear trend from both series yields the fluctuations $w'$ and
 $\theta'$.
@@ -132,6 +137,9 @@ axs[0].plot(x_km, w, lw=0.4, color="C0"); axs[0].set_ylabel("w' (m s$^{-1}$)")
 axs[1].plot(x_km, th, lw=0.4, color="C3"); axs[1].set_ylabel(r"$\theta$' (K)")
 axs[2].plot(x_km, np.cumsum(w * th) / w.size, color="k"); axs[2].set_ylabel(r"running sum of w'$\theta$'"); axs[2].set_xlabel("distance along the segment (km)")
 print(f"plain covariance of the detrended series: {np.mean(w * th):.4f} K m/s")
+'''), ("md", r'''
+**Figure 2.1.** Detrended vertical wind $w'$ (top) and potential temperature $\theta'$ (middle) along the segment, and
+the running sum of $w'\theta'$ divided by the number of samples (bottom), which ends at the covariance of the segment.
 '''), ("md", r'''
 ## Cospectrum and flux band
 
@@ -156,15 +164,19 @@ for ax in axs:
 in_band = band_covariance(w, th, fs, 0.1, 20.0)
 print(f"covariance inside 0.1-20 Hz: {in_band:.4f} K m/s = {in_band / np.mean(w * th) * 100:.0f} % of the total covariance of this segment")
 '''), ("md", r'''
+**Figure 2.2.** Left: cospectrum of $w'$ and $\theta'$, summed in logarithmically spaced frequency bins. Right:
+covariance contained in all frequencies above $f$, accumulated from high to low frequency. The shaded band
+(0.1–20 Hz) is the part that enters the flux.
+'''), ("md", r'''
 ## Conversion to W m⁻²
 '''), ("code", r'''
 rho = float((seg.p * 100 / (RD * (seg["T"] + 273.15))).mean())        # dry-air density from p (hPa) and T (degC)
 H_by_hand = rho * CP * in_band
 H_fluxpy = segment_flux(seg).flux
 print(f"rho = {rho:.2f} kg m-3, c_p = {CP:.0f} J kg-1 K-1")
-print(f"H by hand         : {H_by_hand:6.2f} W m-2")
-print(f"H from fluxpy     : {float(H_fluxpy):6.2f} W m-2")
-print(f"H in the data file: {EC[i]:6.2f} W m-2")
+print(f"H by hand            : {H_by_hand:6.2f} W m-2")
+print(f"H from fluxpy        : {float(H_fluxpy):6.2f} W m-2")
+print(f"H in the segment file: {float(SEG.sensible_heat_flux[i]):6.2f} W m-2")
 '''), ("md", r'''
 ## Integrity check and random error (Appendix A)
 
@@ -187,10 +199,10 @@ from fluxpy.eddy_covariance import band_covariance_random_error
 slope = segment_spectra(w=seg.w.values, theta=seg.theta.values, u=seg.u.values, v=seg.v.values, fs=100.0)["slope_w"]
 sigma = rho * CP * band_covariance_random_error(w, th, fs)
 print(f"this segment: spectral slope of w = {slope:.2f} -> turbulence resolved: {turbulence_resolved(slope)}")
-print(f"              flux {float(H_fluxpy):.1f} +- {sigma:.1f} W m-2 (random error) -> {abs(float(H_fluxpy)) / sigma:.0f} sigma")
+print(f"              flux {float(H_fluxpy):.1f} W m-2, random error {sigma:.2f} W m-2 -> {abs(float(H_fluxpy)) / sigma:.0f} sigma")
 ratio = FIG.ec_flux_over_sigma.values
 print(f"\nall {ratio.size} segments: {int(SEG.turbulence_resolved.sum())} pass the integrity check; "
-      f"median random error {np.median(FIG.sigma_random_ec.values):.1f} W m-2")
+      f"median random error {np.median(FIG.sigma_random_ec.values):.2f} W m-2")
 days = pd.to_datetime(FIG.start_time.values).strftime("%d %b")
 pd.DataFrame({f"|H| > {k} sigma": {**{d: f"{(ratio[days == d] > k).sum()} / {(days == d).sum()}" for d in pd.unique(days)},
                                    "all": f"{(ratio > k).sum()} / {ratio.size}"} for k in (1, 2, 3)})
@@ -213,7 +225,11 @@ axs[1].plot(wl.length_km, wl.random_error_median, "s-", color="C4"); axs[1].set_
 for ax in axs:
     ax.set_xscale("log"); ax.axvline(5, color="goldenrod", lw=3, ls="--"); ax.set_xlabel("window length (km)")
 r5 = wl[wl.length_km == 5].iloc[0]
-print(f"at 5 km: flux ratio {r5.ratio_mean:.1f}, random error {r5.random_error_median:.1f} W m-2, fluxes above 2 sigma {r5.fraction_above_2sigma * 100:.0f} %")
+print(f"at 5 km: flux ratio {r5.ratio_mean:.2f}, random error {r5.random_error_median:.2f} W m-2, fluxes above 2 sigma {r5.fraction_above_2sigma * 100:.0f} %")
+'''), ("md", r'''
+**Figure 2.3.** Left: mean flux of the sub-windows of a leg relative to the flux of the complete leg, as a function of
+the window length (mean and standard deviation over the legs). Right: median random error of the sub-window fluxes. The
+dashed line marks the 5 km segments of the analysis.
 '''), ("md", r'''
 ## Uncertainty of the EC flux
 
@@ -226,7 +242,7 @@ from fluxpy.uncertainty import uncertainty_budget
 U = uncertainty_budget(FIG)
 pd.DataFrame({k.replace("ec_", ""): [np.nanmedian(U[k]), np.nanpercentile(U[k], 25), np.nanpercentile(U[k], 75)]
               for k in ("ec_random", "ec_instrument", "ec_total", "ec_placement")},
-             index=["median (W m-2)", "25th percentile", "75th percentile"]).round(1)
+             index=["median (W m-2)", "25th percentile", "75th percentile"]).round(2)
 '''), ("md", r'''
 Appendix A of the paper contains two further checks, printed by `pixi run ec-quality`: the comparison is insensitive to
 the screening of the fluxes (Table A1, eight alternative screenings), and the pitch resonance of the towed T-Bird near
@@ -336,6 +352,10 @@ lo, hi = np.nanpercentile(FIG.Ri_obs.values, [5, 95]); ax.axvspan(lo, hi, color=
 ax.axvline(0, color="k", lw=0.6); ax.set_xlabel("bulk Richardson number"); ax.set_ylabel("$C_h$ × 10$^3$"); ax.legend(ncol=2, fontsize=8)
 ax.set_title("z = 24 m, z$_{0m}$ = 3·10$^{-4}$ m, α$_T$ = 0.1");
 '''), ("md", r'''
+**Figure 3.1.** Transfer coefficient $C_\mathrm{h}$ as a function of the bulk Richardson number for six of the eight
+stability schemes, at the height and roughness given in the title. The grey band is the range of $Ri_\mathrm{b}$ sampled
+during the campaign.
+'''), ("md", r'''
 ## Dependence of $C_\mathrm{h}$ on $\alpha_T$
 
 The scalar roughness ratio $\alpha_T = z_{0,T}/z_{0,m}$ is poorly constrained over sea ice: models use values between 1
@@ -347,7 +367,11 @@ ch = np.array([Cd_Ch_noniterative(0.0, 24.0, 3e-4, 3e-4 * x, "GLGS20")[1] for x 
 fig, ax = plt.subplots(figsize=(6, 3)); ax.semilogx(a, ch / ch[np.argmin(abs(a - 0.1))], color="k")
 ax.axvline(0.1, color="C2", ls="--"); ax.axvline(1e-4, color="C1", ls="--")
 ax.set_xlabel(r"$\alpha_T$"); ax.set_ylabel(r"$C_h$ relative to $\alpha_T$ = 0.1")
-print(f"alpha_T from 1e-1 to 1e-4 (three orders of magnitude) changes C_h by a factor {ch[np.argmin(abs(a - 1e-4))] / ch[np.argmin(abs(a - 0.1))]:.1f}")
+print(f"alpha_T from 1e-1 to 1e-4 (three orders of magnitude) changes C_h by a factor {ch[np.argmin(abs(a - 1e-4))] / ch[np.argmin(abs(a - 0.1))]:.2f}")
+'''), ("md", r'''
+**Figure 3.2.** $C_\mathrm{h}$ under neutral stratification as a function of $\alpha_T$, relative to its value at
+$\alpha_T = 0.1$. Dashed lines: reference configuration ($\alpha_T = 0.1$, green) and amplitude-matched configuration
+($\alpha_T = 10^{-4}$, orange).
 '''), ("md", r'''
 **Summary.** The bulk flux is the product of wind speed, temperature difference and $C_\mathrm{h}$, which contains
 roughness and stability. Roughness scales the flux and thus changes its *amplitude*, but not *where* along the track the
@@ -399,8 +423,10 @@ for key, name in NAMES.items():
                   "MAE (W m-2)": np.mean(np.abs(h[ok] - EC[ok])), "RMSE (W m-2)": m["rmse"], "n": m["n"]}
 rows["zero flux  (H = 0 everywhere)"] = {"bias (W m-2)": -EC.mean(), "MAE (W m-2)": np.mean(np.abs(EC)),
                                         "RMSE (W m-2)": np.sqrt(np.mean(EC ** 2)), "n": EC.size}
-table = pd.DataFrame(rows).T.round(1); table["n"] = table["n"].astype(int)
-table.fillna("–")
+table = pd.DataFrame(rows).T; table["n"] = table["n"].astype(int)
+stats = table.columns.drop("n")                          # two decimals, also in the columns with a gap
+table[stats] = table[stats].apply(lambda col: col.map(lambda v: "–" if pd.isna(v) else f"{v:.2f}"))
+table
 '''), ("md", r'''
 (CARRA is not available on 13 April, hence the smaller *n*.) The zero estimate has a smaller MAE and RMSE than every
 estimate in the table: in this weak-flux regime, these error measures reward conservative estimates, not skill.
@@ -420,20 +446,24 @@ for ax, key, c in zip(axs, ["H_obs_bulk", "H_rs_bulk", "H_era_bulk"], ["C2", "C1
     h = FIG[key].values; ok = np.isfinite(EC) & np.isfinite(h); b, a = np.polyfit(EC[ok], h[ok], 1)
     ax.scatter(EC[ok], h[ok], s=12, color=c, alpha=0.7); xx = np.array([-8, 14])
     ax.plot(xx, xx, "k--", lw=0.8); ax.plot(xx, a + b * xx, color=c, lw=2)
-    ax.set_title(f"{NAMES[key].split('(')[1][:-1]}\nslope {b:.1f}, r {np.corrcoef(EC[ok], h[ok])[0, 1]:.1f}", fontsize=9)
+    ax.set_title(f"{NAMES[key].split('(')[1][:-1]}\nslope {b:.2f}, r {np.corrcoef(EC[ok], h[ok])[0, 1]:.2f}", fontsize=9)
     ax.set_xlabel("EC flux (W m$^{-2}$)"); ax.set_xlim(-8, 14); ax.set_ylim(-30, 30)
 axs[0].set_ylabel("bulk flux (W m$^{-2}$)");
 '''), ("md", r'''
-From right to left, the panels show the main result of the paper (numbers in the panel titles):
+**Figure 4.1.** The three offline bulk estimates against the EC flux, one point per segment, with the 1:1 line (dashed)
+and the regression line (solid). Left to right: measured inputs, MODIS surface temperature with the ERA5 atmosphere,
+ERA5 only. Figure 6 of the paper shows the same comparison together with the model-diagnosed fluxes.
+'''), ("md", r'''
+From left to right, the panels show the main result of the paper (numbers in the panel titles):
 
-* **ERA5 only:** the regression line is nearly flat; a small part of the amplitude is recovered and the correlation is weak.
-* **MODIS surface temperature:** with the ERA5 atmosphere unchanged, amplitude and correlation both increase.
 * **Measured inputs:** the highest correlation, but the amplitude is overestimated (slope well above 1). With measured
   inputs, the conventional transfer coefficient is too large (Chapter 5).
+* **MODIS surface temperature:** with the ERA5 atmosphere unchanged, amplitude and correlation both increase.
+* **ERA5 only:** the regression line is nearly flat; a small part of the amplitude is recovered and the correlation is weak.
 
 ## Effect of the satellite surface temperature
 
-If the benefit of MODIS arises from resolving leads and thin ice that ERA5 does not represent, it should concentrate on
+If the benefit of MODIS arises from resolving leads and thin ice that ERA5 does not represent, it should be greatest for
 segments with a *heterogeneous* surface. The segments are split at the median of the within-segment standard deviation
 of the KT-19 surface temperature.
 '''), ("code", r'''
@@ -443,7 +473,7 @@ rows = {}
 for label, m in (("heterogeneous half", ok & (sd > med)), ("homogeneous half", ok & (sd <= med))):
     rows[label] = {"n": int(m.sum()), "r  ERA5 only": np.corrcoef(EC[m], era[m])[0, 1], "r  with MODIS": np.corrcoef(EC[m], rs[m])[0, 1],
                    "slope  ERA5 only": np.polyfit(EC[m], era[m], 1)[0], "slope  with MODIS": np.polyfit(EC[m], rs[m], 1)[0]}
-print(f"median within-segment standard deviation of the surface temperature: {med:.1f} K"); pd.DataFrame(rows).T.round(1)
+print(f"median within-segment standard deviation of the surface temperature: {med:.1f} K"); pd.DataFrame(rows).T.round(2)
 '''), ("md", r'''
 **Summary.** The surface temperature determines whether a bulk estimate follows the observed variability. The ERA5
 surface temperature does not represent leads and thin ice within a grid cell; on heterogeneous segments the ERA5-only
@@ -455,7 +485,7 @@ NB5 = [("md", r'''
 # 5 · Sensitivity and uncertainty
 
 With measured inputs, the bulk method overestimates the flux amplitude (Chapter 4). To identify the cause, the paper
-varies one choice within the transfer coefficient at a time (stability scheme, scalar roughness ratio $\alpha_T$,
+varies one choice within the transfer coefficient at a time (scalar roughness ratio $\alpha_T$, stability scheme,
 momentum roughness) and perturbs the two inputs, temperature difference and wind speed.
 
 > [!NOTE]
@@ -476,10 +506,14 @@ for ax, col, ideal, lab in ((axs[0], "slope", 1, "slope b (amplitude)"), (axs[1]
     if ideal: ax.axhline(ideal, color="k", ls="--", lw=0.8)
     ax.set_xlabel(r"$\alpha_T$"); ax.set_ylabel(lab)
 axs[1].set_ylim(0, 1); axs[0].legend(fontsize=8); axs[0].set_xlim(2e-8, 0.3)
-tab = a.drop_duplicates("zt_ratio")[["zt_ratio", "obs_slope", "obs_r", "rs_slope", "rs_r"]].round(1)
-tab["zt_ratio"] = tab["zt_ratio"].map("{:.0e}".format)
+tab = a.drop_duplicates("zt_ratio")[["zt_ratio", "obs_slope", "obs_r", "rs_slope", "rs_r"]]
+tab = tab.assign(zt_ratio=tab.zt_ratio.map("{:.0e}".format)).round(2)        # format alpha_T before rounding the statistics
 tab.rename(columns={"zt_ratio": "alpha_T", "obs_slope": "slope (measured inputs)", "obs_r": "r (measured inputs)",
                     "rs_slope": "slope (MODIS + ERA5)", "rs_r": "r (MODIS + ERA5)"}).set_index("alpha_T")
+'''), ("md", r'''
+**Figure 5.1.** Slope $b$ (left) and correlation $r$ (right) of the bulk estimates with measured inputs (green) and with
+MODIS + ERA5 inputs (orange) as functions of $\alpha_T$; the dashed line marks the ideal slope of 1. The table lists the
+same values.
 '''), ("md", r'''
 With measured inputs, the amplitude is matched (slope 1) near $\alpha_T = 10^{-4}$, the *amplitude-matched
 configuration* of the paper: three orders of magnitude below the conventional value and close to values found by earlier
@@ -496,7 +530,7 @@ groups = {"stability scheme (8 schemes)": S.index.str.endswith("_ref"),
           "alpha_T (1e-4 ... 1e-1)": (S.index.str.contains("ztr") & S.zt_ratio.between(1e-4, 1e-1)) | (S.index == "GLGS20_ref"),
           "momentum roughness set": S.index.str.contains("mosaic|sheba|nschnier") | (S.index == "GLGS20_ref"),
           "constant momentum roughness": S.index.str.contains("z0c")}
-rng = lambda x: f"{x.min():.1f} - {x.max():.1f}"
+rng = lambda x: f"{x.min():.2f} - {x.max():.2f}"
 pd.DataFrame({g: {"slope, measured inputs": rng(S[m].obs_slope), "r, measured inputs": rng(S[m].obs_r),
                   "slope, MODIS + ERA5": rng(S[m].rs_slope), "r, MODIS + ERA5": rng(S[m].rs_r)} for g, m in groups.items()}).T
 '''), ("md", r'''
@@ -507,13 +541,14 @@ stratification and differ only under stable stratification, where the flux is sm
 ## Sensitivity to the inputs
 '''), ("code", r'''
 from fluxpy.uncertainty import central_difference, uncertainty_budget
-keep = np.isfinite(EC); q = lambda x: f"{np.nanmedian(x):+.1f}  [{np.nanpercentile(x, 25):+.1f}, {np.nanpercentile(x, 75):+.1f}]"
+keep = np.isfinite(EC); q = lambda x: f"{np.nanmedian(x):+.2f}  [{np.nanpercentile(x, 25):+.2f}, {np.nanpercentile(x, 75):+.2f}]"
 pd.DataFrame({name: {"per +1 K in (theta_air - theta_s)   (W m-2)": q(central_difference(FIG, f"H_{k}_dTair", "dT")[keep]),
                      "per +1 m/s in wind speed   (W m-2)": q(central_difference(FIG, f"H_{k}_dU", "dU")[keep])}
               for k, name in (("obs", "measured inputs"), ("rs", "MODIS + ERA5"))}).T
 '''), ("md", r'''
-(Median and interquartile range over the segments.) A change of 1 K in the temperature difference has a much larger
-effect than 1 m s⁻¹ in wind speed, and the typical air–surface temperature difference of one to two kelvin is comparable
+The table gives the change of the bulk flux per unit change of one input: the median over the segments and, in
+brackets, the 25th and 75th percentiles. A change of 1 K in the temperature difference has a much larger effect than
+1 m s⁻¹ in wind speed, and the typical air–surface temperature difference of one to two kelvin is comparable
 to the uncertainty of a satellite surface temperature. The surface temperature product is therefore decisive (Chapter 4).
 
 ## Uncertainty budget (Table 2)
@@ -526,7 +561,7 @@ U = uncertainty_budget(FIG)
 print("assumed 1-sigma input uncertainties (T_s [K], T_air [K], U [m/s]):", INPUT_UNCERTAINTY)
 pd.DataFrame({name: [np.nanmedian(U[k]), np.nanpercentile(U[k], 25), np.nanpercentile(U[k], 75)]
               for k, name in (("ec_total", "EC reference"), ("obs_bulk", "bulk, measured inputs"), ("rs_bulk", "bulk, MODIS + ERA5"))},
-             index=["median (W m-2)", "25th percentile", "75th percentile"]).round(1).T
+             index=["median (W m-2)", "25th percentile", "75th percentile"]).round(2).T
 '''), ("md", r'''
 **Summary.** The measured reference is known to about 1 W m⁻². A bulk estimate driven by satellite and reanalysis
 inputs is uncertain by several W m⁻², more than the typical flux; surface temperature, air temperature and the large
