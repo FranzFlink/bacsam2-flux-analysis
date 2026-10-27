@@ -154,15 +154,18 @@ for field, levels, labelled, fmt in [
     ax.clabel(cs, levels=[v for v in labelled if v in cs.levels], fmt=fmt,
               fontsize=fs.FONT_SIZE - 1, inline=True)
 
-# flight tracks: grey for all, day colours for the analysed flights
+# flight tracks: grey for all, day colours for the analysed flights; the grey
+# tracks are dark with a white outline, so that they stay visible over the light
+# grey land and the dark open ocean alike
+OTHER_TRACK = dict(color="0.3", linewidth=0.8,
+                   path_effects=[pe.withStroke(linewidth=1.6, foreground="white")])
 for df, day, analysed in tracks:
     if analysed:
         ax.plot(df.lon, df.lat, color=day_color[day], linewidth=1,
                 transform=PC, zorder=6 + 0.5 * DAY_ZORDER.get(day, 0),
                 path_effects=[pe.withStroke(linewidth=1.1, foreground="white")])
     else:
-        ax.plot(df.lon, df.lat, color="dimgrey", linewidth=0.7, alpha=0.8,
-                transform=PC, zorder=4)
+        ax.plot(df.lon, df.lat, **OTHER_TRACK, transform=PC, zorder=4)
 
 # focus-region rectangles; (c) and (d) almost coincide, so their labels sit at
 # opposite corners of the shared box (d: north-west, c: south-east), each tied
@@ -206,8 +209,7 @@ for name, lon, lat, col in [("Svalbard", 19.0, 78.9, "dimgrey"),
 handles = [Line2D([0], [0], color=day_color[d], linewidth=1.8,
                   label=pd.Timestamp(d).strftime("%d %B"))
            for d in analysed_days]
-handles.append(Line2D([0], [0], color="dimgrey", linewidth=0.9,
-                      label="Other flights"))
+handles.append(Line2D([0], [0], **OTHER_TRACK, label="Other flights"))
 ax.legend(handles=handles, loc="lower left", frameon=True, framealpha=0.9,
           title="Flight tracks")
 
