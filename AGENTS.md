@@ -62,7 +62,9 @@ pixi run site         # build the website (docs/ + book/) into _build/html; site
   flight level, `fluxpy.aggregate.SegmentConfig`); every flux carries its random error (Appendix A).
 * Amplitude skill = ordinary-least-squares slope of the estimate on the EC flux; variability
   skill = Pearson r. RMSE is reported but not used to rank (it rewards estimates near zero).
-* Numbers are printed with one decimal.
+* Statistics (slopes and their intervals, correlations, biases, errors and uncertainties,
+  sensitivities) are printed with two decimals; flux values, temperatures, Ri_b and flight
+  facts with one; counts and percentages as integers (author decision 2026-09-24).
 
 ## Rules for changing anything
 

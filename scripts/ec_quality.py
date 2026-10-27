@@ -31,6 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error, band_pass  # noqa: E402
 from fluxpy.qc import segment_spectra  # noqa: E402
+from fluxpy.sensitivity import slope_bootstrap_ci  # noqa: E402
 from fluxpy.util import CP, add_theta, air_density  # noqa: E402
 
 warnings.filterwarnings("ignore")
@@ -113,8 +114,8 @@ above_2sigma = (abs_H > 2.0 * df["sigma_fs"]).values
 print(RULE)
 print("1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX")
 print(RULE)
-print(f"rank correlation with |H|:  R2 of the cumulative covariance {spearmanr(df.R2, abs_H)[0]:+.1f},  "
-      f"relative stationarity test (Foken and Wichura, 1996) {spearmanr(df.fw_rel, abs_H)[0]:+.1f}")
+print(f"rank correlation with |H|:  R2 of the cumulative covariance {spearmanr(df.R2, abs_H)[0]:+.2f},  "
+      f"relative stationarity test (Foken and Wichura, 1996) {spearmanr(df.fw_rel, abs_H)[0]:+.2f}")
 low_r2 = df.R2 < 0.4
 print(f"segments with R2 < 0.4: {low_r2.sum()};  median |H| {abs_H[low_r2].median():.1f} W m-2 (others: {abs_H[~low_r2].median():.1f});  "
       f"below 2 sigma_rand: {(~above_2sigma[low_r2]).mean() * 100:.0f} %;  "
@@ -142,32 +143,30 @@ def slope_and_r(x, y):
     return np.polyfit(x[ok], y[ok], 1)[0], np.corrcoef(x[ok], y[ok])[0, 1]
 
 
-tex = []
+tex, table_a1 = [], []
 for name, keep in SCREENINGS:
     x = df["H_interp"].values if keep is None else df["H"].values
     keep = np.ones(len(df), bool) if keep is None else keep
     cells = [slope_and_r(x[keep], df[c].values[keep]) for c in ESTIMATES]
+    table_a1.append(np.ravel(cells))
     plain = (name.replace("$", "").replace("\\,", " ").replace("\\geq", ">=").replace("\\%", "%")
              .replace("\\sigma_\\mathrm{rand}", "sigma_rand"))
-    print(f"  {plain:<48s} n = {keep.sum():2d}   " + "   ".join(f"{b:.1f} / {r:.1f}" for b, r in cells))
-    tex.append(f"{name} & {keep.sum()} & " + " & ".join(f"{b:.1f} & {r:.1f}" for b, r in cells) + r" \\")
+    print(f"  {plain:<48s} n = {keep.sum():2d}   " + "   ".join(f"{b:.2f} / {r:.2f}" for b, r in cells))
+    tex.append(f"{name} & {keep.sum()} & " + " & ".join(f"{b:.2f} & {r:.2f}" for b, r in cells) + r" \\")
 (REPO / "tables_manuscript" / "table_qc_robustness.tex").write_text("\n".join(tex) + "\n", encoding="utf-8", newline="\n")
 
-x_all, y_all = df["H"].values, df["H_obs_bulk"].values
-rng_boot = np.random.default_rng(0)
-boot = [np.polyfit(x_all[i], y_all[i], 1)[0] for i in (rng_boot.integers(0, len(df), len(df)) for _ in range(3000))]
-print(f"  for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: "
-      f"[{np.percentile(boot, 2.5):.1f}, {np.percentile(boot, 97.5):.1f}]")
+lo, hi = slope_bootstrap_ci(df["H"].values, df["H_obs_bulk"].values)    # the interval of Table 4 and the Conclusions
+print(f"  for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: [{lo:.2f}, {hi:.2f}]")
 
 
 # ── 3  random error (Appendix A2) ────────────────────────────────────────────
 print("\n" + RULE)
 print("3. RANDOM ERROR: INDEPENDENT ESTIMATES")
 print(RULE)
-print(f"median random error (W m-2): Finkelstein-Sims {df.sigma_fs.median():.1f} | surrogate data {df.sigma_sur.median():.1f} | "
-      f"segment-placement spread {df.sigma_place.median():.1f}")
+print(f"median random error (W m-2): Finkelstein-Sims {df.sigma_fs.median():.2f} | surrogate data {df.sigma_sur.median():.2f} | "
+      f"segment-placement spread {df.sigma_place.median():.2f}")
 print(f"rank correlation Finkelstein-Sims vs surrogates {spearmanr(df.sigma_fs, df.sigma_sur)[0]:.2f}, "
-      f"vs placement spread {spearmanr(df.sigma_fs, df.sigma_place, nan_policy='omit')[0]:.1f}")
+      f"vs placement spread {spearmanr(df.sigma_fs, df.sigma_place, nan_policy='omit')[0]:.2f}")
 print(f"sensitivity to the lag range m (10 s used): median sigma_rand(m = 5 s) / sigma_rand(10 s) = {(df.sigma_m5 / df.sigma_fs).median():.2f}, "
       f"sigma_rand(30 s) / sigma_rand(10 s) = {(df.sigma_m30 / df.sigma_fs).median():.2f}")
 print(f"median |correlation of w and theta| in the flux band: {df.r_wt.median():.2f}  "
@@ -199,4 +198,6 @@ reduction = (df["H"] - df["H_interp"])[large] / df["H"][large]
 print(f"flux reduction if the resonance bin is replaced by the interpolation of its neighbours: "
       f"median {np.median(reduction) * 100:.0f} % (quartiles {np.percentile(reduction, 25) * 100:.0f} to {np.percentile(reduction, 75) * 100:.0f} %); "
       f"effect on the comparison: last row of the table above")
+print(f"largest change of a slope or correlation of the comparison (last row against the first): "
+      f"{np.max(np.abs(table_a1[-1] - table_a1[0])):.2f}")
 print()

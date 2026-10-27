@@ -158,6 +158,11 @@ Single source of truth for the printed statistics. Run after any pipeline change
 and copy the numbers from here, never from an older PDF, a notebook or git
 history. `pixi run check` compares this output with `expected_numbers.txt`.
 
+Precision, as printed in the paper: statistics (slopes and their intervals,
+correlations, biases, errors and uncertainties, sensitivities) with two decimals;
+flux values, temperatures, Ri_b and flight facts with one; counts and percentages
+as integers.
+
 Blocks (in the order printed) and where they appear in the manuscript
 
 ```text
@@ -288,9 +293,9 @@ Compare the numbers printed by the number scripts with expected_numbers.txt.
 expected_numbers.txt is the committed output of manuscript_numbers.py (text and
 Table 4), ec_quality.py (Appendix A), robustness_checks.py and
 ec_band_sensitivity.py (robustness of the comparison) for this version
-of the repository. Numbers are compared with a tolerance of 0.02 (one
-unit in the last printed digit plus rounding) so that harmless floating-point
-differences between operating systems do not raise a false alarm.
+of the repository. Numbers are compared with a tolerance of 0.02 (two
+units in the last digit of a two-decimal statistic) so that harmless
+floating-point differences between operating systems do not raise a false alarm.
 
 Run:  pixi run check
 Update the reference after an intended change:

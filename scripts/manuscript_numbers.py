@@ -4,6 +4,11 @@ Single source of truth for the printed statistics. Run after any pipeline change
 and copy the numbers from here, never from an older PDF, a notebook or git
 history. ``pixi run check`` compares this output with ``expected_numbers.txt``.
 
+Precision, as printed in the paper: statistics (slopes and their intervals,
+correlations, biases, errors and uncertainties, sensitivities) with two decimals;
+flux values, temperatures, Ri_b and flight facts with one; counts and percentages
+as integers.
+
 Blocks (in the order printed) and where they appear in the manuscript
     EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
     reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
@@ -67,12 +72,12 @@ def within_leg_r(h):
 def line(name, h, ci=False):
     """One row of Table 4: slope, r, r2, within-leg r, bias, RMSE, centred RMSE, n (+ bootstrap CI of the slope)."""
     m = skill_metrics(EC, h, name)
-    out = (f"{name:<26} {m['slope']:5.1f} {m['r']:6.1f} {m['r'] ** 2:5.1f} "
-           f"{within_leg_r(h):8.1f} {m['bias']:+7.1f} {m['rmse']:6.1f} "
-           f"{m['crmse']:6.1f} {m['n']:4d}")
+    out = (f"{name:<26} {m['slope']:5.2f} {m['r']:6.2f} {m['r'] ** 2:5.2f} "
+           f"{within_leg_r(h):8.2f} {m['bias']:+7.2f} {m['rmse']:6.2f} "
+           f"{m['crmse']:6.2f} {m['n']:4d}")
     if ci:
         lo, hi = slope_bootstrap_ci(EC, h)
-        out += f"   OLS 95% CI [{lo:.1f}, {hi:.1f}]"
+        out += f"   OLS 95% CI [{lo:.2f}, {hi:.2f}]"
     return out
 
 
@@ -81,7 +86,7 @@ def rmse(x, y):
 
 
 def quartiles(x):
-    return f"{np.nanmedian(x):+.1f} [{np.nanpercentile(x, 25):+.1f}, {np.nanpercentile(x, 75):+.1f}]"
+    return f"{np.nanmedian(x):+.2f} [{np.nanpercentile(x, 25):+.2f}, {np.nanpercentile(x, 75):+.2f}]"
 
 
 # ── blocks ───────────────────────────────────────────────────────────────────
@@ -96,7 +101,7 @@ def ec_reference():
     print(f"integrity check (inertial-subrange slope of w): {int(seg['turbulence_resolved'].sum())} of {EC.size} pass; "
           f"slope median {float(seg['qc_slope_w'].median()):.1f}, range {float(seg['qc_slope_w'].min()):.1f} to {float(seg['qc_slope_w'].max()):.1f}")
     sigma, ratio = np.asarray(FIG["sigma_random_ec"]), np.asarray(FIG["ec_flux_over_sigma"])
-    print(f"random error: median {np.median(sigma):.1f} W m-2 [{np.percentile(sigma, 25):.1f}-{np.percentile(sigma, 75):.1f}]")
+    print(f"random error: median {np.median(sigma):.2f} W m-2 [{np.percentile(sigma, 25):.2f}-{np.percentile(sigma, 75):.2f}]")
     days = T.strftime("%d %b")
     for k in (1, 2, 3):
         above = ratio > k
@@ -144,8 +149,8 @@ def alpha_sweep():
             e_ = skill_metrics(EC, H_RS_ALL[RUNS_RS.index(f"GLGS20_ztr{a}_era5only")], "")
         except ValueError:
             continue
-        print(f"{a:>8} | {o['slope']:12.1f} {o['r']:5.1f} {o['bias']:+6.1f} {o['rmse']:5.1f} |"
-              f" {r_['slope']:16.1f} {r_['r']:5.1f} | {e_['slope']:15.1f} {e_['r']:5.1f}")
+        print(f"{a:>8} | {o['slope']:12.2f} {o['r']:5.2f} {o['bias']:+6.2f} {o['rmse']:5.2f} |"
+              f" {r_['slope']:16.2f} {r_['r']:5.2f} | {e_['slope']:15.2f} {e_['r']:5.2f}")
 
 
 def satellite_benefit():
@@ -165,9 +170,9 @@ def satellite_benefit():
     print(f"median within-segment sigma(T_s) = {med:.1f} K")
     for name, m in [("above median", vv > med), ("below median", vv <= med)]:
         print(f"  {name} (n={m.sum():2d}): "
-              f"slope {np.polyfit(e[m], a_[m], 1)[0]:+.1f} -> {np.polyfit(e[m], r_[m], 1)[0]:+.1f}   "
-              f"r {np.corrcoef(e[m], a_[m])[0, 1]:.1f} -> {np.corrcoef(e[m], r_[m])[0, 1]:.1f}   "
-              f"RMSE {rmse(a_[m], e[m]):.1f} -> {rmse(r_[m], e[m]):.1f}")
+              f"slope {np.polyfit(e[m], a_[m], 1)[0]:+.2f} -> {np.polyfit(e[m], r_[m], 1)[0]:+.2f}   "
+              f"r {np.corrcoef(e[m], a_[m])[0, 1]:.2f} -> {np.corrcoef(e[m], r_[m])[0, 1]:.2f}   "
+              f"RMSE {rmse(a_[m], e[m]):.2f} -> {rmse(r_[m], e[m]):.2f}")
 
     rng = np.random.default_rng(42)
     hi = vv > med
@@ -180,8 +185,8 @@ def satellite_benefit():
         p = rng.permutation(len(vv)) < hi.sum()
         permuted.append((rmse(a_[p], e[p]) - rmse(r_[p], e[p]))
                         - (rmse(a_[~p], e[~p]) - rmse(r_[~p], e[~p])))
-    print(f"  RMSE gain above median: {gain:.1f} W/m2, bootstrap 95 % CI "
-          f"[{np.percentile(boot, 2.5):.1f}, {np.percentile(boot, 97.5):.1f}], "
+    print(f"  RMSE gain above median: {gain:.2f} W/m2, bootstrap 95 % CI "
+          f"[{np.percentile(boot, 2.5):.2f}, {np.percentile(boot, 97.5):.2f}], "
           f"permutation p = {np.mean(np.abs(permuted) >= abs(observed)):.2f}")
     return e, r_, a_, hi
 
@@ -195,7 +200,7 @@ def alpha_is_a_weak_knob():
     s01 = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ztr1e-01")][ok])["slope"]
     s04 = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ztr1e-04")][ok])["slope"]
     print(f"3 decades of alpha_T (1e-1 -> 1e-4) change the flux amplitude by a factor "
-          f"{s04 / s01:.1f} (slope {s01:.1f} -> {s04:.1f}); the correlation does not change at all.")
+          f"{s04 / s01:.2f} (slope {s01:.2f} -> {s04:.2f}); the correlation does not change at all.")
     print()
 
 
@@ -208,8 +213,8 @@ def window_length_experiment():
     print(f"{int(wl.loc[0, 'n_legs'])} low-level legs, median length {wl.loc[0, 'length_km']:.1f} km")
     for L in (1.0, 5.0, 10.0):
         w = wl[wl["length_km"] == L].iloc[0]
-        print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.1f} +- {w['ratio_std']:.1f}   "
-              f"random error {w['random_error_median']:.1f} W m-2   "
+        print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.2f} +- {w['ratio_std']:.2f}   "
+              f"random error {w['random_error_median']:.2f} W m-2   "
               f"fluxes above 1 / 2 / 3 sigma_rand: {w['fraction_above_1sigma'] * 100:.0f} / "
               f"{w['fraction_above_2sigma'] * 100:.0f} / {w['fraction_above_3sigma'] * 100:.0f} %")
 
@@ -221,7 +226,7 @@ def uncertainty_budget_table():
     print(RULE)
     for key, sigma in uncertainty_budget(FIG).items():
         s = sigma[np.isfinite(sigma)]
-        print(f"  {key:<14} {np.median(s):4.1f} [{np.percentile(s, 25):.1f}-{np.percentile(s, 75):.1f}]")
+        print(f"  {key:<14} {np.median(s):5.2f} [{np.percentile(s, 25):.2f}-{np.percentile(s, 75):.2f}]")
     print()
 
 
@@ -249,8 +254,8 @@ def further_numbers(split):
     m = keep & np.isfinite(car)
     print(f"model-diagnosed fluxes on the common CARRA subset (n = {m.sum()}):")
     for name, h in (("H_S,ERA,diag", erad), ("H_S,CAR,diag", car)):
-        print(f"  {name}: slope {np.polyfit(EC[m], h[m], 1)[0]:.1f}   r {np.corrcoef(EC[m], h[m])[0, 1]:.1f}   "
-              f"bias {(h[m] - EC[m]).mean():+.1f}")
+        print(f"  {name}: slope {np.polyfit(EC[m], h[m], 1)[0]:.2f}   r {np.corrcoef(EC[m], h[m])[0, 1]:.2f}   "
+              f"bias {(h[m] - EC[m]).mean():+.2f}")
 
     e, r_, a_, hi = split
     rng = np.random.default_rng(42)
@@ -261,8 +266,8 @@ def further_numbers(split):
         i = rng.integers(0, eh.size, eh.size)
         boot.append(np.corrcoef(eh[i], rh[i])[0, 1] - np.corrcoef(eh[i], ah[i])[0, 1])
     boot = np.asarray(boot)
-    print(f"heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = {dr:+.1f}, paired-bootstrap 95 % CI "
-          f"[{np.percentile(boot, 2.5):+.1f}, {np.percentile(boot, 97.5):+.1f}], "
+    print(f"heterogeneous half: r(ERA5-MODIS) - r(ERA5-only) = {dr:+.2f}, paired-bootstrap 95 % CI "
+          f"[{np.percentile(boot, 2.5):+.2f}, {np.percentile(boot, 97.5):+.2f}], "
           f"fraction of resamples <= 0: {np.mean(boot <= 0):.4f}")
     print()
 

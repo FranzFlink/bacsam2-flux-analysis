@@ -32,7 +32,7 @@ def write(name: str, body: str) -> None:
 
 # ── Table 3: range over each sensitivity axis ─────────────────────────────────
 
-def value_range(rows, column, fmt="{:.1f}"):
+def value_range(rows, column, fmt="{:.2f}"):
     """min--max of a metric across a set of configurations."""
     v = rows[column].astype(float)
     return f"{fmt.format(v.min())}--{fmt.format(v.max())}"
@@ -107,8 +107,8 @@ for title, labels in GROUPS:
         lines.append(
             f"\\texttt{{{label.replace('_', chr(92) + '_')}}} & {SCHEME_CITATION.get(label, 'GLGS20')} & {emph(alpha)} & "
             f"{roughness_cell(label, row.z0_constant)} & "
-            f"{emph(f'{row.obs_slope:.1f}')} & {emph(f'{row.obs_r:.1f}')} & "
-            f"{emph(f'{row.rs_slope:.1f}')} & {emph(f'{row.rs_r:.1f}')} \\\\")
+            f"{emph(f'{row.obs_slope:.2f}')} & {emph(f'{row.obs_r:.2f}')} & "
+            f"{emph(f'{row.rs_slope:.2f}')} & {emph(f'{row.rs_r:.2f}')} \\\\")
     lines.append(r"\hline")
 tableC1 = "\n".join(lines)
 write("table_sensitivity_full.tex", tableC1)
@@ -124,7 +124,7 @@ H_ec = np.asarray(FIG["H_obs_ec"], dtype=float)
 
 def absolute(sigma):
     v = sigma[np.isfinite(sigma)]
-    return f"{np.median(v):.1f} [{np.percentile(v, 25):.1f}--{np.percentile(v, 75):.1f}]"
+    return f"{np.median(v):.2f} [{np.percentile(v, 25):.2f}--{np.percentile(v, 75):.2f}]"
 
 
 def relative(sigma, flux, floor=2.0):
