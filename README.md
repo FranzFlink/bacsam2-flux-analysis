@@ -145,4 +145,6 @@ Please cite the paper; `CITATION.cff` has the reference.
 
 The code is released under the [MIT License](LICENSE). The files in `data/` are not covered by it:
 third-party products (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS
-imagery) remain under the licences of their providers, see `DATA.md`.
+imagery) remain under the licences of their providers, see `DATA.md`. The drawing on the website
+(`docs/images/polar6_tbird.png`, generated with ChatGPT from a photograph by Anna-Maria Jörs) is not
+covered by the MIT License either.

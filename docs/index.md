@@ -12,12 +12,30 @@ and figure of the paper, and the data from which they are derived.
 :::{figure} images/polar6_tbird.png
 :alt: The research aircraft Polar 6 towing the T-Bird on a cable below it
 :width: 75%
-The research aircraft Polar 6 with the T-Bird, the towed sensor package that measured the reference flux.
+The research aircraft Polar 6 with the T-Bird, the towed sensor package that measured the reference flux. Drawing
+generated with ChatGPT from a photograph by Anna-Maria Jörs.
 :::
 
 During the BACSAM-II campaign (Svalbard, April 2024), the T-Bird was towed 20–30 m above the sea ice and measured
 wind and temperature at 100 Hz. The sensible heat flux derived from these data by eddy covariance is the reference
 for bulk estimates driven by in-situ, satellite and reanalysis inputs.
+
+## How to use this supplement
+
+**To check the paper.** [Paper and code](paper_to_code.md) locates each section, equation, table and figure of the
+paper in the code, and [Figures](figures/index.md) shows each figure with its caption and the script that draws it.
+`pixi run check` recomputes every number printed in the paper from the data in the repository and compares it with the
+committed reference; `pixi run all` also rebuilds the tables and figures ([Reproduction](reproduce.md)). Neither
+requires programming knowledge.
+
+**To reuse code or data.** The analysis package `fluxpy` (eddy covariance, bulk transfer, stability schemes,
+uncertainty) is documented in the [API reference](api/index.md); the data files and their variables are described under
+[Data files](data.md). The code is released under the MIT License; the subsets of third-party products remain under the
+licences of their providers. Please cite the paper and the archived version of the repository (`CITATION.cff`).
+
+**To follow the method.** The [Method](../book/01_overview.ipynb) chapters derive the eddy-covariance and the bulk flux
+of a single segment by hand and recompute the central results of the paper; the [Glossary](glossary.md) defines the
+symbols. No prior knowledge of the code is assumed.
 
 ## Flux estimates
 
