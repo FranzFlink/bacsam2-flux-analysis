@@ -141,7 +141,9 @@ Raw data are available from the authors on request.
 
 ## Citation and license
 
-Please cite the paper; `CITATION.cff` has the reference.
+Please cite the paper and the archived version of this repository: every release is archived on
+Zenodo with its own DOI. `CITATION.cff` has the reference of the paper, `.zenodo.json` the metadata
+of the archive.
 
 The code is released under the [MIT License](LICENSE). The files in `data/` are not covered by it:
 third-party products (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS

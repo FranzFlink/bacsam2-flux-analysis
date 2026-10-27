@@ -1,10 +1,20 @@
 cff-version: 1.2.0
-message: "If you use this code or data, please cite the paper below."
+message: "If you use this code or data, please cite the paper below and the archived version of this repository (Zenodo)."
 title: "BACSAM-II sensible-heat-flux analysis (code and data)"
 type: software
-version: "1.5.0"
-date-released: "2026-09-23"
+version: "1.6.0"
+date-released: "2026-10-27"
 license: MIT
+keywords:
+  - sensible heat flux
+  - eddy covariance
+  - Arctic sea ice
+  - bulk formula
+  - ERA5
+  - MODIS
+  - CARRA
+  - airborne measurements
+  - BACSAM-II
 authors:
   - family-names: Müller
     given-names: Joshua J.

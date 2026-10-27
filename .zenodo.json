@@ -1,0 +1,34 @@
+{
+  "upload_type": "software",
+  "title": "BACSAM-II sensible-heat-flux analysis (code and data)",
+  "version": "1.6.0",
+  "creators": [
+    {
+      "name": "Müller, Joshua J.",
+      "affiliation": "Leipzig Institute for Meteorology (LIM), Leipzig University"
+    }
+  ],
+  "description": "<p>Code and data of J. J. Müller, I. Staudinger, F. Gebhardt, D. J. Simon, L. Köhler, J. Hartmann, A. Ehrlich, M. Schäfer, M. D. Shupe and M. Wendisch: <em>Evaluation of reanalysis and satellite products of sensible heat flux over Arctic sea ice against airborne eddy-covariance measurements</em> (submitted to Atmospheric Measurement Techniques).</p><p>The archive reproduces every data-derived number, table and figure of the paper from the data it contains: the eddy-covariance sensible heat flux from the 100 Hz measurements of the T-Bird, a sensor package towed below the research aircraft Polar 6 during the BACSAM-II campaign (Svalbard, April 2024); bulk estimates driven by in-situ, MODIS and ERA5 inputs; the model-diagnosed fluxes of ERA5 and CARRA; the sensitivity analysis and the uncertainty budget. With <code>pixi run all</code>, a locked Python environment recomputes them and compares every printed number with the committed reference <code>expected_numbers.txt</code>. <code>README.md</code> describes the procedure, <code>AGENTS.md</code> how to check a statement of the paper against the code, <code>DATA.md</code> the data files.</p><p>The code is released under the MIT License. The subsets of third-party products in <code>data/</code> (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS imagery) remain under the licences of their providers; see <code>DATA.md</code>.</p>",
+  "license": "mit",
+  "access_right": "open",
+  "language": "eng",
+  "keywords": [
+    "sensible heat flux",
+    "eddy covariance",
+    "Arctic sea ice",
+    "bulk formula",
+    "ERA5",
+    "MODIS",
+    "CARRA",
+    "airborne measurements",
+    "BACSAM-II"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1594/PANGAEA.971763",
+      "relation": "references",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    }
+  ]
+}
