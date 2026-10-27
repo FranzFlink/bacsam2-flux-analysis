@@ -57,6 +57,8 @@ book          = { cmd = "python book/build_book.py", depends-on = ["precompute"]
 paper         = "python paper/export_clean_manuscript.py"
 # API reference (docs/api/) and figure pages (docs/figures/) of the website; tests/test_api_docs.py checks them
 api           = "python docs/build_api.py"
+# size and checksum of every data file against data/manifest.tsv (--write recomputes it)
+data-manifest = "python scripts/data_manifest.py"
 all           = { depends-on = ["test", "verify-ec", "verify-cache", "check", "tables", "figures"] }
 # everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
 all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "verify-cache", "check", "tables", "figures"] }

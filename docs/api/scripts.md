@@ -532,3 +532,35 @@ neither the data nor the analysis environment. `tests/test_api_docs.py` fails wh
 docstring or signature changed and the pages were not rebuilt.
 
 Run:  pixi run api
+
+## Other scripts
+
+(scripts/data_manifest.py)=
+### `scripts/data_manifest.py`
+
+**Run:** `pixi run data-manifest`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/data_manifest.py)
+
+Checksum manifest of the data files (data/manifest.tsv), and where each file is archived.
+
+The paper's numbers were computed from exactly these bytes. The manifest records, for every
+data file, its size, its SHA-256 checksum and the archive it is published in, so that a file
+downloaded from PANGAEA or Zenodo can be checked against the file the numbers came from
+(DATA_PUBLICATION.md describes the publication of the data).
+
+Archive column:
+
+```text
+pangaea:published   already published on PANGAEA (source: its DOI)
+pangaea:new         derived from the measurements; to be published on PANGAEA by the authors
+zenodo:data         subsets of third-party gridded products; to be published on Zenodo
+regenerated         written by the pipeline (pixi run precompute); not archived
+unused              not read by any script; not archived
+```
+
+Run:
+
+```text
+pixi run data-manifest            check every listed file (size and checksum)
+pixi run data-manifest --write    recompute size and checksum; new files get the archive
+                                  of the first matching rule below, existing rows keep theirs
+```
