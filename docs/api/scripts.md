@@ -21,7 +21,7 @@ Reads
 
 ```text
 data/observations/processed/t-bird_unified/noseboom_unified.nc    100 Hz T-Bird
-data/observations/processed/polar6_unified/radiation_unified.nc  20 Hz KT-19 surface temperature
+data/observations/processed/polar6_unified/kt19_unified.nc       50 Hz KT-19 surface temperature
 data/observations/processed/satellite_unified/sic_*.nc           sea-ice concentration
 data/observations/ar/analysis_ready_polar6_legs_metadata.csv     start/end time of every leg
 ```
@@ -104,14 +104,14 @@ Sect. 4.2 (sensitivity, Table 3, Fig. 7), Table 2 (uncertainty budget), Appendix
 Writes
 
 ```text
-data/model_output/sensitivity_figure_data.nc      every flux estimate on the 90 segments
+data/model_output/sensitivity_figure_data.nc      every flux estimate on the 91 segments
 data/model_output/sensitivity_summary_table.csv   skill of every configuration
 ```
 
 Stages
 
 ```text
-1  load_obs             the 90 low-level segments over sea ice with the EC reference
+1  load_obs             the 91 low-level segments over sea ice with the EC reference
 2  along-track inputs   MODIS IST, ERA5 level 136 (T, wind, height), ERA5 skin temperature,
                         surface pressure and surface flux, CARRA surface flux, at each segment.
                         Cached in along_track_inputs.nc so that the bulk computation
@@ -257,7 +257,7 @@ the band. Here every EC flux is recomputed from the 100 Hz data with other bands
 comparison (slope b / correlation r of the three bulk estimates against the EC flux) is
 repeated with each of them. The first row reproduces the shipped EC fluxes.
 
-A 5 km segment lasts about 83 s, so its lowest resolved frequency is about 0.012 Hz;
+A 5 km segment lasts about 81 s, so its lowest resolved frequency is about 0.012 Hz;
 bands that start below 0.05 Hz rest on one or two cycles and are not used.
 
 Run:  pixi run ec-bands      (about 30 s)
@@ -327,10 +327,10 @@ Run:  pixi run python figures_manuscript/fig01_campaign_overview.py
 
 Fig. 2 (fig:bulk_methods_overview) -- thermodynamic inputs of the bulk flux estimates (manuscript Sect. 2.3).
 
-For the 90 segments of the four low-level flight days:
+For the 91 segments of the four low-level flight days:
 
 * **(a)** pseudo profiles of potential temperature per flight day: the surface value
-  theta_s and theta_air at the T-Bird (~24 m) and Polar 6 (~70 m) levels for the
+  theta_s and theta_air at the T-Bird (~23 m) and Polar 6 (~73 m) levels for the
   observations, and the corresponding levels of ERA5 (with ERA5 or MODIS T_s) and
   CARRA; thin lines are single segments, thick lines the daily median;
 * **(b)** distributions of the surface temperature T_s of the four sources;
@@ -597,12 +597,16 @@ campaign with Polar 6" (Köhler et al., 2026, doi:10.1594/PANGAEA.995979). The n
 the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight):
 
 ```text
+995975  T-Bird, 100 Hz              -> data/observations/processed/t-bird_unified/noseboom_unified.nc
 995974  Polar 6 nose boom, 100 Hz   -> data/observations/processed/polar6_unified/noseboom_unified.nc
+995980  KT-19, 50 Hz                -> data/observations/processed/polar6_unified/kt19_unified.nc
 ```
 
-Each file is cut to the windows around the legs flown below 150 m (Polar 6 height in
-data/observations/ar/analysis_ready_polar6_legs_metadata.csv), 120 s before and after every
-leg, windows less than 300 s apart merged. Names and units are those the analysis uses
-(T in degC, p in hPa, h in m); the values are the published ones (float64).
+The T-Bird and nose-boom files are cut to the windows around the legs flown below 150 m
+(Polar 6 height in data/observations/ar/analysis_ready_polar6_legs_metadata.csv), 120 s
+before and after every leg, windows less than 300 s apart merged; the KT-19 file to one
+window per flight day, from 1 h before the first to 1 h after the last leg (the tracks of
+Fig. 5 extend beyond the legs). Names and units are those the analysis uses (T in degC,
+p in hPa, h in m); the values are the published ones (float64).
 
 Run:  pixi run inputs

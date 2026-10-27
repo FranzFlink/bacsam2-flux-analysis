@@ -10,10 +10,10 @@ Manuscript: Sect. 3.1 "Eddy-covariance method" (Eq. 1) and Appendix A2
        \quad [\mathrm{W\,m^{-2}},\ \text{positive upward}] $$
 
 * ``w'`` and ``theta'`` are the linearly detrended 100 Hz vertical wind and
-  potential temperature of one 5 km segment (about 83 s of flight).
+  potential temperature of one 5 km segment (about 81 s of flight).
 * The overbar is the part of their covariance carried by frequencies between
-  0.1 and 20 Hz (``band_covariance``). At the mean true airspeed of 60 m/s this
-  band corresponds to eddies of about 3 to 600 m along the track.
+  0.1 and 20 Hz (``band_covariance``). At the mean true airspeed of 62 m/s this
+  band corresponds to eddies of about 3 to 620 m along the track.
 * ``rho`` is the segment-mean dry-air density, ``c_p`` the specific heat of dry
   air (``fluxpy.util``).
 * Every flux carries a random (sampling) error, the standard deviation the

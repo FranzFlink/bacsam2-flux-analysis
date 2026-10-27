@@ -18,7 +18,7 @@ The paper separates two things:
 
 No criterion that is a ratio to the flux is applied (A3): over compact sea ice
 most fluxes are close to zero, and such criteria fail for small fluxes and pass
-for large ones (on the 90 segments they correlate with |H| at |rho| = 0.6).
+for large ones (on the 91 segments they correlate with |H| at |rho| = 0.5 to 0.7).
 ``scripts/ec_quality.py`` evaluates them anyway to show that the results do not
 depend on them (Table A1).
 

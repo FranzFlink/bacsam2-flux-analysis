@@ -26,7 +26,7 @@ REPO = Path("..").resolve(); sys.path.insert(0, str(REPO))
 plt.rcParams.update({"figure.dpi": 110, "figure.constrained_layout.use": True, "axes.grid": True, "grid.alpha": 0.3, "font.size": 10})
 
 AR  = REPO / "data/observations/ar"
-FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # all flux estimates, 90 segments
+FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # all flux estimates on the segments
 SEG = xr.open_dataset(AR / "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc").sel(start_time=FIG.start_time.values)
 EC  = FIG["H_obs_ec"].values
 '''
@@ -37,7 +37,7 @@ NB1 = [("md", r'''
 
 Over Arctic sea ice, the turbulent sensible heat flux $H_\mathrm{S}$ is commonly estimated with a bulk formula
 driven by reanalysis data. Assessing such estimates requires a measured reference. During BACSAM-II (Svalbard,
-April 2024), the **T-Bird**, a sensor package towed about 24 m above the ice below the research aircraft Polar 6,
+April 2024), the **T-Bird**, a sensor package towed about 23 m above the ice below the research aircraft Polar 6,
 sampled wind and temperature at 100 Hz, from which the flux is obtained by **eddy covariance (EC)**.
 
 All estimates are evaluated on the same 5 km flight segments:
@@ -143,9 +143,9 @@ the running sum of $w'\theta'$ divided by the number of samples (bottom), which 
 '''), ("md", r'''
 ## Cospectrum and flux band
 
-The cospectrum distributes the covariance over frequency. At the mean airspeed of 60 m s⁻¹, a frequency $f$
-corresponds to an eddy length of $60\,\mathrm{m\,s^{-1}}/f$. The flux is the cospectrum integrated between
-**0.1 and 20 Hz** (eddies of about 3 to 600 m): slower variations are attributed to mesoscale changes along the
+The cospectrum distributes the covariance over frequency. At the mean airspeed of 62 m s⁻¹, a frequency $f$
+corresponds to an eddy length of $62\,\mathrm{m\,s^{-1}}/f$. The flux is the cospectrum integrated between
+**0.1 and 20 Hz** (eddies of about 3 to 620 m): slower variations are attributed to mesoscale changes along the
 track, faster ones to instrument noise. Only the shaded band enters the flux.
 '''), ("code", r'''
 n, fs = w.size, 100.0
@@ -186,7 +186,7 @@ Two properties are assessed separately.
 $|s_w + 5/3| \le 0.4$. The slope is reported for every segment; no segment is excluded by it. Table A1 of the paper
 repeats the comparison on the segments within tolerances of 0.3 to 0.6.
 
-**Precision.** A covariance from about 83 s of data carries a random error, because only a finite number of eddies is
+**Precision.** A covariance from about 81 s of data carries a random error, because only a finite number of eddies is
 sampled. It is estimated from the data (Finkelstein and Sims, 2001). For a true flux of zero, the estimate exceeds
 1, 2 and 3 $\sigma_\mathrm{rand}$ by chance in 32 %, 5 % and 0.3 % of cases.
 
@@ -208,9 +208,9 @@ days = pd.to_datetime(FIG.start_time.values).strftime("%d %b")
 pd.DataFrame({f"|H| > {k} sigma": {**{d: f"{(ratio[days == d] > k).sum()} / {(days == d).sum()}" for d in pd.unique(days)},
                                    "all": f"{(ratio > k).sum()} / {ratio.size}"} for k in (1, 2, 3)})
 '''), ("md", r'''
-On 15 April, the day with open leads and the largest fluxes, all fluxes clearly exceed their random error; on the days
-over compact ice or with weak temperature contrast, most fluxes are statistically indistinguishable from zero. This is a
-property of the surface, not a defect of the data, and it limits the correlation attainable by any estimate (Chapter 4).
+On 15 April, the day with open leads and the largest fluxes, all fluxes clearly exceed their random error, and on
+23 April most do; on 13 and 17 April most fluxes are statistically indistinguishable from zero. This is a property of
+the surface, not a defect of the data, and it limits the correlation attainable by any estimate (Chapter 4).
 
 ## Segment length (Fig. 3)
 
@@ -288,7 +288,7 @@ print("reference configuration:", cfg.scheme_name, "| alpha_T =", cfg.zt_ratio, 
 
 The surface temperature is taken from the KT-19 infrared pyrometer, air temperature and wind from the T-Bird, all
 averaged over the 5 km segment. Both temperatures are converted to potential temperature with the pressure at their
-own height. Pressure is measured at the T-Bird, about 24 m above the ice, not at the surface; the surface pressure
+own height. Pressure is measured at the T-Bird, about 23 m above the ice, not at the surface; the surface pressure
 follows from the hypsometric equation,
 
 $$p_\mathrm{s} = p_z \exp\!\left(\frac{g\,z}{R_d\,\bar T}\right),$$
@@ -345,11 +345,12 @@ $Ri_\mathrm{b}$ sampled during the campaign (central 90 % of the segments). All 
 the stable branch they differ, but there $C_\mathrm{h}$ and the flux are small in every scheme. The effect on the
 comparison is quantified in Chapter 5.
 '''), ("code", r'''
-ri = np.linspace(-1, 0.5, 200)
+lo, hi = np.nanpercentile(FIG.Ri_obs.values, [5, 95])                 # central 90 % of the sampled Ri_b
+ri = np.linspace(min(-1.0, lo), max(0.5, hi), 300)
 fig, ax = plt.subplots(figsize=(6.5, 3.4))
 for name in ["GLGS20", "BD", "HB88", "BH91", "CB05", "GAFGP07"]:
     ax.plot(ri, [Cd_Ch_noniterative(r, 24.0, 3e-4, 3e-5, name)[1] * 1e3 for r in ri], label=name, lw=2 if name == "GLGS20" else 1)
-lo, hi = np.nanpercentile(FIG.Ri_obs.values, [5, 95]); ax.axvspan(lo, hi, color="0.85")
+ax.axvspan(lo, hi, color="0.85")
 ax.axvline(0, color="k", lw=0.6); ax.set_xlabel("bulk Richardson number"); ax.set_ylabel("$C_h$ × 10$^3$"); ax.legend(ncol=2, fontsize=8)
 ax.set_title("z = 24 m, z$_{0m}$ = 3·10$^{-4}$ m, α$_T$ = 0.1");
 '''), ("md", r'''
@@ -430,7 +431,8 @@ table[stats] = table[stats].apply(lambda col: col.map(lambda v: "–" if pd.isna
 table
 '''), ("md", r'''
 (CARRA is not available on 13 April, hence the smaller *n*.) The zero estimate has a smaller MAE and RMSE than every
-estimate in the table: in this weak-flux regime, these error measures reward conservative estimates, not skill.
+estimate in the table except the one with measured inputs: in this weak-flux regime, these error measures reward
+conservative estimates, not skill.
 
 $r_\mathrm{leg}$ is the correlation after removing the mean of each leg from both series (Table 4 of the paper). It
 measures whether an estimate follows the flux from segment to segment *along* a leg, rather than only the differences
@@ -457,7 +459,7 @@ ERA5 only. Figure 6 of the paper shows the same comparison together with the mod
 '''), ("md", r'''
 From left to right, the panels show the main result of the paper (numbers in the panel titles):
 
-* **Measured inputs:** the highest correlation, but the amplitude is overestimated (slope well above 1). With measured
+* **Measured inputs:** the highest correlation, but the amplitude is overestimated (slope above 1). With measured
   inputs, the conventional transfer coefficient is too large (Chapter 5).
 * **MODIS surface temperature:** with the ERA5 atmosphere unchanged, amplitude and correlation both increase.
 * **ERA5 only:** the regression line is nearly flat; a small part of the amplitude is recovered and the correlation is weak.
@@ -564,7 +566,7 @@ pd.DataFrame({name: [np.nanmedian(U[k]), np.nanpercentile(U[k], 25), np.nanperce
               for k, name in (("ec_total", "EC reference"), ("obs_bulk", "bulk, measured inputs"), ("rs_bulk", "bulk, MODIS + ERA5"))},
              index=["median (W m-2)", "25th percentile", "75th percentile"]).round(2).T
 '''), ("md", r'''
-**Summary.** The measured reference is known to about 1 W m⁻². A bulk estimate driven by satellite and reanalysis
+**Summary.** The measured reference is known to better than 1 W m⁻². A bulk estimate driven by satellite and reanalysis
 inputs is uncertain by several W m⁻², more than the typical flux; surface temperature, air temperature and the large
 ERA5 wind uncertainty contribute comparably. Whether an estimate follows the observed variability is determined by the
 surface temperature (Chapter 4), its amplitude by the transfer coefficient; improving pan-Arctic flux estimates requires

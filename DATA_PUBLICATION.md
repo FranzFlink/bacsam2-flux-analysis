@@ -19,52 +19,46 @@ CC BY 4.0) contains the master tracks
 ([996236](https://doi.org/10.1594/PANGAEA.996236)). The 13 master-track files in
 `data/observations/raw/polar6/mastertracks/` are taken from there unchanged.
 
-**B. New PANGAEA dataset, derived from the measurements** (archive `pangaea:new`, about 103 MB):
+**B. New PANGAEA dataset, derived from the measurements** (archive `pangaea:new`, well under 1 MB):
 
 | File in `data/observations/` | Content |
 |---|---|
-| `ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc` | EC flux, random error, integrity check and segment means of the 154 segments flown at one level (90 used in the paper) |
+| `ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc` | EC flux, random error, integrity check and segment means of the segments flown at one level (those below 50 m over sea ice are used in the paper) |
 | `ar/analysis_ready_polar6_legs_metadata.csv` | start and end time of every straight leg |
 | `ar/ec_segment_placement.nc` | segment-placement spread of the EC flux (Appendix A) |
 | `ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv` | window-length experiment (Fig. 3) |
-| `processed/t-bird_unified/noseboom_unified.nc` | 100 Hz T-Bird time series in the leg windows (decision D1) |
-| `processed/polar6_unified/radiation_unified.nc` | KT-19 surface temperature in the leg windows (decision D2) |
 
-**C. Zenodo data record, third-party gridded products** (archive `zenodo:data`, about 181 MB): the ERA5
+**C. Zenodo data record, third-party gridded products** (archive `zenodo:data`, about 197 MB): the ERA5
 model-level and single-level subsets and the three CARRA files (`data/reanalysis/`), the MODIS ice surface
 temperature and the merged MODIS–AMSR2 sea-ice concentration (`data/observations/processed/satellite_unified/`),
 `data/observations/ar/along_track_inputs.nc` (the gridded values at the segments, written by `pixi run extract`)
-and the 13 NASA GIBS images that form the
-background of Fig. 5 (`figures_manuscript/_gibs_cache/`).
+and the 13 NASA GIBS images that form the background of Fig. 5 (`figures_manuscript/_gibs_cache/`).
 
-**D. Not archived.** `data/model_output/` is written by `pixi run precompute` in a few seconds. The Polar 6
-nose-boom file in `data/observations/processed/polar6_unified/` is cut from PANGAEA 995974 by `pixi run inputs`,
-and `data/observations/ar/polar6_level_at_segments.nc` is computed from it by `pixi run polar6-level`. The two
-`apr13_*_worldview.png` images in `figures_manuscript/_gibs_cache/` are not read by any script.
+**D. Not archived.** `pixi run inputs` (`scripts/prepare_inputs.py`) cuts the published T-Bird (995975),
+nose-boom (995974) and KT-19 (995980) files, downloaded into `data/pangaea/<dataset>/`, to the windows around
+the low-level legs (`data/observations/processed/`); `pixi run polar6-level` computes
+`data/observations/ar/polar6_level_at_segments.nc` from the nose-boom file; `data/model_output/` is written by
+`pixi run precompute`. The two `apr13_*_worldview.png` images in `figures_manuscript/_gibs_cache/` are not read
+by any script.
 
-## 2. Decisions before the submission
+## 2. Decisions
 
-* **D1, T-Bird 100 Hz.** Is `noseboom_unified.nc` within the leg windows identical to PANGAEA 995975
-  (same variables, same processing, same float32 values)? If yes, it need not be published again, but
-  the code must then cut the leg windows from 995975 itself, and `pixi run verify-ec` must still
-  reproduce the segment fluxes exactly (a change of data type once moved the fluxes). If not, or to
-  keep the paper's input fixed byte for byte, publish the subset in dataset B with a processing
-  description. Ask L. Köhler and J. Hartmann, the authors of 995975.
-* **D2, KT-19.** The code reads only the KT-19 temperature (20 Hz) with time and position from
-  `radiation_unified.nc`; its irradiances are published in 996236, the KT-19 data at 50 Hz in 995980. Recommended: replace the file in
-  dataset B by a reduced file (time, latitude, longitude, KT-19), adapt `scripts/run_ec_aggregation.py`
-  and `figures_manuscript/fig05_flux_timeseries.py`, and confirm with `pixi run all` that no number
-  changes. The global attributes of the current file are wrong (title "… onboard Polar 5 during the
-  COMPEX-EC campaign", `research_flight_day` 2022-03-20) and must be corrected in any case;
-  `noseboom_unified.nc` has no attributes and needs units and long names.
-* **D3, licence of the Zenodo record.** CC BY 4.0 for the compilation, with the terms of each provider
-  stated in the description: ERA5 and CARRA under the Copernicus licence (redistribution allowed with
-  the attribution "Contains modified Copernicus Climate Change Service information 2024"; check the
-  current wording on the Climate Data Store), MODIS (NSIDC) and GIBS (NASA) without restriction but
-  with citation, the merged sea-ice concentration under the terms of the University of Bremen. Check
-  each before uploading.
-* **D4, authors.** Who is listed as author of dataset B and of the Zenodo record (who measured, who
-  processed); the instrument and dataset owners among the co-authors should agree.
+* **D1, T-Bird 100 Hz (decided 27 October 2026).** The analysis uses the published T-Bird data (995975);
+  `scripts/prepare_inputs.py` cuts them to the leg windows. The earlier input, converted from the ASCII
+  files of the raw-data host, differed from the published version (its EC fluxes on 23 April most of all)
+  and is no longer used.
+* **D2, KT-19 and Polar 6 nose boom (decided 27 October 2026).** Both come from the published datasets
+  (995980, 995974), cut by the same script. The radiation file is no longer used (its irradiances are
+  published in 996236).
+* **D3, licence of the Zenodo record (decided 27 October 2026).** CC BY 4.0 for the compilation, with the
+  terms of each provider stated in the description: ERA5 and CARRA under the Copernicus licence
+  (redistribution allowed with the attribution "Contains modified Copernicus Climate Change Service
+  information 2024"; check the current wording on the Climate Data Store), MODIS (NSIDC) and GIBS (NASA)
+  without restriction but with citation, the merged sea-ice concentration under the terms of the
+  University of Bremen. Check each before uploading.
+* **D4, authors (open).** Who is listed as author of dataset B and of the Zenodo record. A natural choice
+  for dataset B is the author who derived the products, together with the authors of the source datasets
+  it builds on (L. Köhler, J. Hartmann), if they agree.
 
 ## 3. PANGAEA: dataset B
 
@@ -102,7 +96,8 @@ and `data/observations/ar/polar6_level_at_segments.nc` is computed from it by `p
 ## 5. The repository after both publications
 
 1. A script `pixi run fetch-data` downloads dataset B, the master tracks and record C into the
-   paths of `data/manifest.tsv` and checks every checksum. (Master-track files downloaded again from
+   paths of `data/manifest.tsv` and checks every checksum, and the published T-Bird, nose-boom and KT-19
+   files into `data/pangaea/` (then `pixi run inputs`). (Master-track files downloaded again from
    PANGAEA can differ in their header from the shipped ones; compare them by their data lines.)
 2. `data/` (except `manifest.tsv`) and `figures_manuscript/_gibs_cache/` leave git and go into
    `.gitignore`. `DATA.md`, `README.md`, `docs/reproduce.md`, `.zenodo.json` (the code record no longer
@@ -118,9 +113,8 @@ and `data/observations/ar/polar6_level_at_segments.nc` is computed from it by `p
 
 ## 6. Order
 
-1. Decisions D1–D4 with the co-authors concerned.
-2. Correct the file attributes (D1, D2), run `pixi run all` (no number may change) and
-   `pixi run data-manifest --write`; commit.
+1. Decision D4 with the co-authors concerned.
+2. `pixi run all` on the final state and `pixi run data-manifest --write`; commit.
 3. Zenodo record C: reserve the DOI, upload, publish (a day).
 4. PANGAEA dataset B: submit (several weeks until the DOI).
 5. Meanwhile: `fetch-data`, removal of the data from git, the new public repository.

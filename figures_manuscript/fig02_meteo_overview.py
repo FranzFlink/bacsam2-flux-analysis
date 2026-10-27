@@ -1,8 +1,8 @@
 """Fig. 2 (fig:bulk_methods_overview) -- thermodynamic inputs of the bulk flux estimates (manuscript Sect. 2.3).
 
-For the 90 segments of the four low-level flight days:
+For the 91 segments of the four low-level flight days:
 (a) pseudo profiles of potential temperature per flight day: the surface value
-    theta_s and theta_air at the T-Bird (~24 m) and Polar 6 (~70 m) levels for the
+    theta_s and theta_air at the T-Bird (~23 m) and Polar 6 (~73 m) levels for the
     observations, and the corresponding levels of ERA5 (with ERA5 or MODIS T_s) and
     CARRA; thin lines are single segments, thick lines the daily median;
 (b) distributions of the surface temperature T_s of the four sources;
@@ -54,7 +54,7 @@ ERA5_LEVELS = {137: 10.0, 136: 31.0, 135: 54.0, 134: 79.0}
 CARRA_LEVELS_M = (30.0, 75.0)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Data: the 90 segments and every source colocated to them
+# Data: the 91 segments and every source colocated to them
 # ═════════════════════════════════════════════════════════════════════════════
 obs = load_obs()
 start_times = pd.DatetimeIndex(obs["start_time"].values)

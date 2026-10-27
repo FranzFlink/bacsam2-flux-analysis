@@ -46,7 +46,7 @@ from fluxpy.uncertainty import central_difference, uncertainty_budget  # noqa: E
 RULE = "=" * 118
 
 # ── pipeline output ──────────────────────────────────────────────────────────
-FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # the 90 segments, all estimates
+FIG = xr.open_dataset(REPO / "data/model_output/sensitivity_figure_data.nc")      # the 91 segments, all estimates
 SEG = xr.open_dataset(REPO / "data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc")
 SEG = SEG.where(SEG.altitude <= 50, drop=True)                                   # low-level segments (all days)
 

@@ -145,9 +145,9 @@ H_era_bulk = H_era_bulk_full[keep]
 H_era_diag = H_era_diag_full[keep]
 H_car_diag = H_car_diag_full[keep]
 
-# Aircraft position (1 Hz) for the track overlays.
+# Aircraft position (50 Hz, from the KT-19 file) for the track overlays.
 ds_rad = xr.open_dataset(
-    REPO / "data" / "observations" / "processed" / "polar6_unified" / "radiation_unified.nc"
+    REPO / "data" / "observations" / "processed" / "polar6_unified" / "kt19_unified.nc"
 )
 
 

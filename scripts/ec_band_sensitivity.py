@@ -7,7 +7,7 @@ the band. Here every EC flux is recomputed from the 100 Hz data with other bands
 comparison (slope b / correlation r of the three bulk estimates against the EC flux) is
 repeated with each of them. The first row reproduces the shipped EC fluxes.
 
-A 5 km segment lasts about 83 s, so its lowest resolved frequency is about 0.012 Hz;
+A 5 km segment lasts about 81 s, so its lowest resolved frequency is about 0.012 Hz;
 bands that start below 0.05 Hz rest on one or two cycles and are not used.
 
 Run:  pixi run ec-bands      (about 30 s)

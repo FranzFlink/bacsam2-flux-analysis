@@ -30,7 +30,8 @@ Each potential temperature is computed with the pressure at its own height. In
 situ, the surface pressure is reconstructed from the T-Bird pressure with the
 hypsometric equation (no surface pressure is measured;
 ``fluxpy.util.surface_pressure_hypsometric``); using the T-Bird pressure at the
-surface as well would make theta_s too warm by about g z / c_p = 0.23 K at 24 m.
+surface as well would make theta_s too warm by about g z / c_p = 0.23 K at the mean
+T-Bird height.
 Remote, theta_s uses the ERA5 surface pressure and theta_air the pressure of
 model level 136 (``fluxpy.util.era5_level_pressure``).
 

@@ -105,11 +105,11 @@ yerr = df_sub.loc[valid, "ratio_std"]
 
 ax.plot(x, y, color=C_RATIO)
 ax.errorbar(x, y, yerr=yerr, color=C_RATIO, fmt="o",
-            label=r"$H_\mathrm{S,sub}/H_\mathrm{S,full}$  $\pm1\sigma$", **kw_eb)
+            label=r"mean $\pm1\sigma$", **kw_eb)                    # the y label names the ratio
 ax.axhline(1.0, color="k", lw=1.5, ls="--", alpha=0.6, label="Full-leg = 1")
 _fmt_xax(ax)
 ax.set_ylabel(r"$H_\mathrm{S,sub}\,/\,H_\mathrm{S,full}$")
-ax.legend(loc="lower right")
+ax.legend(loc="upper left")              # empty corner; lower right is crossed by the 5 km line
 _panel_label(ax, "(a)")
 
 # ── (b) random error of the sub-window flux (Finkelstein & Sims, 2001) ─────

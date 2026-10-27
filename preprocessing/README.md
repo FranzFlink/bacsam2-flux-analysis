@@ -5,12 +5,17 @@ These notebooks and scripts document how the raw archives were turned into the f
 paths inside them refer to that server. They are **not** part of `pixi run all`. Stored cell
 outputs were removed.
 
+The T-Bird, Polar 6 nose-boom and KT-19 inputs are no longer made here: `scripts/prepare_inputs.py`
+(`pixi run inputs`) cuts them from the published PANGAEA datasets 995975, 995974 and 995980. The two
+entries marked *superseded* below document the earlier inputs, converted from the ASCII files of the raw-data
+server.
+
 | File | Produces |
 |------|----------|
-| `preprocess_polar6_noseboom.ipynb` | unified 100 Hz nose-boom time series (`noseboom_unified.nc`) |
+| `preprocess_polar6_noseboom.ipynb` | *superseded:* unified 100 Hz nose-boom time series (`noseboom_unified.nc`) from the ASCII files |
 | `preprocess_mastertracks.ipynb` | unified master track |
 | `preprocess_sic.ipynb` | merged sea-ice concentration file |
 | `preprocess_carra.ipynb`, `carra_write_subset.py` | CARRA crops |
 | `ERA5_STN_dl.py` | ERA5 download (Copernicus Climate Data Store; needs your own CDS account) |
-| `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region, period and flux-leg time windows shipped here |
+| `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region and period shipped here (gridded products); its time-series part (nose boom, radiation) is *superseded* |
 | `flight_segments.py` | how the leg table `analysis_ready_polar6_legs_metadata.csv` was cut from the flight-separation file `config/flight_sep_BACSAM-II_MASTER.json` and the full Polar 6 archive |

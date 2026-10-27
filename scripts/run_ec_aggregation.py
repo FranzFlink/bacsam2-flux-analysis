@@ -3,7 +3,7 @@
 
 Reads
     data/observations/processed/t-bird_unified/noseboom_unified.nc    100 Hz T-Bird
-    data/observations/processed/polar6_unified/radiation_unified.nc  20 Hz KT-19 surface temperature
+    data/observations/processed/polar6_unified/kt19_unified.nc       50 Hz KT-19 surface temperature
     data/observations/processed/satellite_unified/sic_*.nc           sea-ice concentration
     data/observations/ar/analysis_ready_polar6_legs_metadata.csv     start/end time of every leg
 Writes
@@ -30,7 +30,7 @@ from fluxpy.aggregate import SegmentConfig, process_legs, to_xarray  # noqa: E40
 
 OBS = REPO / "data" / "observations"
 TBIRD_FILE = OBS / "processed" / "t-bird_unified" / "noseboom_unified.nc"
-RADIATION_FILE = OBS / "processed" / "polar6_unified" / "radiation_unified.nc"
+KT19_FILE = OBS / "processed" / "polar6_unified" / "kt19_unified.nc"
 SIC_FILE = OBS / "processed" / "satellite_unified" / "sic_modis-aqua_amsr2-gcom-w1_merged_nh_1000m_APRIL.nc"
 LEGS_FILE = OBS / "ar" / "analysis_ready_polar6_legs_metadata.csv"
 OUTPUT_FILE = OBS / "ar" / "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc"
@@ -62,13 +62,13 @@ def main() -> None:
           f"height range <= {cfg.max_height_range_m:.0f} m")
 
     ds_tbird = xr.open_dataset(TBIRD_FILE).sortby("time")
-    ds_radiation = xr.open_dataset(RADIATION_FILE)
+    ds_kt19 = xr.open_dataset(KT19_FILE)
     ds_sic = xr.open_dataset(SIC_FILE)
     # The product flags land and missing data with values of 101-127; as in the
     # original processing, exactly 100 % is masked as well.
     ds_sic = ds_sic.where(ds_sic["sic"] < 100)
 
-    df = process_legs(load_legs(ds_tbird), ds_radiation, ds_sic, cfg=cfg)
+    df = process_legs(load_legs(ds_tbird), ds_kt19, ds_sic, cfg=cfg)
     ds = to_xarray(df)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     ds.to_netcdf(args.out, mode="w")

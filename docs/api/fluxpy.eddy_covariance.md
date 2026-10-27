@@ -17,10 +17,10 @@ $$ H_\mathrm{S,obs,EC} = \rho\, c_p\, \overline{w'\theta'}_{0.1-20\,\mathrm{Hz}}
 \quad [\mathrm{W\,m^{-2}},\ \text{positive upward}] $$
 
 * `w'` and `theta'` are the linearly detrended 100 Hz vertical wind and
-  potential temperature of one 5 km segment (about 83 s of flight).
+  potential temperature of one 5 km segment (about 81 s of flight).
 * The overbar is the part of their covariance carried by frequencies between
-  0.1 and 20 Hz ([`band_covariance`](#fluxpy.eddy_covariance.band_covariance)). At the mean true airspeed of 60 m/s this
-  band corresponds to eddies of about 3 to 600 m along the track.
+  0.1 and 20 Hz ([`band_covariance`](#fluxpy.eddy_covariance.band_covariance)). At the mean true airspeed of 62 m/s this
+  band corresponds to eddies of about 3 to 620 m along the track.
 * `rho` is the segment-mean dry-air density, `c_p` the specific heat of dry
   air ([`fluxpy.util`](fluxpy.util.md)).
 * Every flux carries a random (sampling) error, the standard deviation the

@@ -39,7 +39,7 @@ symbols. No prior knowledge of the code is assumed.
 
 ## Flux estimates
 
-Six estimates of the same flux are compared on the same 90 flight segments of 5 km. From top to bottom, measured inputs
+Six estimates of the same flux are compared on the same 91 flight segments of 5 km. From top to bottom, measured inputs
 are successively replaced by products with pan-Arctic coverage, so that a loss of skill can be attributed to the
 replaced input.
 
@@ -50,7 +50,7 @@ flowchart LR
   M["MODIS T<sub>s</sub><br/>ERA5 T, U, p"] -->|bulk formula| RS["H<sub>S,RS,bulk</sub>"]
   E["ERA5 T<sub>s</sub><br/>ERA5 T, U, p"] -->|bulk formula| ER["H<sub>S,ERA,bulk</sub>"]
   D["ERA5, CARRA<br/>model output"] --> DG["H<sub>S,ERA,diag</sub><br/>H<sub>S,CAR,diag</sub>"]
-  EC --> C{{"90 segments<br/>slope b, correlation r"}}
+  EC --> C{{"91 segments<br/>slope b, correlation r"}}
   OB & RS & ER & DG --> C
 ```
 

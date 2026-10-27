@@ -5,11 +5,11 @@ Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 4, Figs. 4-6),
 Sect. 4.2 (sensitivity, Table 3, Fig. 7), Table 2 (uncertainty budget), Appendix C.
 
 Writes
-    data/model_output/sensitivity_figure_data.nc      every flux estimate on the 90 segments
+    data/model_output/sensitivity_figure_data.nc      every flux estimate on the 91 segments
     data/model_output/sensitivity_summary_table.csv   skill of every configuration
 
 Stages
-    1  load_obs             the 90 low-level segments over sea ice with the EC reference
+    1  load_obs             the 91 low-level segments over sea ice with the EC reference
     2  along-track inputs   MODIS IST, ERA5 level 136 (T, wind, height), ERA5 skin temperature,
                             surface pressure and surface flux, CARRA surface flux, at each segment.
                             Cached in along_track_inputs.nc so that the bulk computation
@@ -82,7 +82,7 @@ DU_LEVELS_MS = np.array([-4., -3., -2., -1., -0.5, 0., 0.5, 1., 2., 3., 4.])
 # ══════════════════════════════════════════════════════════════════════════════
 
 def load_obs() -> xr.Dataset:
-    """The 90 low-level segments over sea ice (T-Bird below 50 m and at one level, see
+    """The 91 low-level segments over sea ice (T-Bird below 50 m and at one level, see
     fluxpy.aggregate.SegmentConfig.max_height_range_m; 25 and 26 April excluded)."""
     ds = xr.open_dataset(_AR / "analysis_ready_polar6_turbulent_fluxes_latest_5km.nc")
     ds["ws_mean"] = np.sqrt(ds["u_mean"] ** 2 + ds["v_mean"] ** 2)

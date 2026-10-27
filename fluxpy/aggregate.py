@@ -15,7 +15,7 @@ consecutive 5 km segments, and for each segment one row holds
   (:mod:`fluxpy.eddy_covariance`, :mod:`fluxpy.qc`),
 * the segment means that drive the T-Bird bulk estimate: air temperature,
   pressure, wind, height and the KT-19 surface temperature,
-* the surface composition of the segment from the 1 Hz KT-19 (open water,
+* the surface composition of the segment from the KT-19 samples (open water,
   thin ice, snow-covered ice; Table B1) and the merged MODIS-AMSR2 sea-ice
   concentration.
 
@@ -48,7 +48,7 @@ class SegmentConfig:
     """How the legs are cut and classified (defaults = the paper)."""
     length_km: float = 5.0          #: segment length along the track [km]
     min_samples: int = 100          #: skip a segment with fewer 100 Hz samples (a full
-                                    #: 5 km segment has about 8300)
+                                    #: 5 km segment has about 8100)
     max_height_range_m: float = 30.0    #: skip a segment whose T-Bird height (raw 100 Hz,
                                         #: max - min) varies more than this: constant flight
                                         #: level, Appendix A1. Level segments vary by at most
@@ -59,7 +59,7 @@ class SegmentConfig:
     T_open_degC: float = -1.8       #: KT-19 T_s above this: open water      (Table B1)
     T_thick_degC: float = -20.0     #: KT-19 T_s at or below this: snow-covered ice
     T_lead_degC: float = -5.0       #: "lead fraction": share of KT-19 samples warmer than this
-    kt19_var: str = "KT19"          #: name of the KT-19 variable in the radiation file [degC]
+    kt19_var: str = "KT19"          #: name of the KT-19 variable in the KT-19 file [degC]
     verbose: bool = False
 
 
@@ -76,7 +76,7 @@ def _add_along_track_distance(leg: xr.Dataset) -> xr.Dataset:
     """Distance along the track [km] from the mean true airspeed, as the new dimension.
 
     The elapsed time is taken in whole seconds (``dt.seconds``), so the distance
-    coordinate advances in steps of one second of flight (about 60 m) and the
+    coordinate advances in steps of one second of flight (about 62 m) and the
     segment boundaries fall on whole seconds.
     """
     elapsed_s = (leg["time"] - leg["time"][0]).dt.seconds
@@ -94,14 +94,14 @@ def _segment_edges(leg_length_km: float, length_km: float) -> list[tuple[float, 
     return edges
 
 
-def _surface_composition(kt19_1hz: np.ndarray, cfg: SegmentConfig) -> dict:
-    """Fractions of open water / thin ice / snow-covered ice from the 1 Hz KT-19 (Table B1).
+def _surface_composition(kt19: np.ndarray, cfg: SegmentConfig) -> dict:
+    """Fractions of open water / thin ice / snow-covered ice from the KT-19 samples (Table B1).
 
     The class fractions are taken over the valid samples; the lead fraction over
     all samples of the segment (a missing sample counts as "not a lead").
     """
-    lead_frac = float((kt19_1hz > cfg.T_lead_degC).mean()) if kt19_1hz.size else np.nan
-    T_s = kt19_1hz[np.isfinite(kt19_1hz)]
+    lead_frac = float((kt19 > cfg.T_lead_degC).mean()) if kt19.size else np.nan
+    T_s = kt19[np.isfinite(kt19)]
     if T_s.size == 0:
         return dict(frac_open=np.nan, frac_thin_ice=np.nan, frac_thick_ice=np.nan, lead_frac=lead_frac)
     frac_open = float((T_s > cfg.T_open_degC).mean())
@@ -126,7 +126,7 @@ def _sea_ice_concentration(segment: xr.Dataset, ds_sic: xr.Dataset, fs: float) -
 # Main loop
 # ---------------------------------------------------------------------------
 
-def process_legs(legs: list[xr.Dataset], ds_radiation: xr.Dataset, ds_sic: xr.Dataset,
+def process_legs(legs: list[xr.Dataset], ds_kt19: xr.Dataset, ds_sic: xr.Dataset,
                  cfg: SegmentConfig = SegmentConfig()) -> pd.DataFrame:
     """Cut every leg into segments and compute one row per segment.
 
@@ -134,7 +134,7 @@ def process_legs(legs: list[xr.Dataset], ds_radiation: xr.Dataset, ds_sic: xr.Da
     ----------
     legs         : T-Bird 100 Hz time slices, one per leg (``T`` degC, ``p`` hPa,
                    ``u``, ``v``, ``w``, ``tas`` m/s, ``h`` m, ``lat``, ``lon``).
-    ds_radiation : Polar 6 radiation file with the 1 Hz KT-19 surface temperature [degC].
+    ds_kt19 : KT-19 surface temperature [degC] (50 Hz, PANGAEA 995980; scripts/prepare_inputs.py).
     ds_sic       : gridded sea-ice concentration (``time``, ``lat``, ``lon``; ``sic`` in %).
     cfg          : :class:`SegmentConfig`.
 
@@ -174,8 +174,8 @@ def process_legs(legs: list[xr.Dataset], ds_radiation: xr.Dataset, ds_sic: xr.Da
                                       segment["u"].values, segment["v"].values, fs=cfg.fs)
             resolved = turbulence_resolved(spectra["slope_w"])
 
-            # -- surface: KT-19 at 1 Hz, sea-ice concentration --------------------
-            kt19 = ds_radiation[cfg.kt19_var].sel(time=slice(start, end))
+            # -- surface: KT-19, sea-ice concentration -----------------------------
+            kt19 = ds_kt19[cfg.kt19_var].sel(time=slice(start, end))
             composition = _surface_composition(kt19.values.astype(float), cfg)
 
             rows.append({
@@ -230,7 +230,7 @@ VARIABLES = {
     "qc_slope_w":            ("1", "Log-log slope of the w power spectrum, 0.1-20 Hz"),
     "turbulence_resolved":   ("1", "1 if |qc_slope_w + 5/3| <= 0.4 (integrity check, Appendix A1; a diagnostic, no segment is excluded by it)"),
     "t_kt19":                ("degC", "Segment-mean KT-19 surface brightness temperature"),
-    "T_sfc_std":             ("K", "Standard deviation of the 1 Hz KT-19 surface temperature within the segment"),
+    "T_sfc_std":             ("K", "Standard deviation of the KT-19 surface temperature within the segment"),
     "sic":                   ("%", "Sea-ice concentration along the segment (merged MODIS-AMSR2)"),
     "lead_frac":             ("1", "Fraction of KT-19 samples warmer than -5 degC"),
     "frac_open":             ("1", "Fraction of KT-19 samples classified as open water (T_s > -1.8 degC)"),

@@ -35,7 +35,8 @@ Each potential temperature is computed with the pressure at its own height. In
 situ, the surface pressure is reconstructed from the T-Bird pressure with the
 hypsometric equation (no surface pressure is measured;
 [`fluxpy.util.surface_pressure_hypsometric`](#fluxpy.util.surface_pressure_hypsometric)); using the T-Bird pressure at the
-surface as well would make theta_s too warm by about g z / c_p = 0.23 K at 24 m.
+surface as well would make theta_s too warm by about g z / c_p = 0.23 K at the mean
+T-Bird height.
 Remote, theta_s uses the ERA5 surface pressure and theta_air the pressure of
 model level 136 ([`fluxpy.util.era5_level_pressure`](#fluxpy.util.era5_level_pressure)).
 
@@ -83,9 +84,9 @@ The free parameters of one bulk flux run (manuscript Table B1 and Sect. 4.2).
 | `ri_clip` | `float` | `np.inf` (= `inf`) | \|Ri_b\| bound; inf = none, as in the paper ("no further limitation"). The flux statistics change by < 0.01 W m-2 for any bound >= 1 (App. B1; scripts/manuscript_numbers.py block richardson_number). |
 | `label` | `str` | `"default"` |  |
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L61-L90)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L62-L91)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 61–90)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 62–91)
 ````python
 @dataclass
 class BulkConfig:
@@ -134,9 +135,9 @@ value of large-eddy simulations over sea ice), Table B1 roughness set.
 
 **Returns** `BulkConfig`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L93-L96)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L94-L97)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 93–96)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 94–97)
 ````python
 def reference_config() -> BulkConfig:
     """Reference configuration of the paper: GLGS20, alpha_T = 1e-1 (the conventional
@@ -158,9 +159,9 @@ manuscript Sect. 4.2). Reported alongside the reference, never as a roughness re
 
 **Returns** `BulkConfig`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L99-L103)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L100-L104)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 99–103)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 100–104)
 ````python
 def amplitude_matched_config() -> BulkConfig:
     """Amplitude-matched configuration: alpha_T = 1e-4, the value at which the in-situ
@@ -206,9 +207,9 @@ renormalised; segments without valid fractions get NaN.
 
 **Returns** `tuple[np.ndarray, np.ndarray]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L108-L126)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L109-L127)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 108–126)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 109–127)
 ````python
 def effective_roughness(f_open, f_thin, f_thick, cfg: BulkConfig) -> tuple[np.ndarray, np.ndarray]:
     r"""Effective roughness lengths of each segment from its surface fractions (Eq. B4),
@@ -256,9 +257,9 @@ measured wind with the regularisation eps in the shear denominator.
 
 **Returns** `np.ndarray`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L149-L155)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L150-L156)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 149–155)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 150–156)
 ````python
 def bulk_richardson_in_situ(theta_sfc, theta_air, u, v, z, cfg: BulkConfig) -> np.ndarray:
     """Ri_b of the in-situ pathway (Eq. B3): surface (no-slip) to T-Bird level, from the
@@ -293,9 +294,9 @@ which bounds Ri_b at vanishing wind; no eps, no further limitation.
 
 **Returns** `np.ndarray`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L158-L166)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L159-L167)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 158–166)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 159–167)
 ````python
 def bulk_richardson_remote(theta_sfc, theta_air, wind_speed, z, cfg: BulkConfig) -> np.ndarray:
     """Ri_b of the reanalysis-driven pathways (Eq. B3): surface to the ERA5 level, with the
@@ -331,9 +332,9 @@ NaN where the inputs are missing or the geometry is invalid (z <= z0).
 
 **Returns** `tuple[np.ndarray, np.ndarray]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L171-L184)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L172-L185)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 171–184)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 172–185)
 ````python
 def transfer_coefficients(Ri, z, z0, zt, scheme_name: str) -> tuple[np.ndarray, np.ndarray]:
     """(C_d, C_h) per segment from ``fluxpy.stability_lib.Cd_Ch_noniterative``;
@@ -378,9 +379,9 @@ Returns `H_obs_bulk`, `Ri_obs`, `z0_obs`, `zt_obs`, `Cd_obs`,
 
 **Returns** `xr.Dataset`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L206-L236)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L207-L237)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 206–236)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 207–237)
 ````python
 def compute_bulk_shf_obs(ds: xr.Dataset, cfg: BulkConfig) -> xr.Dataset:
     """H_S,obs,bulk: the in-situ bulk estimate (manuscript Table 1, row 2).
@@ -451,9 +452,9 @@ Returns `H_rs_bulk`, `Ri_rs`, `z0_rs`, `zt_rs`, `Cd_rs`, `Ch_rs`,
 
 **Returns** `xr.Dataset`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L239-L275)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L240-L276)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 239–275)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 240–276)
 ````python
 def compute_bulk_shf_remote(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.Dataset,
                             cfg: BulkConfig, z_ref=30.0) -> xr.Dataset:
