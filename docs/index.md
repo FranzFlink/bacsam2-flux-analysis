@@ -101,3 +101,9 @@ source code.
    without changing the correlation. → [Chapter 5](../book/05_sensitivity_and_uncertainty.ipynb)
 3. **The choice of stability scheme is of minor importance** under the near-neutral spring conditions sampled.
    → [Chapter 3](../book/03_bulk_method.ipynb)
+
+## Acknowledgements
+
+We gratefully acknowledge the funding by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) –
+project no. 268020496 – TRR 172, within the Transregional Collaborative Research Center “ArctiC Amplification: Climate
+Relevant Atmospheric and SurfaCe Processes, and Feedback Mechanisms (AC)³”.

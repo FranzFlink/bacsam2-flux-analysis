@@ -150,3 +150,10 @@ third-party products (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice conce
 imagery) remain under the licences of their providers, see `DATA.md`. The drawing on the website
 (`docs/images/polar6_tbird.png`, generated with ChatGPT from a photograph by Anna-Maria Jörs) is not
 covered by the MIT License either.
+
+## Acknowledgements
+
+We gratefully acknowledge the funding by the Deutsche Forschungsgemeinschaft (DFG, German Research
+Foundation) – project no. 268020496 – TRR 172, within the Transregional Collaborative Research Center
+“ArctiC Amplification: Climate Relevant Atmospheric and SurfaCe Processes, and Feedback Mechanisms
+(AC)³”.
