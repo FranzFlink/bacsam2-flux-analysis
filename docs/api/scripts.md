@@ -21,7 +21,7 @@ Reads
 
 ```text
 data/observations/processed/t-bird_unified/noseboom_unified.nc    100 Hz T-Bird
-data/observations/processed/polar6_unified/radiation_unified.nc  1 Hz KT-19 surface temperature
+data/observations/processed/polar6_unified/radiation_unified.nc  20 Hz KT-19 surface temperature
 data/observations/processed/satellite_unified/sic_*.nc           sea-ice concentration
 data/observations/ar/analysis_ready_polar6_legs_metadata.csv     start/end time of every leg
 ```
