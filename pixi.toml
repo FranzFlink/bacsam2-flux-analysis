@@ -62,9 +62,12 @@ paper         = "python paper/export_clean_manuscript.py"
 api           = "python docs/build_api.py"
 # size and checksum of every data file against data/manifest.tsv (--write recomputes it)
 data-manifest = "python scripts/data_manifest.py"
-all           = { depends-on = ["test", "verify-ec", "verify-cache", "check", "tables", "figures"] }
-# everything from the 100 Hz data onwards (rewrites the shipped EC products; ~10 min)
-all-from-raw  = { depends-on = ["test", "ec-segments", "placement", "window-length", "verify-cache", "check", "tables", "figures"] }
+# every output from the input files: segments, EC products, Polar 6 level, gridded values at the
+# segments, bulk fluxes, every printed number against expected_numbers.txt, tables, figures (~15 min)
+all           = { depends-on = ["test", "ec-segments", "placement", "window-length", "polar6-level", "extract",
+                                "check", "tables", "figures"] }
+# the same, after cutting the inputs from the published PANGAEA files in data/pangaea/
+all-from-pangaea = { depends-on = ["inputs", "all"] }
 
 # ── website: the book and the docs as a static site (MyST / Jupyter Book 2) ──
 # Separate environment so that the analysis environment stays lean. The notebooks are

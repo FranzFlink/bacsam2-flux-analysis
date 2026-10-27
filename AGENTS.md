@@ -40,7 +40,8 @@ directly fails on Windows because scipy's DLLs are not on the path):
 ```
 pixi run test         # unit and physics tests, 5 s
 pixi run check        # every number against expected_numbers.txt, ~1 min
-pixi run all          # tests, EC reproduction, cache check, numbers, tables, figures, ~5 min
+pixi run all          # every output from the input files (segments ... figures) + check, ~15 min
+pixi run all-from-pangaea  # the same, after cutting the inputs from data/pangaea/ (pixi run inputs)
 pixi run numbers      # print the numbers of the text
 pixi run robustness   # robustness of the comparison (dependence, baselines, MODIS subset, ...)
 pixi run book         # re-execute the didactic notebooks in book/

@@ -9,10 +9,11 @@ paper that is derived from data:
 
 | Step | What it shows | Time |
 |------|---------------|------|
-| `verify-ec` | The eddy-covariance (EC) reference fluxes follow from the 100 Hz T-Bird measurements | ~30 s |
-| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 3); part of `all-from-raw` | ~2 min each |
+| `ec-segments` | The 5 km segments and their eddy-covariance (EC) fluxes from the 100 Hz T-Bird measurements | ~1 min |
+| `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 3) | ~5 and ~2 min |
+| `polar6-level` | Polar 6 temperature and height per segment (Fig. 2a) from the nose-boom data | ~10 s |
+| `extract` | MODIS, ERA5 and CARRA values at the segments from the shipped gridded fields | ~5 s |
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
-| `verify-cache` | The MODIS and ERA5 values at the segments follow from the shipped gridded fields | ~5 s |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
 | `robustness`, `ec-bands` | Robustness of the comparison: dependent segments, zero-flux baseline, the genuine-MODIS subset, stability correction, the frequency band of the EC flux | ~10 s |
 | `check` | Every printed number (text, Table 4, Appendix A, robustness checks) equals the committed reference `expected_numbers.txt` | ~1 min |
@@ -45,15 +46,17 @@ clean reading copy of the manuscript, annotated with the code that produces each
    pixi run all
    ```
 
-   The first call downloads the Python environment (a few minutes). `verify-ec` and `check`
-   end with a `RESULT:` line; the run stops with an error if anything does not match.
+   The first call downloads the Python environment (a few minutes); the run takes about
+   15 minutes. `check` ends with a `RESULT:` line; the run stops with an error if anything
+   does not match.
    Figures 1, 4 and 5 download map data on first use, so an internet connection is needed once.
 
-Single steps: `pixi run test`, `pixi run verify-ec`, `pixi run precompute`, `pixi run check`,
-`pixi run numbers`, `pixi run robustness`, `pixi run tables`, `pixi run figures`, `pixi run book`,
-`pixi run api`, `pixi run site`. `pixi run all-from-raw` additionally
-rewrites all EC products (segments, placement uncertainty, window-length experiment) from the
-100 Hz data before everything else (~10 min).
+Single steps: `pixi run test`, `pixi run precompute`, `pixi run check`, `pixi run numbers`,
+`pixi run robustness`, `pixi run tables`, `pixi run figures`, `pixi run book`, `pixi run api`,
+`pixi run site`. Without rewriting anything, `pixi run verify-ec` and `pixi run verify-cache`
+show that the shipped EC fluxes and gridded values follow from the input files.
+`pixi run all-from-pangaea` first cuts the T-Bird, nose-boom and KT-19 inputs from the published
+PANGAEA files (downloaded into `data/pangaea/<dataset>/`) and then runs `all`.
 
 Re-running rewrites the output files with a new time stamp; `git status` will then list
 them as modified although the numbers are identical.
