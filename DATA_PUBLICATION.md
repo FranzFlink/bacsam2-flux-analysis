@@ -32,10 +32,10 @@ CC BY 4.0) contains the master tracks
 | `processed/polar6_unified/radiation_unified.nc` | KT-19 surface temperature in the leg windows (decision D2) |
 
 **C. Zenodo data record, third-party gridded products** (archive `zenodo:data`, about 181 MB): the ERA5
-model-level and single-level subsets and the two CARRA files (`data/reanalysis/`), the MODIS ice surface
+model-level and single-level subsets and the three CARRA files (`data/reanalysis/`), the MODIS ice surface
 temperature and the merged MODIS–AMSR2 sea-ice concentration (`data/observations/processed/satellite_unified/`),
-`data/observations/ar/along_track_inputs.nc` (the gridded values at the segments; the only source of the
-CARRA surface flux, whose forecast file is not shipped) and the 13 NASA GIBS images that form the
+`data/observations/ar/along_track_inputs.nc` (the gridded values at the segments, written by `pixi run extract`)
+and the 13 NASA GIBS images that form the
 background of Fig. 5 (`figures_manuscript/_gibs_cache/`).
 
 **D. Not archived.** `data/model_output/` is written by `pixi run precompute` in a few seconds. The two

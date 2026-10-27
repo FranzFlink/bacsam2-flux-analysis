@@ -38,7 +38,7 @@ RULES = [
     ("data/observations/processed/polar6_unified/*", "pangaea:new",
      "KT-19 used from it; source doi:10.1594/PANGAEA.995980 (KT-19 50 Hz); see DATA_PUBLICATION.md, decision D2"),
     ("data/observations/ar/along_track_inputs.nc", "zenodo:data",
-     "ERA5, MODIS and CARRA values at the segments (the CARRA flux exists only here)"),
+     "ERA5, MODIS and CARRA values at the segments (pixi run extract)"),
     ("data/observations/ar/*", "pangaea:new", "derived from the BACSAM-II measurements"),
     ("data/observations/processed/satellite_unified/*", "zenodo:data", "MODIS / University of Bremen, regridded subset"),
     ("data/reanalysis/*", "zenodo:data", "ERA5 / CARRA (Copernicus), regional subset"),
@@ -71,7 +71,8 @@ def rule(path: str):
 
 def write() -> None:
     old = read()
-    found = sorted({p.relative_to(REPO).as_posix() for loc in LOCATIONS for p in REPO.glob(loc) if p.is_file()})
+    found = sorted({p.relative_to(REPO).as_posix() for loc in LOCATIONS for p in REPO.glob(loc) if p.is_file()}
+                   - {p.relative_to(REPO).as_posix() for p in (REPO / "data" / "pangaea").glob("**/*")})  # downloads
     rows = []
     for path in found:
         archive, source = (old[path]["archive"], old[path]["source"]) if path in old else rule(path)

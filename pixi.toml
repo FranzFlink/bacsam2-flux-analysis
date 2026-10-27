@@ -47,6 +47,7 @@ ec-quality    = { cmd = "python scripts/ec_quality.py", depends-on = ["precomput
 robustness    = { cmd = "python scripts/robustness_checks.py", depends-on = ["precompute"] }
 ec-bands      = { cmd = "python scripts/ec_band_sensitivity.py", depends-on = ["precompute"] }
 # bulk side and paper outputs
+extract       = "python scripts/calc_bulk_and_ec_fluxes.py --extract-only"   # gridded values at the segments
 precompute    = "python scripts/calc_bulk_and_ec_fluxes.py"
 numbers       = { cmd = "python scripts/manuscript_numbers.py", depends-on = ["precompute"] }
 tables        = { cmd = "python scripts/make_manuscript_tables.py", depends-on = ["precompute"] }

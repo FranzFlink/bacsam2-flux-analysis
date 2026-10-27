@@ -26,7 +26,7 @@ fluxes of ERA5 and CARRA are positive downward in the products and are sign-flip
 here, once, so that every H_* is positive upward.
 
 Run:  pixi run precompute                       (about 15 s with the cache)
-      python scripts/calc_bulk_and_ec_fluxes.py --extract-only   (raw-data host: rebuild the cache)
+      pixi run extract                          (rebuild the cache from the gridded files)
 """
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ _AR = REPO / "data" / "observations" / "ar"
 _SAT = REPO / "data" / "observations" / "processed" / "satellite_unified"
 _ERA5_SL = REPO / "data" / "reanalysis" / "era5" / "ERA5_single_levels"
 _ERA5_ML = REPO / "data" / "reanalysis" / "era5" / "ERA5_model_levels"
-_CARRA_FORECAST = REPO / "data" / "reanalysis" / "carra" / "carra_east_forecast_sf_latlon0p05.nc"  # not shipped
+_CARRA_FORECAST = REPO / "data" / "reanalysis" / "carra" / "carra_east_forecast_sf_latlon0p05.nc"  # sshf, flight days
 _CACHE = _AR / "along_track_inputs.nc"
 _OUT = REPO / "data" / "model_output"
 
@@ -143,11 +143,8 @@ def load_era5_sl(ds_obs: xr.Dataset) -> dict:
 
 def load_carra_direct_shf(ds_obs: xr.Dataset) -> np.ndarray:
     """CARRA surface sensible heat flux at the segments [W m-2, positive downward as in the
-    product; ``sshf`` is an hourly accumulation in J m-2]. The forecast file is not part of
-    the repository; the values are carried in the cache."""
-    if not _CARRA_FORECAST.exists():
-        log.warning("CARRA forecast file not available: %s", _CARRA_FORECAST)
-        return np.full(ds_obs.sizes["start_time"], np.nan)
+    product; ``sshf`` is an hourly accumulation in J m-2], from the subset of the CARRA-East
+    forecast file (sshf on the flight days, regridded to 0.05 deg)."""
     t, lat, lon = _segment_points(ds_obs)
     sshf = xr.open_dataset(_CARRA_FORECAST)["sshf"].sel(time=t, lat=lat, lon=lon, method="nearest")
     return sshf.values.astype(float) / 3600.0
@@ -193,16 +190,7 @@ def load_inputs(ds_obs: xr.Dataset, use_cache: bool, extract_only: bool):
     ds_modis = load_modis(ds_obs)
     era5_ml = load_era5_ml(ds_obs)
     era5_sl = load_era5_sl(ds_obs)
-    if _CARRA_FORECAST.exists() or not _CACHE.exists():
-        carra_sshf = load_carra_direct_shf(ds_obs)
-    else:   # the CARRA forecast file is not shipped: keep the values extracted on the raw-data host
-        with xr.open_dataset(_CACHE) as old:
-            by_time = pd.Series(old["carra_sshf_Wm2"].values.astype(float), index=pd.to_datetime(old["start_time"].values))
-        wanted = pd.to_datetime(ds_obs["start_time"].values)
-        if not wanted.isin(by_time.index).all():
-            raise RuntimeError("segments without a cached CARRA flux: the CARRA forecast file is needed")
-        carra_sshf = by_time.reindex(wanted).values                     # matched by segment start time
-        log.warning("CARRA forecast file absent: CARRA flux carried over from the existing cache")
+    carra_sshf = load_carra_direct_shf(ds_obs)
     _write_cache(ds_obs, ds_modis, era5_ml, era5_sl, carra_sshf)
     return ds_modis, era5_ml, era5_sl, carra_sshf
 

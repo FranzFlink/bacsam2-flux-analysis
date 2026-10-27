@@ -1,9 +1,9 @@
 path	bytes	sha256	archive	source
-data/model_output/sensitivity_figure_data.nc	101349	71148e1395a368663609ca8d593bd30860dee12f4fea6b82c6ab208265c27e7c	regenerated	pixi run precompute
+data/model_output/sensitivity_figure_data.nc	101349	e91d9e3436c3c44d39b0afa8ba7d6f797339c9837f5c973ed95743b9a0487411	regenerated	pixi run precompute
 data/model_output/sensitivity_summary_table.csv	15008	44b6fdb2c963391fa72da8faf34242c339658c5b3e34814f355ec3ee88289323	regenerated	pixi run precompute
-data/observations/ar/along_track_inputs.nc	20904	f42529f529b1dc2828486307d661f7a2d5b4bc88d4ecbbc5ac5c6144f51eea96	zenodo:data	ERA5, MODIS and CARRA values at the segments (the CARRA flux exists only here)
+data/observations/ar/along_track_inputs.nc	20904	9b4dc1c3a53293abad0cb5ad626dace190da26ccbab6eb6acbd77e7ac384a288	zenodo:data	ERA5, MODIS and CARRA values at the segments (pixi run extract)
 data/observations/ar/analysis_ready_polar6_legs_metadata.csv	7218	082e924bc69bd6db0d87628f06cd6c751875964dba92e75055b4f5075acdb59b	pangaea:new	derived from the BACSAM-II measurements
-data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc	61015	647f9d8ab577ca9eb044fc8dedd2dc3f5d26d1eacfa27e8b93a2f8d8e696c11c	pangaea:new	derived from the BACSAM-II measurements
+data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc	61025	180a2ad5840c0657707e2314809331292d89b483b2f3beb254eb3fdd2aaaaa8b	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv	3445	5b8db46b04c33f88c7d7338abb59a7b7ab5afb63474afa174262b3717b4cf14a	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/ec_segment_placement.nc	14184	5929b17e1e17168f95badcc7fc405a77d8d974de8c7ae59fb3f0a4470ca256d9	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/polar6_level_at_segments.nc	22112	ea5c49b3816b79ac9c025fb00c3b5661f7d0640e0379dff5ea38dcc0c63c5f12	pangaea:new	derived from the BACSAM-II measurements
@@ -24,6 +24,7 @@ data/observations/raw/polar6/mastertracks/P6-247_BACSAM2_2024_2404241001_mastert
 data/observations/raw/polar6/mastertracks/P6-247_BACSAM2_2024_2404251101_mastertrack.tab	25200	10e271164640032e55ce756bd6411484df6a8b698ec575cad5255baa493ba0bc	pangaea:published	doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)
 data/observations/raw/polar6/mastertracks/P6-247_BACSAM2_2024_2404261201_mastertrack.tab	27993	835d38225b7989e9f0cd3dd92f57bb8f48b433b389c06926bb37c7816fa0f0cd	pangaea:published	doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)
 data/observations/raw/polar6/mastertracks/P6-247_BACSAM2_2024_2404291301_mastertrack.tab	19370	cf8785a0e5282f30521639eca6b42b9a60ef24f0bab35497f1160a07a410f38f	pangaea:published	doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)
+data/reanalysis/carra/carra_east_forecast_sf_latlon0p05.nc	16506183	857f78b7c8c83e5da9279db1f8f31c6200a979e806bf8a6c48f191f1ecf2c751	zenodo:data	ERA5 / CARRA (Copernicus), regional subset
 data/reanalysis/carra/carra_east_latlon0p05.nc	49418315	c89686d891c90630a1fd00dcd8e35b2636ecd62eb5f8b6f923a25e1ef9fd8adb	zenodo:data	ERA5 / CARRA (Copernicus), regional subset
 data/reanalysis/carra/height_level/carra_latlon0p05.nc	71202777	dabbf32f1ca17749df0f3ff83f7d792c764ddee4a495c5346c12971b97674769	zenodo:data	ERA5 / CARRA (Copernicus), regional subset
 data/reanalysis/era5/ERA5_model_levels/era5_ml.nc	13813147	7e5896d75a1df393bbeda11e4fccf18289815f9966f8e3ed8eedb1aee478a2a0	zenodo:data	ERA5 / CARRA (Copernicus), regional subset

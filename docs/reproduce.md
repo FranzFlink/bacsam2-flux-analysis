@@ -42,8 +42,6 @@ additionally regenerates the 5 km segments, the segment-placement spread and the
 
 ## Data not included
 
-* The CARRA surface sensible heat flux at the segments is shipped in `along_track_inputs.nc`; the CARRA forecast file
-  from which it was extracted is not included.
 * The Polar 6 aircraft-level temperature and height per segment (Fig. 2a) are shipped in `polar6_level_at_segments.nc`;
   the Polar 6 nose-boom archive is not included.
 * `preprocessing/` documents how the shipped files were extracted from the raw archives and requires those archives.

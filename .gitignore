@@ -6,3 +6,5 @@ __pycache__/
 .pytest_cache/
 manuscript/
 .claude/
+# local downloads of the published PANGAEA datasets
+data/pangaea/

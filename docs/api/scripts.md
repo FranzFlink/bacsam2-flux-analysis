@@ -94,7 +94,7 @@ Run:    pixi run window-length      (about 2 minutes)
 (scripts/calc_bulk_and_ec_fluxes.py)=
 ### `scripts/calc_bulk_and_ec_fluxes.py`
 
-**Run:** `pixi run precompute`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/calc_bulk_and_ec_fluxes.py)
+**Run:** `pixi run extract`, `pixi run precompute`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/calc_bulk_and_ec_fluxes.py)
 
 Bulk fluxes for every forcing, the sensitivity sweep and the input perturbations.
 
@@ -131,7 +131,7 @@ here, once, so that every H_* is positive upward.
 Run:  pixi run precompute                       (about 15 s with the cache)
 
 ```text
-python scripts/calc_bulk_and_ec_fluxes.py --extract-only   (raw-data host: rebuild the cache)
+pixi run extract                          (rebuild the cache from the gridded files)
 ```
 
 (scripts/verify_along_track_cache.py)=
@@ -139,11 +139,8 @@ python scripts/calc_bulk_and_ec_fluxes.py --extract-only   (raw-data host: rebui
 
 **Run:** `pixi run verify-cache`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/verify_along_track_cache.py)
 
-Re-extract the MODIS and ERA5 values at the 90 segments from the shipped gridded
+Re-extract the MODIS, ERA5 and CARRA values at the segments from the shipped gridded
 files and compare them with the shipped along-track file (along_track_inputs.nc).
-
-The CARRA surface flux in that file cannot be re-extracted here, because the CARRA
-forecast file is not part of the repository.
 
 Run:  pixi run verify-cache
 
