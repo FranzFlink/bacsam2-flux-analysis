@@ -48,7 +48,7 @@ The scripts that run the analysis are documented on the [Scripts](scripts.md) pa
 | [`skill_metrics`](#fluxpy.sensitivity.skill_metrics) | [`fluxpy.sensitivity`](fluxpy.sensitivity.md) | Slope, intercept, std_ratio, Pearson r, bias, RMSE, centred RMSE and n of an estimate against the reference, over the pairs where both are finite. |
 | [`slope_bootstrap_ci`](#fluxpy.sensitivity.slope_bootstrap_ci) | [`fluxpy.sensitivity`](fluxpy.sensitivity.md) | Percentile-bootstrap 95 % confidence interval of the regression slope. |
 | [`to_xarray`](#fluxpy.aggregate.to_xarray) | [`fluxpy.aggregate`](fluxpy.aggregate.md) | DataFrame of `process_legs` -> Dataset indexed by `start_time`, with units. |
-| [`turbulence_resolved`](#fluxpy.qc.turbulence_resolved) | [`fluxpy.qc`](fluxpy.qc.md) | Integrity check: True when the w power spectrum follows the inertial-subrange slope, `\|s_w + 5/3\| <= 0.4`. |
+| [`turbulence_resolved`](#fluxpy.qc.turbulence_resolved) | [`fluxpy.qc`](fluxpy.qc.md) | Integrity check: True when the w power spectrum follows the inertial-subrange slope, `\|s_w + 5/3\| <= tolerance` (0.4 in the paper). |
 
 ## Usage
 

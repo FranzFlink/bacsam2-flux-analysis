@@ -110,7 +110,8 @@ GLGS20 stability functions (Gryanik et al., 2020), scalar roughness ratio
 α_T = z₀,T/z₀,m = 10⁻¹, surface-type-dependent momentum roughness, classic two-point bulk
 Richardson number between the surface and the measurement level. The amplitude-matched
 configuration uses α_T = 10⁻⁴. All fluxes are positive upward. 90 low-level 5 km segments over
-sea ice. All pass the integrity check (resolved inertial subrange). Every EC flux carries a measured random error
+sea ice. The integrity check (resolved inertial subrange) is reported for every segment and excludes none; Table A1
+repeats the comparison at several tolerances. Every EC flux carries a measured random error
 (median 0.75 W m⁻²); 67, 46 and 33 of the 90 fluxes exceed 1, 2 and 3 times this error. All fluxes are kept: those that do
 not stand out from their random error are valid measurements of a small flux.
 Statistics (slopes, correlations, biases, errors and uncertainties, sensitivities) are reported with two decimals, so that

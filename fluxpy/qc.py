@@ -5,9 +5,11 @@ Quality of the eddy-covariance reference (manuscript Appendix A).
 
 The paper separates two things:
 
-* **A1, integrity check (pass / fail).** The turbulence must be resolved: the
-  power spectrum of the vertical wind has to follow the inertial-subrange slope,
-  ``|s_w + 5/3| <= 0.4`` between 0.1 and 20 Hz (Kolmogorov, 1941).
+* **A1, integrity check (diagnostic).** Resolved turbulence shows the
+  inertial-subrange slope in the power spectrum of the vertical wind,
+  ``|s_w + 5/3| <= 0.4`` between 0.1 and 20 Hz (Kolmogorov, 1941). The slope is
+  reported for every segment; no segment is excluded by it. ``scripts/ec_quality.py``
+  repeats the comparison on the segments within tolerances of 0.3 to 0.6 (Table A1).
   -> :func:`spectral_slope`, :func:`turbulence_resolved`.
   Data completeness and a constant flight level are enforced when the segments
   are cut (``fluxpy.aggregate``).
@@ -30,13 +32,15 @@ from __future__ import annotations
 import numpy as np
 from scipy.signal import csd, detrend, get_window, welch
 
-__all__ = ["INERTIAL_SLOPE", "SLOPE_TOLERANCE", "SLOPE_BAND_HZ",
+__all__ = ["INERTIAL_SLOPE", "SLOPE_TOLERANCE", "SLOPE_TOLERANCES_TABLE_A1", "SLOPE_BAND_HZ",
            "spectral_slope", "turbulence_resolved", "segment_spectra"]
 
 #: Kolmogorov inertial-subrange slope of the power spectrum
 INERTIAL_SLOPE = -5.0 / 3.0
-#: a segment passes the integrity check when |s_w - INERTIAL_SLOPE| <= SLOPE_TOLERANCE
+#: a segment satisfies the integrity check when |s_w - INERTIAL_SLOPE| <= SLOPE_TOLERANCE
 SLOPE_TOLERANCE = 0.4
+#: tolerances of the integrity-check rows of Table A1
+SLOPE_TOLERANCES_TABLE_A1 = (0.3, 0.4, 0.5, 0.6)
 #: frequency interval of the slope fit [Hz] (the flux band of Sect. 3.1)
 SLOPE_BAND_HZ = (0.1, 20.0)
 
@@ -55,10 +59,11 @@ def spectral_slope(f: np.ndarray, P: np.ndarray,
     return float(np.polyfit(np.log10(f[use]), np.log10(P[use]), 1)[0])
 
 
-def turbulence_resolved(slope_w: float) -> bool:
+def turbulence_resolved(slope_w: float, tolerance: float = SLOPE_TOLERANCE) -> bool:
     """Integrity check: True when the w power spectrum follows the inertial-subrange
-    slope, ``|s_w + 5/3| <= 0.4``. The only pass/fail criterion of the paper."""
-    return bool(np.isfinite(slope_w) and abs(slope_w - INERTIAL_SLOPE) <= SLOPE_TOLERANCE)
+    slope, ``|s_w + 5/3| <= tolerance`` (0.4 in the paper). A diagnostic: no segment
+    is excluded by it (Appendix A1, Table A1)."""
+    return bool(np.isfinite(slope_w) and abs(slope_w - INERTIAL_SLOPE) <= tolerance)
 
 
 # ---------------------------------------------------------------------------

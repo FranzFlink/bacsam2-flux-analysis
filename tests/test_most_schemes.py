@@ -101,6 +101,7 @@ def test_integrity_check_threshold():
     assert turbulence_resolved(-5 / 3)
     assert turbulence_resolved(-5 / 3 + 0.39) and turbulence_resolved(-5 / 3 - 0.39)
     assert not turbulence_resolved(-5 / 3 + 0.41)
+    assert turbulence_resolved(-5 / 3 + 0.45, tolerance=0.5)       # the tolerances of Table A1
     assert not turbulence_resolved(float("nan"))
 
 

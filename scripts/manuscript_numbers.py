@@ -95,10 +95,10 @@ def ec_reference():
     """Sect. 3.1 and Appendix A2: sample size, integrity check, random error, fluxes above 1/2/3 sigma."""
     ecv = EC[np.isfinite(EC)]
     print("\n" + RULE)
-    print(f"EC REFERENCE ({ecv.size} of {EC.size} low-level 5 km segments pass the integrity check)")
+    print(f"EC REFERENCE ({ecv.size} of {EC.size} low-level 5 km segments have an EC flux; none is excluded)")
     print(RULE)
     seg = SEG.sel(start_time=FIG["start_time"].values)
-    print(f"integrity check (inertial-subrange slope of w): {int(seg['turbulence_resolved'].sum())} of {EC.size} pass; "
+    print(f"integrity check (inertial-subrange slope of w; a diagnostic): {int(seg['turbulence_resolved'].sum())} of {EC.size} satisfy it; "
           f"slope median {float(seg['qc_slope_w'].median()):.1f}, range {float(seg['qc_slope_w'].min()):.1f} to {float(seg['qc_slope_w'].max()):.1f}")
     sigma, ratio = np.asarray(FIG["sigma_random_ec"]), np.asarray(FIG["ec_flux_over_sigma"])
     print(f"random error: median {np.median(sigma):.2f} W m-2 [{np.percentile(sigma, 25):.2f}-{np.percentile(sigma, 75):.2f}]")

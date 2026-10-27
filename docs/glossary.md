@@ -45,5 +45,5 @@ the variable names in `data/model_output/sensitivity_figure_data.nc` (`fluxpy/na
 | configuration | the parameter settings of the bulk algorithm (stability scheme, $\alpha_T$, roughness) |
 | reference configuration | GLGS20 stability functions, $\alpha_T = 10^{-1}$, surface-type-dependent roughness |
 | amplitude-matched configuration | as the reference, with $\alpha_T = 10^{-4}$, where the in-situ estimate has slope 1 |
-| integrity check | the pass/fail test of an EC flux: the vertical-wind spectrum falls off like $f^{-5/3}$ (resolved turbulence) |
+| integrity check | whether the vertical-wind spectrum of a segment falls off like $f^{-5/3}$ (resolved turbulence), $\lvert s_w + 5/3 \rvert \le 0.4$; reported for every segment, no segment is excluded by it |
 | model-diagnosed | a flux computed inside the reanalysis model, as opposed to a bulk flux recomputed offline from its output |

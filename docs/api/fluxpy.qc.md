@@ -12,9 +12,11 @@ Quality of the eddy-covariance reference (manuscript Appendix A).
 
 The paper separates two things:
 
-* **A1, integrity check (pass / fail).** The turbulence must be resolved: the
-  power spectrum of the vertical wind has to follow the inertial-subrange slope,
-  `|s_w + 5/3| <= 0.4` between 0.1 and 20 Hz (Kolmogorov, 1941).
+* **A1, integrity check (diagnostic).** Resolved turbulence shows the
+  inertial-subrange slope in the power spectrum of the vertical wind,
+  `|s_w + 5/3| <= 0.4` between 0.1 and 20 Hz (Kolmogorov, 1941). The slope is
+  reported for every segment; no segment is excluded by it. [`scripts/ec_quality.py`](#scripts/ec_quality.py)
+  repeats the comparison on the segments within tolerances of 0.3 to 0.6 (Table A1).
   -> [`spectral_slope`](#fluxpy.qc.spectral_slope), [`turbulence_resolved`](#fluxpy.qc.turbulence_resolved).
   Data completeness and a constant flight level are enforced when the segments
   are cut ([`fluxpy.aggregate`](fluxpy.aggregate.md)).
@@ -37,10 +39,11 @@ All diagnostics are calculated from the 100 Hz series after linear detrending.
 | Name | Kind | Summary |
 |---|---|---|
 | [`INERTIAL_SLOPE`](#fluxpy.qc--constants) | constant | Kolmogorov inertial-subrange slope of the power spectrum |
-| [`SLOPE_TOLERANCE`](#fluxpy.qc--constants) | constant | a segment passes the integrity check when \|s_w - INERTIAL_SLOPE\| <= SLOPE_TOLERANCE |
+| [`SLOPE_TOLERANCE`](#fluxpy.qc--constants) | constant | a segment satisfies the integrity check when \|s_w - INERTIAL_SLOPE\| <= SLOPE_TOLERANCE |
+| [`SLOPE_TOLERANCES_TABLE_A1`](#fluxpy.qc--constants) | constant | tolerances of the integrity-check rows of Table A1 |
 | [`SLOPE_BAND_HZ`](#fluxpy.qc--constants) | constant | frequency interval of the slope fit [Hz] (the flux band of Sect. 3.1) |
 | [`spectral_slope`](#fluxpy.qc.spectral_slope) | function | Log-log slope `s` of a power spectrum, `log10 P = a + s log10 f`, by ordinary least squares over `fmin <= f <= fmax` (Appendix A1). |
-| [`turbulence_resolved`](#fluxpy.qc.turbulence_resolved) | function | Integrity check: True when the w power spectrum follows the inertial-subrange slope, `\|s_w + 5/3\| <= 0.4`. |
+| [`turbulence_resolved`](#fluxpy.qc.turbulence_resolved) | function | Integrity check: True when the w power spectrum follows the inertial-subrange slope, `\|s_w + 5/3\| <= tolerance` (0.4 in the paper). |
 | [`segment_spectra`](#fluxpy.qc.segment_spectra) | function | Spectra of one segment as shown in Fig. A1, plus the integrity-check slope. |
 
 (fluxpy.qc--constants)=
@@ -49,7 +52,8 @@ All diagnostics are calculated from the 100 Hz series after linear detrending.
 | Name | Value | Meaning |
 |---|---|---|
 | `INERTIAL_SLOPE` | `-5.0 / 3.0` = `-1.66667` | Kolmogorov inertial-subrange slope of the power spectrum |
-| `SLOPE_TOLERANCE` | `0.4` | a segment passes the integrity check when \|s_w - INERTIAL_SLOPE\| <= SLOPE_TOLERANCE |
+| `SLOPE_TOLERANCE` | `0.4` | a segment satisfies the integrity check when \|s_w - INERTIAL_SLOPE\| <= SLOPE_TOLERANCE |
+| `SLOPE_TOLERANCES_TABLE_A1` | `(0.3, 0.4, 0.5, 0.6)` | tolerances of the integrity-check rows of Table A1 |
 | `SLOPE_BAND_HZ` | `(0.1, 20.0)` | frequency interval of the slope fit [Hz] (the flux band of Sect. 3.1) |
 
 [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py)
@@ -82,9 +86,9 @@ by ordinary least squares over `fmin <= f <= fmax` (Appendix A1).
 
 **Returns** `float`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L48-L55)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L52-L59)
 
-:::{dropdown} Source code (fluxpy/qc.py, lines 48–55)
+:::{dropdown} Source code (fluxpy/qc.py, lines 52–59)
 ````python
 def spectral_slope(f: np.ndarray, P: np.ndarray,
                    fmin: float = SLOPE_BAND_HZ[0], fmax: float = SLOPE_BAND_HZ[1]) -> float:
@@ -101,28 +105,31 @@ def spectral_slope(f: np.ndarray, P: np.ndarray,
 ### `turbulence_resolved`
 
 ```python
-turbulence_resolved(slope_w: float) -> bool
+turbulence_resolved(slope_w: float, tolerance: float = SLOPE_TOLERANCE) -> bool
 ```
 
 Integrity check: True when the w power spectrum follows the inertial-subrange
-slope, `|s_w + 5/3| <= 0.4`. The only pass/fail criterion of the paper.
+slope, `|s_w + 5/3| <= tolerance` (0.4 in the paper). A diagnostic: no segment
+is excluded by it (Appendix A1, Table A1).
 
 **Parameters**
 
 | Parameter | Type | Default |
 |---|---|---|
 | `slope_w` | `float` | required |
+| `tolerance` | `float` | `SLOPE_TOLERANCE` (= `0.4`) |
 
 **Returns** `bool`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L58-L61)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L62-L66)
 
-:::{dropdown} Source code (fluxpy/qc.py, lines 58–61)
+:::{dropdown} Source code (fluxpy/qc.py, lines 62–66)
 ````python
-def turbulence_resolved(slope_w: float) -> bool:
+def turbulence_resolved(slope_w: float, tolerance: float = SLOPE_TOLERANCE) -> bool:
     """Integrity check: True when the w power spectrum follows the inertial-subrange
-    slope, ``|s_w + 5/3| <= 0.4``. The only pass/fail criterion of the paper."""
-    return bool(np.isfinite(slope_w) and abs(slope_w - INERTIAL_SLOPE) <= SLOPE_TOLERANCE)
+    slope, ``|s_w + 5/3| <= tolerance`` (0.4 in the paper). A diagnostic: no segment
+    is excluded by it (Appendix A1, Table A1)."""
+    return bool(np.isfinite(slope_w) and abs(slope_w - INERTIAL_SLOPE) <= tolerance)
 ````
 :::
 
@@ -162,9 +169,9 @@ dict with
 * `slope_w`: inertial-subrange slope of P_w (Appendix A1)
 * `r2_cumulative_covariance`: R^2 of a straight line through the cumulative covariance along the segment; one of the relative criteria evaluated, and not applied, in Appendix A3
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L89-L151)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/qc.py#L94-L156)
 
-:::{dropdown} Source code (fluxpy/qc.py, lines 89–151)
+:::{dropdown} Source code (fluxpy/qc.py, lines 94–156)
 ````python
 def segment_spectra(w: np.ndarray, theta: np.ndarray, u: np.ndarray, v: np.ndarray,
                     fs: float) -> dict:

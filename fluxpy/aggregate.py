@@ -192,7 +192,7 @@ def process_legs(legs: list[xr.Dataset], ds_radiation: xr.Dataset, ds_sic: xr.Da
                 "latitude": float(segment["lat"].mean()),
                 "longitude": float(segment["lon"].mean()),
                 # EC reference
-                "sensible_heat_flux": ec.flux if resolved else np.nan,
+                "sensible_heat_flux": ec.flux,                  # kept whatever the integrity check says
                 "sensible_heat_flux_random_error": ec.random_error,
                 "flux_over_random_error": ec.flux_over_random_error,
                 "qc_slope_w": spectra["slope_w"],
@@ -224,11 +224,11 @@ VARIABLES = {
     "v_mean":                ("m s-1", "Segment-mean northward wind (T-Bird)"),
     "latitude":              ("degrees_north", "Segment-mean latitude"),
     "longitude":             ("degrees_east", "Segment-mean longitude"),
-    "sensible_heat_flux":    ("W m-2", "Eddy-covariance sensible heat flux, 0.1-20 Hz band; positive upward; NaN if the integrity check fails"),
+    "sensible_heat_flux":    ("W m-2", "Eddy-covariance sensible heat flux, 0.1-20 Hz band; positive upward"),
     "sensible_heat_flux_random_error": ("W m-2", "Random (sampling) error of the EC flux, 1 sigma (Finkelstein and Sims, 2001)"),
     "flux_over_random_error": ("1", "|flux| divided by its random error; the paper counts the fluxes above 1, 2 and 3 (all fluxes are kept)"),
     "qc_slope_w":            ("1", "Log-log slope of the w power spectrum, 0.1-20 Hz"),
-    "turbulence_resolved":   ("1", "1 if |qc_slope_w + 5/3| <= 0.4 (integrity check, Appendix A1)"),
+    "turbulence_resolved":   ("1", "1 if |qc_slope_w + 5/3| <= 0.4 (integrity check, Appendix A1; a diagnostic, no segment is excluded by it)"),
     "t_kt19":                ("degC", "Segment-mean KT-19 surface brightness temperature"),
     "T_sfc_std":             ("K", "Standard deviation of the 1 Hz KT-19 surface temperature within the segment"),
     "sic":                   ("%", "Sea-ice concentration along the segment (merged MODIS-AMSR2)"),

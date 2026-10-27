@@ -30,7 +30,7 @@ from scipy.stats import spearmanr
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 from fluxpy.eddy_covariance import band_covariance, band_covariance_random_error, band_pass  # noqa: E402
-from fluxpy.qc import segment_spectra  # noqa: E402
+from fluxpy.qc import SLOPE_TOLERANCES_TABLE_A1, segment_spectra, turbulence_resolved  # noqa: E402
 from fluxpy.sensitivity import slope_bootstrap_ci  # noqa: E402
 from fluxpy.util import CP, add_theta, air_density  # noqa: E402
 
@@ -134,6 +134,10 @@ SCREENINGS = [
     (r"relative stationarity test $< 30\,\%$", (df.fw_rel < 0.3).values),
     (r"segment halves agree within $3\,\sigma_\mathrm{rand}$", (df.half_diff <= 3 * np.sqrt(2) * df.sigma_fs).values),
     (r"only fluxes above $2\,\sigma_\mathrm{rand}$", above_2sigma),
+    # integrity check (Appendix A1) as a screening at several tolerances of |s_w + 5/3|
+    *[(rf"integrity check, $|s_w + 5/3| \leq {tol:.1f}$",
+       np.array([turbulence_resolved(s, tol) for s in SEG["qc_slope_w"].values]))
+      for tol in SLOPE_TOLERANCES_TABLE_A1],
     (r"pitch-resonance bin interpolated", None),          # no segment removed; the EC flux itself is changed
 ]
 
@@ -149,8 +153,8 @@ for name, keep in SCREENINGS:
     keep = np.ones(len(df), bool) if keep is None else keep
     cells = [slope_and_r(x[keep], df[c].values[keep]) for c in ESTIMATES]
     table_a1.append(np.ravel(cells))
-    plain = (name.replace("$", "").replace("\\,", " ").replace("\\geq", ">=").replace("\\%", "%")
-             .replace("\\sigma_\\mathrm{rand}", "sigma_rand"))
+    plain = (name.replace("$", "").replace("\\,", " ").replace("\\geq", ">=").replace("\\leq", "<=")
+             .replace("\\%", "%").replace("\\sigma_\\mathrm{rand}", "sigma_rand"))
     print(f"  {plain:<48s} n = {keep.sum():2d}   " + "   ".join(f"{b:.2f} / {r:.2f}" for b, r in cells))
     tex.append(f"{name} & {keep.sum()} & " + " & ".join(f"{b:.2f} & {r:.2f}" for b, r in cells) + r" \\")
 (REPO / "tables_manuscript" / "table_qc_robustness.tex").write_text("\n".join(tex) + "\n", encoding="utf-8", newline="\n")

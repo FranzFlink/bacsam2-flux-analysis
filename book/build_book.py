@@ -182,8 +182,9 @@ print(f"H in the segment file: {float(SEG.sensible_heat_flux[i]):6.2f} W m-2")
 
 Two properties are assessed separately.
 
-**Integrity.** The turbulence must be resolved: the power spectrum of $w$ must follow the inertial-subrange slope,
-$|s_w + 5/3| \le 0.4$. This pass/fail criterion tests the instrument and the processing.
+**Integrity.** Resolved turbulence shows the inertial-subrange slope in the power spectrum of $w$,
+$|s_w + 5/3| \le 0.4$. The slope is reported for every segment; no segment is excluded by it. Table A1 of the paper
+repeats the comparison on the segments within tolerances of 0.3 to 0.6.
 
 **Precision.** A covariance from about 83 s of data carries a random error, because only a finite number of eddies is
 sampled. It is estimated from the data (Finkelstein and Sims, 2001). For a true flux of zero, the estimate exceeds
@@ -201,7 +202,7 @@ sigma = rho * CP * band_covariance_random_error(w, th, fs)
 print(f"this segment: spectral slope of w = {slope:.2f} -> turbulence resolved: {turbulence_resolved(slope)}")
 print(f"              flux {float(H_fluxpy):.1f} W m-2, random error {sigma:.2f} W m-2 -> {abs(float(H_fluxpy)) / sigma:.0f} sigma")
 ratio = FIG.ec_flux_over_sigma.values
-print(f"\nall {ratio.size} segments: {int(SEG.turbulence_resolved.sum())} pass the integrity check; "
+print(f"\nall {ratio.size} segments: {int(SEG.turbulence_resolved.sum())} satisfy the integrity check (none is excluded); "
       f"median random error {np.median(FIG.sigma_random_ec.values):.2f} W m-2")
 days = pd.to_datetime(FIG.start_time.values).strftime("%d %b")
 pd.DataFrame({f"|H| > {k} sigma": {**{d: f"{(ratio[days == d] > k).sum()} / {(days == d).sum()}" for d in pd.unique(days)},

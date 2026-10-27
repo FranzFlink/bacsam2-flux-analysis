@@ -59,8 +59,10 @@ pixi run site-deploy  # upload _build/html to Cloudflare behind a password (depl
   is reconstructed hydrostatically from the T-Bird pressure; for ERA5, level 136 uses its
   hybrid-coefficient pressure and the surface the surface pressure.
 * EC flux = w–θ covariance between 0.1 and 20 Hz after linear detrending. No segment is
-  discarded for being small (n = 90; the only exclusions are the integrity check and a constant
-  flight level, `fluxpy.aggregate.SegmentConfig`); every flux carries its random error (Appendix A).
+  discarded for being small (n = 90; the only exclusion is a constant flight level,
+  `fluxpy.aggregate.SegmentConfig`); the integrity check is reported, not used to exclude
+  (Table A1 repeats the comparison at several tolerances); every flux carries its random error
+  (Appendix A).
 * Amplitude skill = ordinary-least-squares slope of the estimate on the EC flux; variability
   skill = Pearson r. RMSE is reported but not used to rank (it rewards estimates near zero).
 * Statistics (slopes and their intervals, correlations, biases, errors and uncertainties,
