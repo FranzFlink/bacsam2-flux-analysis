@@ -57,7 +57,11 @@ SC_LIM, SC_TICKS = (-15, 35), [0, 20]
 HI_LIM, HI_TICKS = (-25, 35), [-20, 0, 20]
 HI_BINS = np.arange(-26, 36.1, 2.0)
 cmap_ri = plt.cm.coolwarm_r
-norm_ri = mcolors.Normalize(vmin=0.2, vmax=-1)     # red = unstable, blue = stable
+# diverging, centred on neutral (Ri_b = 0): red = unstable, blue = stable; the
+# +-0.5 range resolves both sides (Ri_b spans about -0.7 to +0.6 between the
+# 5th and 95th percentiles); values beyond saturate (colour bar extend="both")
+RI_LIM = 0.5
+norm_ri = mcolors.Normalize(vmin=-RI_LIM, vmax=RI_LIM)
 
 fig, axes = fs.figure(width=fs.COL_W, aspect=1.1, nrows=2, ncols=2)
 
@@ -69,14 +73,15 @@ for ax, key in [(axes[0, 0], "H_obs_bulk"), (axes[1, 0], "H_rs_bulk")]:
                 xerr=np.nan_to_num(SIGMA["H_obs_ec"][m]),
                 yerr=np.nan_to_num(SIGMA[key][m]),
                 fmt="none", ecolor="0.35", elinewidth=0.3, alpha=0.8, zorder=2)
-    ax.scatter(ec[m], y[m], c=RI[m], cmap=cmap_ri, norm=norm_ri,
+    top = np.argsort(np.abs(RI[m]))          # draw order only: strongest |Ri_b| on top
+    ax.scatter(ec[m][top], y[m][top], c=RI[m][top], cmap=cmap_ri, norm=norm_ri,
                s=10, alpha=0.85, linewidths=0, rasterized=True, zorder=3)
     ax.plot(SC_LIM, SC_LIM, color=fs.GREY, lw=0.7, alpha=0.5, zorder=1)
     b, r, bias = metrics(ec, y)
     ax.plot(np.asarray(SC_LIM), np.polyval(np.polyfit(ec[m], y[m], 1), SC_LIM),
             color=fs.C[key], lw=1.2, ls="--", zorder=4)
     # metrics live in the CAPTION at single-column size — print for provenance
-    print(f"caption numbers {key}: b={b:.2f}  r={r:.2f}  bias={bias:+.1f} W m-2")
+    print(f"caption numbers {key}: b={b:.2f}  r={r:.2f}  bias={bias:+.2f} W m-2")
     ax.set_xlim(SC_LIM), ax.set_ylim(SC_LIM)
     # NB no set_box_aspect here: it silently breaks constrained layout (axes
     # overflow the canvas without warning); near-square comes from the figure
@@ -91,9 +96,10 @@ for ax, key in [(axes[0, 0], "H_obs_bulk"), (axes[1, 0], "H_rs_bulk")]:
 axes[0, 0].tick_params(labelbottom=False)
 axes[1, 0].set_xlabel(fs.L["H_obs_ec"] + " " + fs.FLUX_UNIT)
 
-cax = axes[0, 0].inset_axes([0.06, 0.56, 0.05, 0.38])
+cax = axes[0, 0].inset_axes([0.70, 0.07, 0.05, 0.36])   # empty lower-right corner
 cb = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap_ri, norm=norm_ri), cax=cax,
-                  ticks=[0, -1])
+                  ticks=[-RI_LIM, 0, RI_LIM], extend="both")
+cb.ax.set_yticklabels([f"\N{MINUS SIGN}{RI_LIM:g}", "0", f"{RI_LIM:g}"])
 cb.ax.set_title(r"$Ri_\mathrm{b}$", fontsize=fs.FONT_SIZE - 1, pad=2)
 cb.ax.tick_params(labelsize=fs.FONT_SIZE - 1, length=2)
 cb.outline.set_linewidth(0.5)
@@ -122,6 +128,10 @@ def hist_panel(ax, keys):
 
 hist_panel(axes[0, 1], ["H_obs_ec", "H_obs_bulk", "H_rs_bulk"])
 hist_panel(axes[1, 1], ["H_obs_ec", "H_era_bulk", "H_era_diag", "H_car_diag"])
+# (b) and (d) on the same density scale, so that their peaks compare directly
+HI_YMAX = max(axes[0, 1].get_ylim()[1], axes[1, 1].get_ylim()[1])
+for ax in (axes[0, 1], axes[1, 1]):
+    ax.set_ylim(0, HI_YMAX)
 axes[0, 1].tick_params(labelbottom=False)
 # short symbol label: the spelled-out one overhangs the canvas under a ~3 cm
 # panel (constrained layout ignores xlabel WIDTH, so it would be clipped)

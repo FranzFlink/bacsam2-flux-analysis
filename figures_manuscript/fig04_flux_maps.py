@@ -54,6 +54,7 @@ low = low.where(low.start_time != first_ts_0413, drop=True)
 # frame colours = campaign-map focus-rectangle colours (batlow over all days)
 frame_colors = dict(zip(low_alt_days,
                         cm_crameri.batlow(np.linspace(0, 1, len(low_alt_days)))))
+frame_colors["2024-04-17"] = "#d7191c"   # = DAY_COLOR_0417 of fig01_campaign_overview.py
 detail_days = [d for d in low_alt_days if d != "2024-04-25"]
 
 # ── Figure ──────────────────────────────────────────────────────────────────

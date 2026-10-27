@@ -29,7 +29,7 @@ logging.getLogger("fontTools").setLevel(logging.WARNING)
 import numpy as np
 import pandas as pd
 import xarray as xr
-from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 
 from fluxpy import figstyle as fs
 from fluxpy.util import era5_level_pressure, potential_temperature, surface_pressure_hypsometric
@@ -159,6 +159,8 @@ for i_day, (ax, day) in enumerate(zip(axs_prof, flight_days)):
 
     x0, x1 = X_LIMITS[i_day]
     ax.set_ylim(-10, Y_TOP)
+    ax.set_yticks([0, 50, 100])                                           # sparse: the instrument-level
+    ax.set_yticks(np.arange(0, Y_TOP + 1, 10), minor=True)                # labels sit between the ticks
     ax.set_xlim(x0, x1)
     ax.set_xlabel(r"$\theta$ (K)")
     ax.set_title(pd.Timestamp(day).strftime("%d %b"), fontweight="bold")
@@ -170,39 +172,47 @@ for i_day, (ax, day) in enumerate(zip(axs_prof, flight_days)):
     if i_day > 0:
         ax.tick_params(axis="y", which="both", left=False, labelleft=False)
 
-axs_prof[0].set_ylabel("Height (m)")
-fig.legend(handles=[Patch(facecolor=c, edgecolor="0.3", lw=0.4, label=name)
-                    for c, name in [(C_OBS, "Obs"), (C_MOD, "MODIS"), (C_ERA, "ERA5"), (C_CAR, "CARRA")]],
-           loc="outside upper center", ncol=4, columnspacing=1.0, handlelength=1.1, handletextpad=0.4)
-fs.panel_label(axs_prof[0], "(a)")
-for z, text, dy in [(z_tbird_mean, "T-Bird", 4), (z_polar6_mean, "Polar 6", -7)]:   # instrument levels
-    axs_prof[0].text(-.8, (z + dy) / Y_TOP, text, transform=axs_prof[0].transAxes, va="bottom", ha="left",
-                     color="0.5", fontsize=fs.FONT_SIZE - 1, zorder=5,
-                     bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5))
+axs_prof[0].set_ylabel("Height (m)", labelpad=15)   # clear of the 'T-Bird' / 'Polar 6' labels
+fig.legend(handles=[Line2D([0], [0], color=c, lw=1.6, label=name)
+                    for c, name in [(C_OBS, "Observations"), (C_MOD, "ERA5–MODIS"), (C_ERA, "ERA5"),
+                                    (C_CAR, "CARRA")]],
+           loc="outside upper center", ncol=2, columnspacing=1.5, handlelength=1.4, handletextpad=0.4)
+
+
+def panel_label(ax, label):
+    """Panel letter raised above the axes top, clear of the uppermost y tick label
+    (local variant of fs.panel_label, whose fixed 2 % offset lets it touch the tick label)."""
+    ax.annotate(label, xy=(0, 1), xycoords="axes fraction", xytext=(-4, 7), textcoords="offset points",
+                fontweight="bold", ha="right", va="bottom")
+
+
+panel_label(axs_prof[0], "(a)")
+for z, text in [(z_tbird_mean, "T-Bird"), (z_polar6_mean, "Polar 6")]:   # instrument levels, in the
+    axs_prof[0].annotate(text, xy=(0, z), xycoords=axs_prof[0].get_yaxis_transform(),   # tick-label
+                         xytext=(-5, 0), textcoords="offset points", va="center", ha="right",   # column,
+                         color="0.5", fontsize=fs.FONT_SIZE - 1, zorder=5)                  # between ticks
 
 # ── (b), (c) histograms ──────────────────────────────────────────────────────
-fill = dict(density=True, alpha=0.2, linewidth=0, zorder=1)
-step = dict(density=True, histtype="step", linewidth=0.8, alpha=0.9, zorder=2)
+step = dict(density=True, histtype="step", linewidth=1.0, alpha=0.9, zorder=2)   # outlines only, no fill
 panels = [
     (ax_tsfc, T_sfc_series, np.linspace(-35, 5, 20), (-35, 5), [-1.8, -20],
      [(-1.8, 5, "#fffde7"), (-20, -1.8, "#e3f2fd"), (-35, -20, "#e8eaf6")],
-     [(-27.5, "snow-covered\nsea-ice"), (-10.9, "thin\nsea-ice"), (1.6, "sea-ice\nfree")],
-     r"$T_\mathrm{sfc}$ (°C)", "(b)"),
+     [(-27.5, "snow-covered\nsea ice"), (-10.9, "thin\nsea ice"), (1.6, "open\nwater")],
+     r"$T_\mathrm{s}$ (°C)", "(b)"),
     (ax_dtheta, dtheta_series, np.linspace(-6, 6, 20), (-8, 8), [0],
      [(-8, 0, "#fff3e0"), (0, 8, "#e8eaf6")],
      [(-4, "unstable\nstratification"), (4, "stable\nstratification")],
-     r"$\theta_\mathrm{air} - \theta_{\mathrm{sfc}}$ (K)", "(c)"),
+     r"$\theta_\mathrm{air} - \theta_\mathrm{s}$ (K)", "(c)"),
 ]
 for ax, series, bins, xlim, vlines, bands, labels, xlabel, letter in panels:
     for x0, x1, colour in bands:                                          # surface classes / stability regimes
         ax.axvspan(x0, x1, color=colour, alpha=0.25, zorder=0, lw=0)
     for x, colour in series:
         x = x[np.isfinite(x)]
-        ax.hist(x, bins=bins, color=colour, **fill)
         ax.hist(x, bins=bins, color=colour, **step)
     for xv in vlines:
         ax.axvline(xv, color="0.5", lw=0.8, ls=":", zorder=4)
-    ax.set_ylim(0, ax.get_ylim()[1] * 1.3)                                # headroom for the labels
+    ax.set_ylim(0, ax.get_ylim()[1] * 1.4)                                # headroom for the labels
     for xc, label in labels:
         x_axes = min(max((xc - xlim[0]) / (xlim[1] - xlim[0]), 0.13), 0.85)
         ax.text(x_axes, 0.97, label, transform=ax.transAxes, va="top", ha="center",
@@ -210,6 +220,6 @@ for ax, series, bins, xlim, vlines, bands, labels, xlabel, letter in panels:
     ax.set_xlim(*xlim)
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Density")
-    fs.panel_label(ax, letter)
+    panel_label(ax, letter)
 
 fs.save(fig, "fig02_meteo_overview")

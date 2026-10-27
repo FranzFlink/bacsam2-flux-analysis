@@ -75,7 +75,7 @@ CMAP_IST = cmocean.cm.thermal
 CMAP_TRACK = cmocean.cm.balance
 GIBS_IST_SOURCE_RANGE_K = (223.2, 313.2)
 IST_RANGE_K = (245.0, 278.0)
-IST_TICKS_K = (245.0, 255.0, 265.0, 275.0)
+IST_TICKS_K = (250.0, 260.0, 270.0)     # sparse: the colour bar is only ~2.5 cm wide
 GIBS_IST_LAYER = "MODIS_Terra_Ice_Surface_Temp_Day"
 GIBS_RGB_LAYER = "MODIS_Terra_CorrectedReflectance_TrueColor"
 GIBS_IST_LEGEND_URL = "https://gibs.earthdata.nasa.gov/legends/MODIS_Ice_Surface_Temp_H.png"
@@ -286,13 +286,16 @@ def _plot_flux_row(ax, window, title, legend=False):
     tw0, tw1 = pd.Timestamp(window[0]), pd.Timestamp(window[1])
     mask = (starts >= tw0) & (starts <= tw1)
     t = mid_times[mask]
+    # legend labels = the estimate names of the manuscript's Table 1
     _plot_with_gaps(ax, t, H_obs_bulk[mask], color=fs.C["H_obs_bulk"], lw=1.2, label="T-Bird bulk")
-    _plot_with_gaps(ax, t, H_rs_bulk[mask], color=fs.C["H_rs_bulk"], lw=1.2, label="ERA5-MODIS")
-    _plot_with_gaps(ax, t, H_era_bulk[mask], color=fs.C["H_era_bulk"], lw=1.2, label="ERA5 bulk")
-    _plot_with_gaps(ax, t, H_era_diag[mask], color=fs.C["H_era_diag"], lw=1.0, ls="--", label="ERA5 diag.")
-    _plot_with_gaps(ax, t, H_car_diag[mask], color=fs.C["H_car_diag"], lw=1.0, ls="--", label="CARRA diag.")
+    _plot_with_gaps(ax, t, H_rs_bulk[mask], color=fs.C["H_rs_bulk"], lw=1.2, label="ERA5–MODIS bulk")
+    _plot_with_gaps(ax, t, H_era_bulk[mask], color=fs.C["H_era_bulk"], lw=1.2, label="ERA5-only bulk")
+    _plot_with_gaps(ax, t, H_era_diag[mask], color=fs.C["H_era_diag"], lw=1.0, ls="--",
+                    label="ERA5 model-diagnosed")
+    _plot_with_gaps(ax, t, H_car_diag[mask], color=fs.C["H_car_diag"], lw=1.0, ls="--",
+                    label="CARRA model-diagnosed")
     _plot_with_gaps(ax, t, H_obs_ec[mask], color=fs.C["H_obs_ec"], lw=1.5, label="EC")
-    ax.axhline(0, color=fs.GRID, lw=0.6, ls=":")
+    ax.axhline(0, color=fs.GREY, lw=0.8, ls=":", zorder=1)       # zero line, below the data
     ax.set_ylabel(fs.FLUX_AXIS)
     # Row title above the axes (in-axes titles collide with the 9 pt legend).
     ax.text(0.02, 1.02, title, transform=ax.transAxes, fontweight="bold", va="bottom", ha="left")
@@ -300,8 +303,6 @@ def _plot_flux_row(ax, window, title, legend=False):
     ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=15))
     ax.xaxis.set_minor_locator(mdates.MinuteLocator(interval=5))
     ax.set_xlim(tw0 - XPAD, tw1 + XPAD)
-    if legend:
-        ax.set_ylim(-5, 15)   # clip the off-scale T-Bird spikes in row (a)
 
 
 def _map_panel(ax, image, ext, window):
@@ -317,24 +318,22 @@ def _map_panel(ax, image, ext, window):
         sp.set_visible(False)
 
 
-def _add_inset_colorbar(ax, cmap, norm, title, ticks, ticklabels, fontcolor,
-                        bounds=(0.76, 0.14, 0.08, 0.6)):
+def _add_colorbar_below(ax, cmap, norm, label, ticks, ticklabels,
+                        bounds=(0.0, -0.13, 1.0, 0.055)):
+    """Horizontal colour bar under the bottom map of a column, outside the imagery.
+
+    The bar is an inset of the map axes placed below it (axes coordinates of the
+    aspect-equal map, so it spans the image width); constrained layout reserves
+    the space because inset axes count towards the parent's tight bounding box.
+    """
     cax = ax.inset_axes(bounds)
-    cax.patch.set_facecolor((1.0, 1.0, 1.0, 0.76))
-    cax.patch.set_edgecolor("none")
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-    cbar = ax.figure.colorbar(sm, cax=cax, orientation="vertical", ticks=ticks)
-    cbar.ax.set_yticklabels(ticklabels)
-    cbar.ax.yaxis.set_ticks_position("left")
-    cbar.ax.tick_params(axis="y", which="major", labelsize=fs.FONT_SIZE - 1,
-                        length=2.0, width=0.5, pad=1.2, colors=fontcolor)
-    cbar.ax.set_title(title, fontsize=fs.FONT_SIZE - 1, pad=2.0, color=fontcolor)
-    cbar.outline.set_visible(False)
-    for side in ("top", "right"):
-        cbar.ax.spines[side].set_visible(False)
-    for side in ("left", "bottom"):
-        cbar.ax.spines[side].set_linewidth(0.5)
-        cbar.ax.spines[side].set_color(fontcolor)
+    cbar = ax.figure.colorbar(sm, cax=cax, orientation="horizontal", ticks=ticks)
+    cbar.ax.set_xticklabels(ticklabels)
+    cbar.ax.tick_params(axis="x", which="major", length=2.0, width=0.5, pad=1.5)
+    cbar.ax.tick_params(axis="x", which="minor", length=0)
+    cbar.set_label(label, labelpad=1.5)
+    cbar.outline.set_linewidth(0.5)
 
 
 # ── Norms (IST fixed range; EC flux symmetric about 0 at the 97th pctile) ────
@@ -373,18 +372,24 @@ for i, row in enumerate(ROWS):
         _map_panel(ax, img, ext, row["window"])
         fs.panel_label(ax, f"({letter})")
 
-    if i == 0:
-        _add_inset_colorbar(ax_ist, CMAP_IST, IST_NORM, "$T_\\mathrm{S,MOD}$\n(K)",
+    if i == len(ROWS) - 1:      # one shared colour bar per map column, below it
+        # (g-l) show the GIBS layer MODIS_Terra_Ice_Surface_Temp_Day, not the
+        # MODIS/Aqua L3 T_s,MOD of the analysis -> labelled as what it is
+        _add_colorbar_below(ax_ist, CMAP_IST, IST_NORM, "MODIS/Terra IST (K)",
                             ticks=IST_TICKS_K,
-                            ticklabels=[f"{t:.0f}" for t in IST_TICKS_K], fontcolor="0.9")
-        _add_inset_colorbar(ax_rgb, CMAP_TRACK, FLUX_NORM, "$H_\\mathrm{S,EC}$\n(W m$^{-2}$)",
-                            ticks=[-10, -5, 0, 5, 10],
-                            ticklabels=["-10", "-5", "0", "5", "10"], fontcolor="0.1")
+                            ticklabels=[f"{t:.0f}" for t in IST_TICKS_K])
+        _add_colorbar_below(ax_rgb, CMAP_TRACK, FLUX_NORM, fs.L["H_obs_ec"] + " " + fs.FLUX_UNIT,
+                            ticks=[-10, 0, 10],
+                            ticklabels=["\N{MINUS SIGN}10", "0", "10"])
 
 fig.align_ylabels(ts_axes)
 handles, labels = ts_axes[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc="outside upper center", ncol=6,
-           columnspacing=1.0, handlelength=1.2, handletextpad=0.4)
+# two rows, read row by row: bulk estimates on top, model-diagnosed and EC below
+# (legend columns fill column-major, hence the interleaved order)
+ORDER = [0, 3, 1, 4, 2, 5]
+fig.legend([handles[k] for k in ORDER], [labels[k] for k in ORDER],
+           loc="outside upper center", ncol=3,
+           columnspacing=1.5, handlelength=2.0, handletextpad=0.5)
 fs.save(fig, "fig05_flux_timeseries")
 ````
 :::

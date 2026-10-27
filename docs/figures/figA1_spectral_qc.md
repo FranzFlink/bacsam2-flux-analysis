@@ -160,8 +160,12 @@ _plot_lines(ax, "f_fft", "ogive_norm", only_detectable=True)
 ax.set_xlabel("f (Hz)")
 ax.set_ylabel(r"norm. $O_{w\theta}$")
 
+# panel letters just above the top-left axes corner, starting at the spine, so
+# they stay clear of the uppermost y tick labels (10^0, 2.0) on its left; local
+# variant of fs.panel_label, whose letters sat on those tick labels
 for key, lab in zip("ABCDEF", ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"]):
-    fs.panel_label(axs[key], lab)
+    axs[key].annotate(lab, xy=(0, 1), xycoords="axes fraction", xytext=(0, 5),
+                      textcoords="offset points", fontweight="bold", ha="left", va="bottom")
 
 axs["E"].legend(
     [Line2D([0], [0], **STYLES[True]), Line2D([0], [0], **STYLES[False]), Line2D([0], [0], color="k", lw=1.0)],

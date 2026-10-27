@@ -3,7 +3,7 @@
 Tornado-chart layout: three shared-y panels, (a) regression slope b on the EC
 reference (ideal 1), (b) correlation r, (c) bias (ideal 0). Each configuration
 row shows the three offline bulk estimates as dots (T-Bird green, ERA5-MODIS
-orange, ERA5-only blue) joined by a grey connector; the model-diagnosed
+orange, ERA5-only blue; no connector line); the model-diagnosed
 ERA5/CARRA fluxes are the dashed vertical benchmark lines. Representative
 configurations only (full matrix: Table C1).
 
@@ -93,8 +93,7 @@ for ax, (metric, xlab, xlim, ticks, ideal) in zip(axes, PANELS):
         yy = ypos[i]
         if entry[0] == "row":
             vo, vr, ve = row_values(entry[2], metric)
-            ax.plot([min(vo, vr, ve), max(vo, vr, ve)], [yy, yy],
-                    color="0.75", lw=1.0, zorder=3)
+            # no connector between the three dots: there are no values between them
             for v, key in [(vo, "H_obs_bulk"), (vr, "H_rs_bulk"), (ve, "H_era_bulk")]:
                 ax.plot(v, yy, "o", ms=4.5, color=fs.C[key], mec="white", mew=0.5,
                         zorder=4)

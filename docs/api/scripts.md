@@ -316,7 +316,7 @@ Fig. 1 -- campaign overview map (manuscript Sect. 2.1, fig:campaign_overview).
 April-2024 mean sea-ice concentration (merged MODIS-AMSR2, 1 km) with all 13
 Polar 6 master tracks of BACSAM-II (PANGAEA, doi:10.1594/PANGAEA.971763).
 The four analysed low-level flight days are highlighted in the batlow day
-colours and their focus regions (the detail panels of the low-level flight
+colours (17 April in red, drawn on top) and their focus regions (the detail panels of the low-level flight
 figure) are drawn as labelled rectangles.  A flight is coloured only if it
 overlaps in time with the analysed 5-km segments (three flights flew on
 13 April; only the one containing the low-level legs is highlighted).
@@ -422,7 +422,7 @@ Fig. 7 (fig:sensitivity_summary) — sensitivity in the slope/r framework (manus
 Tornado-chart layout: three shared-y panels, (a) regression slope b on the EC
 reference (ideal 1), (b) correlation r, (c) bias (ideal 0). Each configuration
 row shows the three offline bulk estimates as dots (T-Bird green, ERA5-MODIS
-orange, ERA5-only blue) joined by a grey connector; the model-diagnosed
+orange, ERA5-only blue; no connector line); the model-diagnosed
 ERA5/CARRA fluxes are the dashed vertical benchmark lines. Representative
 configurations only (full matrix: Table C1).
 

@@ -9,7 +9,7 @@ short_title: "Fig. 4 · Flux maps of the low-level flights"
 
 :::{figure} ../../figures_manuscript/output/fig04_flux_maps.png
 :alt: Figure 4 of the paper
-**Figure 4.** Low-level flux-segment data collected during BACSAM-II (April 2024). Red/blue colour shading indicates the EC sensible heat flux, white/blue colour shading the sea-ice concentration, and wind barbs denote the mean wind speed and direction. The frame colours correspond to the focus-region rectangles in Fig. 1. **(a)** 13 April 2024: Northern-most flight leg, closely packed sea-ice **(b)** 15 April 2024: Closed sea-ice with occasional leads, south-east of Svalbard. **(c)** 17 April 2024: North-east of Svalbard, overflight of the opening Whalers Bay Polynya, with mostly thin sea-ice conditions. **(d)** 23 April 2024: Same area as in (c), but with the polynya now exposing the open-water surface.
+**Figure 4.** Low-level flux-segment data collected during BACSAM-II (April 2024). Red/blue colour shading indicates the EC sensible heat flux, white/blue colour shading the sea-ice concentration, and wind barbs denote the mean wind speed and direction. The frame colours correspond to the focus-region rectangles in Fig. 1. **(a)** 13 April 2024: Northernmost flight leg, closely packed sea ice. **(b)** 15 April 2024: Closed sea ice with occasional leads, south-east of Svalbard. **(c)** 17 April 2024: North-east of Svalbard, overflight of the opening Whalers Bay polynya, with mostly thin sea-ice conditions. **(d)** 23 April 2024: Same area as in (c), but with the polynya now exposing the open-water surface.
 :::
 
 ## Construction
@@ -85,6 +85,7 @@ low = low.where(low.start_time != first_ts_0413, drop=True)
 # frame colours = campaign-map focus-rectangle colours (batlow over all days)
 frame_colors = dict(zip(low_alt_days,
                         cm_crameri.batlow(np.linspace(0, 1, len(low_alt_days)))))
+frame_colors["2024-04-17"] = "#d7191c"   # = DAY_COLOR_0417 of fig01_campaign_overview.py
 detail_days = [d for d in low_alt_days if d != "2024-04-25"]
 
 # ── Figure ──────────────────────────────────────────────────────────────────

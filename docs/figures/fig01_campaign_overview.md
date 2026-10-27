@@ -17,7 +17,7 @@ short_title: "Fig. 1 · Campaign overview"
 April-2024 mean sea-ice concentration (merged MODIS-AMSR2, 1 km) with all 13
 Polar 6 master tracks of BACSAM-II (PANGAEA, doi:10.1594/PANGAEA.971763).
 The four analysed low-level flight days are highlighted in the batlow day
-colours and their focus regions (the detail panels of the low-level flight
+colours (17 April in red, drawn on top) and their focus regions (the detail panels of the low-level flight
 figure) are drawn as labelled rectangles.  A flight is coloured only if it
 overlaps in time with the analysed 5-km segments (three flights flew on
 13 April; only the one containing the low-level legs is highlighted).
@@ -37,7 +37,7 @@ The script writes `figures_manuscript/output/fig01_campaign_overview.pdf` and `.
 April-2024 mean sea-ice concentration (merged MODIS-AMSR2, 1 km) with all 13
 Polar 6 master tracks of BACSAM-II (PANGAEA, doi:10.1594/PANGAEA.971763).
 The four analysed low-level flight days are highlighted in the batlow day
-colours and their focus regions (the detail panels of the low-level flight
+colours (17 April in red, drawn on top) and their focus regions (the detail panels of the low-level flight
 figure) are drawn as labelled rectangles.  A flight is coloured only if it
 overlaps in time with the analysed 5-km segments (three flights flew on
 13 April; only the one containing the low-level legs is highlighted).
@@ -95,6 +95,12 @@ low = xr.open_dataset(AR_FP).pipe(lambda d: d.where(d.altitude <= 50, drop=True)
 seg_times = pd.to_datetime(low.start_time.values)
 low_alt_days = np.unique(seg_times.strftime("%Y-%m-%d"))
 day_color = dict(zip(low_alt_days, cmc.batlow(np.linspace(0, 1, len(low_alt_days)))))
+# 17 April: batlow's mid-range olive vanished next to the 23-April tracks
+# (co-author round 3) -> a saturated red, drawn above the 23-April tracks.
+# Keep in sync with the frame colours of fig04_flux_maps.py.
+DAY_COLOR_0417 = "#d7191c"
+day_color["2024-04-17"] = DAY_COLOR_0417
+DAY_ZORDER = {"2024-04-17": 1}        # extra zorder: 17 April on top
 analysed_days = [d for d in low_alt_days if d != "2024-04-25"]
 
 # focus regions of the detail panels (a)-(d); as there, the first 13-April
@@ -152,27 +158,36 @@ for field, levels, labelled, fmt in [
 for df, day, analysed in tracks:
     if analysed:
         ax.plot(df.lon, df.lat, color=day_color[day], linewidth=1,
-                transform=PC, zorder=6,
+                transform=PC, zorder=6 + 0.5 * DAY_ZORDER.get(day, 0),
                 path_effects=[pe.withStroke(linewidth=1.1, foreground="white")])
     else:
         ax.plot(df.lon, df.lat, color="dimgrey", linewidth=0.7, alpha=0.8,
                 transform=PC, zorder=4)
 
-# focus-region rectangles; (c) and (d) almost coincide, so (c) is labelled on
-# the right side of the shared box; (b) sits above its corner, clearing the
-# 'Svalbard' label
+# focus-region rectangles; (c) and (d) almost coincide, so their labels sit at
+# opposite corners of the shared box (d: north-west, c: south-east), each tied
+# to its corner by a short leader line; (b) sits below its box, inside the map
+# frame (above it, it was cut by the frame)
+pc_data = PC._as_mpl_transform(ax)
+LABEL_POS = {   # (anchor corner of the box, label offset in points, ha, va)
+    "(a)": ("top-left", (-3, 0), "right", "top"),
+    "(b)": ("bottom-centre", (0, -3), "center", "top"),
+    "(c)": ("bottom-right", (6, -5), "left", "top"),
+    "(d)": ("top-left", (-7, 6), "right", "bottom"),
+}
 for name, (day, (x0, x1, y0, y1)) in focus.items():
     ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False,
                            linewidth=.75, edgecolor=day_color[day],
-                           transform=PC, zorder=7, alpha=.7, linestyle="--"))
-    if name == "(b)":       # above the box, clear of the 'Svalbard' label
-        lx, ly, ha, va = x0 + 0.3, y1 + 0.08, "left", "bottom"
-    elif name == "(c)":     # right of the shared box
-        lx, ly, ha, va = x1 + 0.3, y1, "left", "top"
-    else:                   # top-left, outside
-        lx, ly, ha, va = x0 - 0.3, y1, "right", "top"
-    ax.text(lx, ly, name, color=day_color[day], weight="bold", ha=ha, va=va,
-            transform=PC, zorder=8, path_effects=HALO)
+                           transform=PC, zorder=7 + 0.5 * DAY_ZORDER.get(day, 0),
+                           alpha=.7, linestyle="--"))
+    corner, offset, ha, va = LABEL_POS[name]
+    xy = {"top-left": (x0, y1), "bottom-right": (x1, y0),
+          "bottom-centre": (0.5 * (x0 + x1), y0)}[corner]
+    leader = (dict(arrowstyle="-", color=day_color[day], lw=0.6, shrinkA=0, shrinkB=0)
+              if name in ("(c)", "(d)") else None)
+    ax.annotate(name, xy=xy, xycoords=pc_data, xytext=offset,
+                textcoords="offset points", color=day_color[day], weight="bold",
+                ha=ha, va=va, zorder=8, path_effects=HALO, arrowprops=leader)
 
 # geographical references
 ax.plot(*LONGYEARBYEN, marker="*", markersize=9, color="k",

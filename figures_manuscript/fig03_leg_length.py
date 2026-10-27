@@ -47,10 +47,19 @@ kw_eb = dict(lw=1.0, ms=3.5, mew=0.6, markeredgecolor="k", elinewidth=0.8,
 def _fmt_xax(ax, xlim=(0.9, 31.0)):
     ax.set_xscale("log")
     ax.set_xlim(xlim)
-    ax.set_xticks([1.0, 2.5, 5.0, 10.0, 20.0, 30])
-    ax.get_xaxis().set_major_formatter(mticker.ScalarFormatter())
+    ax.set_xticks([1, 2, 5, 10, 20, 30])
+    ax.get_xaxis().set_major_formatter(mticker.FormatStrFormatter("%d"))   # integer labels
+    ax.get_xaxis().set_minor_formatter(mticker.NullFormatter())
     ax.set_xlabel("Averaging window (km)")
     ax.axvline(REF_LENGTH_KM, color=C_REF, lw=3.0, ls="--", zorder=-1)
+
+
+def _panel_label(ax, label):
+    """Panel letter above the top-left axes corner, clear of the uppermost y tick label
+    and of the long y label of (b) (local variant of fs.panel_label, whose fixed 2 %
+    offset lets '(c)' sit on the '1.0')."""
+    ax.annotate(label, xy=(0, 1), xycoords="axes fraction", xytext=(-6, 7),
+                textcoords="offset points", fontweight="bold", ha="left", va="bottom")
 
 
 # ── (a) Flux-capture ratio H_sub / H_full ────────────────────────────────────
@@ -67,7 +76,7 @@ ax.axhline(1.0, color="k", lw=1.5, ls="--", alpha=0.6, label="Full-leg = 1")
 _fmt_xax(ax)
 ax.set_ylabel(r"$H_\mathrm{S,sub}\,/\,H_\mathrm{S,full}$")
 ax.legend(loc="lower right")
-fs.panel_label(ax, "(a)")
+_panel_label(ax, "(a)")
 
 # ── (b) random error of the sub-window flux (Finkelstein & Sims, 2001) ─────
 ax = axes[1]
@@ -81,9 +90,9 @@ ax.errorbar(x, y, yerr=yerr, fmt="s", color=C_SIGMA,
             label=r"$\sigma_\mathrm{rand}$  (median, quartiles)", **kw_eb)
 _fmt_xax(ax)
 ax.set_ylim(bottom=0)
-ax.set_ylabel(r"random error $\sigma_\mathrm{rand}$ (W m$^{-2}$)")
+ax.set_ylabel(r"Random error $\sigma_\mathrm{rand}$ (W m$^{-2}$)")
 ax.legend(loc="upper right")
-fs.panel_label(ax, "(b)")
+_panel_label(ax, "(b)")
 
 # ── (c) share of sub-windows whose flux exceeds 1, 2, 3 x its random error ──
 ax = axes[2]
@@ -94,9 +103,9 @@ for i, k in enumerate((1, 2, 3)):
             label=rf"$|H_\mathrm{{S}}| > {k}\,\sigma_\mathrm{{rand}}$")
 _fmt_xax(ax)
 ax.set_ylim(0, 1)
-ax.set_ylabel("fraction of sub-windows")
+ax.set_ylabel("Fraction of sub-windows")
 ax.legend(loc="lower right", handlelength=2.2)
-fs.panel_label(ax, "(c)")
+_panel_label(ax, "(c)")
 ax.axvline(REF_LENGTH_KM, color=C_REF, lw=3.0, ls="--", zorder=10)
 
 fs.save(fig, "fig03_leg_length")
