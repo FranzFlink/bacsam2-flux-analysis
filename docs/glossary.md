@@ -29,7 +29,7 @@ the variable names in `data/model_output/sensitivity_figure_data.nc` (`fluxpy/na
 | $C_\mathrm{h}$, $C_\mathrm{h,n}$ | transfer coefficient of heat, and its neutral value |
 | $f_h$ | stability factor, $C_\mathrm{h} = C_\mathrm{h,n}\, f_h$ |
 | $z_{0,m}$, $z_{0,T}$ | roughness lengths for momentum and heat |
-| $\alpha_T$ | scalar roughness ratio $z_{0,T}/z_{0,m}$; $10^{-1}$ in the reference configuration, $10^{-4}$ in the amplitude-matched one |
+| $\alpha_T$ | scalar roughness ratio $z_{0,T}/z_{0,m}$; $10^{-1}$ in the reference configuration, $10^{-2}$ in the amplitude-matched one |
 | $Ri_\mathrm{b}$ | two-point bulk Richardson number between the surface and the measurement level (Eq. B3); positive is stable |
 | $\sigma_\mathrm{rand}$ | random (sampling) error of an EC flux (Finkelstein and Sims, 2001), 1σ |
 | $b$ | slope of the ordinary-least-squares regression of an estimate on the EC flux: the **amplitude** it recovers (ideal 1) |
@@ -44,6 +44,6 @@ the variable names in `data/model_output/sensitivity_figure_data.nc` (`fluxpy/na
 | forcing | the source of the inputs of a bulk estimate (in situ, ERA5–MODIS, reanalysis only) |
 | configuration | the parameter settings of the bulk algorithm (stability scheme, $\alpha_T$, roughness) |
 | reference configuration | GLGS20 stability functions, $\alpha_T = 10^{-1}$, surface-type-dependent roughness |
-| amplitude-matched configuration | as the reference, with $\alpha_T = 10^{-4}$, where the in-situ estimate has slope 1 |
+| amplitude-matched configuration | as the reference, with $\alpha_T = 10^{-2}$, where the in-situ estimate has slope 1 |
 | integrity check | whether the vertical-wind spectrum of a segment falls off like $f^{-5/3}$ (resolved turbulence), $\lvert s_w + 5/3 \rvert \le 0.4$; reported for every segment, no segment is excluded by it |
 | model-diagnosed | a flux computed inside the reanalysis model, as opposed to a bulk flux recomputed offline from its output |

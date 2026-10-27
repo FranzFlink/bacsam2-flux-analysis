@@ -98,10 +98,11 @@ def reference_config() -> BulkConfig:
 
 
 def amplitude_matched_config() -> BulkConfig:
-    """Amplitude-matched configuration: alpha_T = 1e-4, the value at which the in-situ
-    bulk estimate reproduces the observed flux amplitude (regression slope 1;
-    manuscript Sect. 4.2). Reported alongside the reference, never as a roughness retrieval."""
-    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-4, label="GLGS20_ztr1e-04")
+    """Amplitude-matched configuration: alpha_T = 1e-2, the value of the sweep (one per
+    decade) at which the in-situ bulk estimate reproduces the observed flux amplitude
+    (regression slope closest to 1; manuscript Sect. 4.2). Reported alongside the
+    reference, never as a roughness retrieval."""
+    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-2, label="GLGS20_ztr1e-02")
 
 
 # ── B2  roughness ─────────────────────────────────────────────────────────────

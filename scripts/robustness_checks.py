@@ -37,7 +37,8 @@ import xarray as xr
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "scripts"))
-from fluxpy.bulk import compute_bulk_shf_obs, compute_bulk_shf_remote, reference_config, transfer_coefficients  # noqa: E402
+from fluxpy.bulk import (amplitude_matched_config, compute_bulk_shf_obs, compute_bulk_shf_remote,  # noqa: E402
+                         reference_config, transfer_coefficients)
 from fluxpy.sensitivity import skill_metrics  # noqa: E402
 from calc_bulk_and_ec_fluxes import _read_cache, era5_forcing, load_obs  # noqa: E402
 
@@ -81,16 +82,18 @@ def more_metrics():
         print(f"{name:<14} {m['slope']:5.1f} {m['r']:6.1f} {m['std_ratio']:10.1f} {m['intercept']:+9.1f} "
               f"{m['bias']:+6.1f} {mae:5.1f} {m['rmse']:5.1f} {m['n']:4d}")
     runs_obs = [str(r) for r in FIG["run_obs"].values]
-    matched = np.asarray(FIG["H_obs_bulk_all"])[runs_obs.index("GLGS20_ztr1e-04")]
+    matched_cfg = amplitude_matched_config()
+    matched = np.asarray(FIG["H_obs_bulk_all"])[runs_obs.index(matched_cfg.label)]
+    matched_name = f"alpha_T {matched_cfg.zt_ratio:.0e}".replace("e-0", "e-")
     m = skill_metrics(EC, matched)
-    print(f"{'  alpha_T 1e-4':<14} {m['slope']:5.1f} {m['r']:6.1f} {m['std_ratio']:10.1f} {m['intercept']:+9.1f} "
+    print(f"{'  ' + matched_name:<14} {m['slope']:5.1f} {m['r']:6.1f} {m['std_ratio']:10.1f} {m['intercept']:+9.1f} "
           f"{m['bias']:+6.1f} {np.mean(np.abs(matched - EC)):5.1f} {m['rmse']:5.1f} {m['n']:4d}   (amplitude-matched in-situ)")
     zero_mae, zero_rmse = np.mean(np.abs(EC)), np.sqrt(np.mean(EC ** 2))
     print(f"{'zero flux':<14} {'':>5} {'':>6} {'':>10} {'':>9} {-EC.mean():+6.1f} {zero_mae:5.1f} "
           f"{zero_rmse:5.1f} {EC.size:4d}   (H = 0 everywhere)")
     print(f"{'constant mean':<14} {'':>5} {'':>6} {'':>10} {'':>9} {0.0:+6.1f} {np.mean(np.abs(EC - EC.mean())):5.1f} "
           f"{EC.std():5.1f} {EC.size:4d}   (H = mean EC flux everywhere)")
-    candidates = [(name, H(key)) for key, name in ESTIMATES] + [("alpha_T 1e-4", matched)]
+    candidates = [(name, H(key)) for key, name in ESTIMATES] + [(matched_name, matched)]
     beat = [name for name, h in candidates
             if np.sqrt(np.nanmean((h - EC) ** 2)) < zero_rmse and np.nanmean(np.abs(h - EC)) < zero_mae]
     print("estimates with a lower RMSE and MAE than the zero-flux forecast: " + (", ".join(beat) if beat else "none"))

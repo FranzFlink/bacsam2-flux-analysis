@@ -165,7 +165,7 @@ Blocks (in the order printed) and where they appear in the manuscript
 ```text
 EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
 reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
-amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-4)
+amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-2)
 alpha_T sweep ....................... Sect. 4.2, Fig. 7, Table C1
 satellite T_s benefit ............... Sect. 4.1, Discussion (heterogeneous vs homogeneous half)
 alpha_T is a weak knob .............. Discussion
@@ -180,7 +180,7 @@ Richardson number ................... Appendix B1 (range of Ri_b, effect of a bo
 Framework (Sect. 4.1): amplitude skill is a regression slope and variability skill
 a correlation, because RMSE in this low-flux regime rewards estimates that shrink
 towards zero. The reference configuration uses the conventional alpha_T = 1e-1;
-the amplitude-matched alpha_T = 1e-4 is reported alongside.
+the amplitude-matched alpha_T = 1e-2 is reported alongside.
 
 Run:  pixi run numbers
 

@@ -12,7 +12,7 @@ as integers.
 Blocks (in the order printed) and where they appear in the manuscript
     EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
     reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
-    amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-4)
+    amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-2)
     alpha_T sweep ....................... Sect. 4.2, Fig. 7, Table C1
     satellite T_s benefit ............... Sect. 4.1, Discussion (heterogeneous vs homogeneous half)
     alpha_T is a weak knob .............. Discussion
@@ -26,7 +26,7 @@ Blocks (in the order printed) and where they appear in the manuscript
 Framework (Sect. 4.1): amplitude skill is a regression slope and variability skill
 a correlation, because RMSE in this low-flux regime rewards estimates that shrink
 towards zero. The reference configuration uses the conventional alpha_T = 1e-1;
-the amplitude-matched alpha_T = 1e-4 is reported alongside.
+the amplitude-matched alpha_T = 1e-2 is reported alongside.
 
 Run:  pixi run numbers
 """
@@ -40,6 +40,7 @@ from scipy.stats import norm
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
+from fluxpy.bulk import amplitude_matched_config  # noqa: E402
 from fluxpy.sensitivity import amplitude_metrics, skill_metrics, slope_bootstrap_ci  # noqa: E402
 from fluxpy.uncertainty import central_difference, uncertainty_budget  # noqa: E402
 
@@ -126,13 +127,14 @@ def reference_configuration():
 
 
 def amplitude_matched_configuration():
-    """Table 4, lower part (Sect. 4.2): alpha_T = 1e-4."""
+    """Table 4, lower part (Sect. 4.2): the amplitude-matched configuration (fluxpy.bulk)."""
+    cfg = amplitude_matched_config()
     print("\n" + RULE)
-    print("AMPLITUDE-MATCHED CONFIGURATION  alpha_T = 1e-4  (Schroeder et al., 2003)")
+    print(f"AMPLITUDE-MATCHED CONFIGURATION  alpha_T = {cfg.zt_ratio:.0e}".replace("e-0", "e-"))
     print(RULE)
-    print(line("H_S,obs,bulk", H_OBS_ALL[RUNS_OBS.index("GLGS20_ztr1e-04")], ci=True))
-    print(line("H_S,RS,bulk", H_RS_ALL[RUNS_RS.index("GLGS20_ztr1e-04")]))
-    print(line("H_S,ERA,bulk", H_RS_ALL[RUNS_RS.index("GLGS20_ztr1e-04_era5only")]))
+    print(line("H_S,obs,bulk", H_OBS_ALL[RUNS_OBS.index(cfg.label)], ci=True))
+    print(line("H_S,RS,bulk", H_RS_ALL[RUNS_RS.index(cfg.label)]))
+    print(line("H_S,ERA,bulk", H_RS_ALL[RUNS_RS.index(f"{cfg.label}_era5only")]))
 
 
 def alpha_sweep():
@@ -324,7 +326,7 @@ def quoted_percentages():
               f"({(m['slope'] - 1) * 100:+4.0f} %);  r {m['r']:.2f}: explains {m['r'] ** 2 * 100:2.0f} % of the variance")
     ok = np.isfinite(EC)
     b_ref = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ref")][ok])["slope"]
-    b_matched = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index("GLGS20_ztr1e-04")][ok])["slope"]
+    b_matched = amplitude_metrics(EC[ok], H_OBS_ALL[RUNS_OBS.index(amplitude_matched_config().label)][ok])["slope"]
     print(f"transfer coefficient reduction needed for unit amplitude: 1 - {b_matched:.2f} / {b_ref:.2f} = "
           f"{(1 - b_matched / b_ref) * 100:.0f} %")
     print()

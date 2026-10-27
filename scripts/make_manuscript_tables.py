@@ -18,7 +18,10 @@ import xarray as xr
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
+from fluxpy.bulk import amplitude_matched_config  # noqa: E402
 from fluxpy.uncertainty import uncertainty_budget  # noqa: E402
+
+MATCHED = amplitude_matched_config().label          # the amplitude-matched row of Table C1 (bold)
 
 OUT = REPO / "tables_manuscript"
 OUT.mkdir(exist_ok=True)
@@ -56,10 +59,11 @@ print("── Table 3 body ──\n" + table3 + "\n")
 
 GROUPS = [
     ("Reference configuration (conventional $\\alpha_T$)", ["GLGS20_ref"]),
-    ("Amplitude-matched configuration", ["GLGS20_ztr1e-04"]),
+    ("Amplitude-matched configuration", [MATCHED]),
     ("Stability scheme (all other settings at reference)",
      ["BD_ref", "HB88_ref", "BH91_ref", "CB05_ref", "GAFGP07_ref", "ZE07-I_ref", "ZE07-II_ref"]),
-    ("Scalar roughness ratio $\\alpha_T$ (GLGS20)", [f"GLGS20_ztr1e-0{k}" for k in (2, 3, 5, 6, 7)]),
+    ("Scalar roughness ratio $\\alpha_T$ (GLGS20)",
+     [f"GLGS20_ztr1e-0{k}" for k in (2, 3, 4, 5, 6, 7) if f"GLGS20_ztr1e-0{k}" != MATCHED]),
     ("Momentum roughness set (GLGS20)", ["GLGS20_mosaic", "GLGS20_sheba", "GLGS20_nschnier"]),
     ("Constant (surface-type-independent) $z_{0,m}$ (GLGS20)",
      ["GLGS20_z0c1e-04", "GLGS20_z0c2e-04", "GLGS20_z0c4e-04"]),
@@ -101,7 +105,7 @@ for title, labels in GROUPS:
             print(f"  ! missing run: {label}")
             continue
         row = match.iloc[0]
-        bold = label in ("GLGS20_ref", "GLGS20_ztr1e-04")
+        bold = label in ("GLGS20_ref", MATCHED)
         emph = (lambda s: r"\textbf{" + s + "}") if bold else (lambda s: s)
         alpha = f"{row.zt_ratio:.0e}".replace("e-0", "e-")
         lines.append(

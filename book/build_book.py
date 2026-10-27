@@ -367,13 +367,13 @@ indicate much smaller values. $C_\mathrm{h}$ depends on it logarithmically:
 a = np.logspace(-7, 0, 50)
 ch = np.array([Cd_Ch_noniterative(0.0, 24.0, 3e-4, 3e-4 * x, "GLGS20")[1] for x in a])
 fig, ax = plt.subplots(figsize=(6, 3)); ax.semilogx(a, ch / ch[np.argmin(abs(a - 0.1))], color="k")
-ax.axvline(0.1, color="C2", ls="--"); ax.axvline(1e-4, color="C1", ls="--")
+ax.axvline(0.1, color="C2", ls="--"); ax.axvline(1e-2, color="C1", ls="--")
 ax.set_xlabel(r"$\alpha_T$"); ax.set_ylabel(r"$C_h$ relative to $\alpha_T$ = 0.1")
 print(f"alpha_T from 1e-1 to 1e-4 (three orders of magnitude) changes C_h by a factor {ch[np.argmin(abs(a - 1e-4))] / ch[np.argmin(abs(a - 0.1))]:.2f}")
 '''), ("md", r'''
 **Figure 3.2.** $C_\mathrm{h}$ under neutral stratification as a function of $\alpha_T$, relative to its value at
 $\alpha_T = 0.1$. Dashed lines: reference configuration ($\alpha_T = 0.1$, green) and amplitude-matched configuration
-($\alpha_T = 10^{-4}$, orange).
+($\alpha_T = 10^{-2}$, orange).
 '''), ("md", r'''
 **Summary.** The bulk flux is the product of wind speed, temperature difference and $C_\mathrm{h}$, which contains
 roughness and stability. Roughness scales the flux and thus changes its *amplitude*, but not *where* along the track the
@@ -518,9 +518,9 @@ tab.rename(columns={"zt_ratio": "alpha_T", "obs_slope": "slope (measured inputs)
 MODIS + ERA5 inputs (orange) as functions of $\alpha_T$; the dashed line marks the ideal slope of 1. The table lists the
 same values.
 '''), ("md", r'''
-With measured inputs, the amplitude is matched (slope 1) near $\alpha_T = 10^{-4}$, the *amplitude-matched
-configuration* of the paper: three orders of magnitude below the conventional value and close to values found by earlier
-aircraft measurements over sea ice. The correlation is unaffected, since roughness only rescales the flux (Chapter 3).
+With measured inputs, the amplitude is matched (slope 1) near $\alpha_T = 10^{-2}$, the *amplitude-matched
+configuration* of the paper, one order of magnitude below the conventional value. The correlation is unaffected, since
+roughness only rescales the flux (Chapter 3).
 
 This is not interpreted as a measurement of $z_{0,T}$: any error that scales the flux, for instance in the surface
 temperature, is absorbed by the same parameter. The value of $\alpha_T$ that gives the in-situ estimate the correct

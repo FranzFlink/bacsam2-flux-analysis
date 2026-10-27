@@ -48,7 +48,7 @@ Sign: theta_s > theta_air (warm surface, e.g. a lead) gives H_S > 0, upward.
 |---|---|---|
 | [`BulkConfig`](#fluxpy.bulk.BulkConfig) | class | The free parameters of one bulk flux run (manuscript Table B1 and Sect. 4.2). |
 | [`reference_config`](#fluxpy.bulk.reference_config) | function | Reference configuration of the paper: GLGS20, alpha_T = 1e-1 (the conventional value of large-eddy simulations over sea ice), Table B1 roughness set. |
-| [`amplitude_matched_config`](#fluxpy.bulk.amplitude_matched_config) | function | Amplitude-matched configuration: alpha_T = 1e-4, the value at which the in-situ bulk estimate reproduces the observed flux amplitude (regression slope 1; manuscript Sect. 4.2). |
+| [`amplitude_matched_config`](#fluxpy.bulk.amplitude_matched_config) | function | Amplitude-matched configuration: alpha_T = 1e-2, the value of the sweep (one per decade) at which the in-situ bulk estimate reproduces the observed flux amplitude (regression slope closest to 1; manuscript Sect. 4.2). |
 | [`effective_roughness`](#fluxpy.bulk.effective_roughness) | function | Effective roughness lengths of each segment from its surface fractions (Eq. B4) |
 | [`bulk_richardson_in_situ`](#fluxpy.bulk.bulk_richardson_in_situ) | function | Ri_b of the in-situ pathway (Eq. B3): surface (no-slip) to T-Bird level, from the segment-mean theta, wind components and height that also enter the flux; the measured wind with the regularisation eps in the shear denominator. |
 | [`bulk_richardson_remote`](#fluxpy.bulk.bulk_richardson_remote) | function | Ri_b of the reanalysis-driven pathways (Eq. B3): surface to the ERA5 level, with the effective wind speed of Jordan et al. (1999) / Fairall et al. (1996) in the shear, which bounds Ri_b at vanishing wind; no eps, no further limitation. |
@@ -153,21 +153,23 @@ def reference_config() -> BulkConfig:
 amplitude_matched_config() -> BulkConfig
 ```
 
-Amplitude-matched configuration: alpha_T = 1e-4, the value at which the in-situ
-bulk estimate reproduces the observed flux amplitude (regression slope 1;
-manuscript Sect. 4.2). Reported alongside the reference, never as a roughness retrieval.
+Amplitude-matched configuration: alpha_T = 1e-2, the value of the sweep (one per
+decade) at which the in-situ bulk estimate reproduces the observed flux amplitude
+(regression slope closest to 1; manuscript Sect. 4.2). Reported alongside the
+reference, never as a roughness retrieval.
 
 **Returns** `BulkConfig`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L100-L104)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L100-L105)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 100–104)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 100–105)
 ````python
 def amplitude_matched_config() -> BulkConfig:
-    """Amplitude-matched configuration: alpha_T = 1e-4, the value at which the in-situ
-    bulk estimate reproduces the observed flux amplitude (regression slope 1;
-    manuscript Sect. 4.2). Reported alongside the reference, never as a roughness retrieval."""
-    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-4, label="GLGS20_ztr1e-04")
+    """Amplitude-matched configuration: alpha_T = 1e-2, the value of the sweep (one per
+    decade) at which the in-situ bulk estimate reproduces the observed flux amplitude
+    (regression slope closest to 1; manuscript Sect. 4.2). Reported alongside the
+    reference, never as a roughness retrieval."""
+    return BulkConfig(scheme_name="GLGS20", zt_ratio=1e-2, label="GLGS20_ztr1e-02")
 ````
 :::
 
@@ -207,9 +209,9 @@ renormalised; segments without valid fractions get NaN.
 
 **Returns** `tuple[np.ndarray, np.ndarray]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L109-L127)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L110-L128)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 109–127)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 110–128)
 ````python
 def effective_roughness(f_open, f_thin, f_thick, cfg: BulkConfig) -> tuple[np.ndarray, np.ndarray]:
     r"""Effective roughness lengths of each segment from its surface fractions (Eq. B4),
@@ -257,9 +259,9 @@ measured wind with the regularisation eps in the shear denominator.
 
 **Returns** `np.ndarray`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L150-L156)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L151-L157)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 150–156)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 151–157)
 ````python
 def bulk_richardson_in_situ(theta_sfc, theta_air, u, v, z, cfg: BulkConfig) -> np.ndarray:
     """Ri_b of the in-situ pathway (Eq. B3): surface (no-slip) to T-Bird level, from the
@@ -294,9 +296,9 @@ which bounds Ri_b at vanishing wind; no eps, no further limitation.
 
 **Returns** `np.ndarray`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L159-L167)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L160-L168)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 159–167)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 160–168)
 ````python
 def bulk_richardson_remote(theta_sfc, theta_air, wind_speed, z, cfg: BulkConfig) -> np.ndarray:
     """Ri_b of the reanalysis-driven pathways (Eq. B3): surface to the ERA5 level, with the
@@ -332,9 +334,9 @@ NaN where the inputs are missing or the geometry is invalid (z <= z0).
 
 **Returns** `tuple[np.ndarray, np.ndarray]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L172-L185)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L173-L186)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 172–185)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 173–186)
 ````python
 def transfer_coefficients(Ri, z, z0, zt, scheme_name: str) -> tuple[np.ndarray, np.ndarray]:
     """(C_d, C_h) per segment from ``fluxpy.stability_lib.Cd_Ch_noniterative``;
@@ -379,9 +381,9 @@ Returns `H_obs_bulk`, `Ri_obs`, `z0_obs`, `zt_obs`, `Cd_obs`,
 
 **Returns** `xr.Dataset`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L207-L237)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L208-L238)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 207–237)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 208–238)
 ````python
 def compute_bulk_shf_obs(ds: xr.Dataset, cfg: BulkConfig) -> xr.Dataset:
     """H_S,obs,bulk: the in-situ bulk estimate (manuscript Table 1, row 2).
@@ -452,9 +454,9 @@ Returns `H_rs_bulk`, `Ri_rs`, `z0_rs`, `zt_rs`, `Cd_rs`, `Ch_rs`,
 
 **Returns** `xr.Dataset`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L240-L276)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/bulk.py#L241-L277)
 
-:::{dropdown} Source code (fluxpy/bulk.py, lines 240–276)
+:::{dropdown} Source code (fluxpy/bulk.py, lines 241–277)
 ````python
 def compute_bulk_shf_remote(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.Dataset,
                             cfg: BulkConfig, z_ref=30.0) -> xr.Dataset:

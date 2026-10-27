@@ -46,7 +46,7 @@ def diag_metrics(key):
 # depend on the bulk configuration.
 ROWS = [
     ("row", "Reference ($\\alpha_T = 10^{-1}$)", "GLGS20_ref"),
-    ("row", "$\\alpha_T = 10^{-4}$", "GLGS20_ztr1e-04"),
+    ("row", "$\\alpha_T = 10^{-2}$ (amplitude-matched)", "GLGS20_ztr1e-02"),
     ("header", "Stability scheme"),
     ("row", "Businger–Dyer", "BD_ref"),
     ("row", "SHEBA (GAFGP07)", "GAFGP07_ref"),
