@@ -46,6 +46,7 @@ pixi run robustness   # robustness of the comparison (dependence, baselines, MOD
 pixi run book         # re-execute the didactic notebooks in book/
 pixi run api          # regenerate the API reference docs/api/ and the figure pages docs/figures/ (pixi run test checks them)
 pixi run site         # build the website (docs/ + book/) into _build/html; site-serve for a live preview
+pixi run site-deploy  # upload _build/html to Cloudflare behind a password (deploy/README.md; site-login once)
 ```
 
 ## Conventions that are decisions, not accidents

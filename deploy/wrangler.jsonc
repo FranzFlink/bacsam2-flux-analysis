@@ -1,0 +1,23 @@
+// Cloudflare Workers deployment of the website (_build/html, built by `pixi run site`).
+// Deploy with `pixi run site-deploy` (= `wrangler deploy` in this folder); see deploy/README.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bacsam-ii-supplement",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-12",
+  "assets": {
+    "directory": "../_build/html",
+    "binding": "ASSETS",
+    // The Worker (password check) runs before any static file is served.
+    "run_worker_first": true,
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // Custom domain: Cloudflare creates the DNS record and certificate on deploy.
+  // The zone must be in the same Cloudflare account; edit the hostname here.
+  "routes": [
+    { "pattern": "bacsam.polarjosh.com", "custom_domain": true }
+  ],
+  // Credentials are secrets, not vars:  wrangler secret put SITE_USER / SITE_PASSWORD
+  "observability": { "enabled": true }
+}

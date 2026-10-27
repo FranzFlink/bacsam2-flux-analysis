@@ -70,6 +70,10 @@ mystmd = "*"
 [feature.docs.tasks]
 site       = "myst build --html"
 site-serve = "myst start"
+# password-protected deployment on Cloudflare Workers (deploy/README.md); wrangler is a local
+# npm package of deploy/ (pixi run -e docs npm install --prefix deploy)
+site-login  = { cmd = "node node_modules/wrangler/bin/wrangler.js login", cwd = "deploy" }
+site-deploy = { cmd = "node node_modules/wrangler/bin/wrangler.js deploy", cwd = "deploy" }
 
 [environments]
 docs = { features = ["docs"], no-default-feature = true }
