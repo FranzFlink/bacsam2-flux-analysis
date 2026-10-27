@@ -39,7 +39,9 @@ test          = "pytest tests -q"
 # EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
 verify-ec     = "python scripts/verify_ec_reproduction.py"
 verify-cache  = "python scripts/verify_along_track_cache.py"
+inputs        = "python scripts/prepare_inputs.py"            # published PANGAEA files -> leg windows
 ec-segments   = "python scripts/run_ec_aggregation.py"
+polar6-level  = "python scripts/polar6_level_at_segments.py"   # Polar 6 means per segment (Fig. 2a)
 placement     = "python scripts/ec_segment_placement.py"
 window-length = "python scripts/ec_window_length.py"
 ec-quality    = { cmd = "python scripts/ec_quality.py", depends-on = ["precompute"] }

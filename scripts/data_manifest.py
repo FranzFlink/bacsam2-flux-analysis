@@ -35,6 +35,8 @@ RULES = [
      "doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)"),
     ("data/observations/processed/t-bird_unified/*", "pangaea:new",
      "leg-window subset of doi:10.1594/PANGAEA.995975 (T-Bird 100 Hz); see DATA_PUBLICATION.md, decision D1"),
+    ("data/observations/processed/polar6_unified/noseboom_unified.nc", "regenerated",
+     "cut from doi:10.1594/PANGAEA.995974 (Polar 6 nose boom 100 Hz) by pixi run inputs"),
     ("data/observations/processed/polar6_unified/*", "pangaea:new",
      "KT-19 used from it; source doi:10.1594/PANGAEA.995980 (KT-19 50 Hz); see DATA_PUBLICATION.md, decision D2"),
     ("data/observations/ar/along_track_inputs.nc", "zenodo:data",

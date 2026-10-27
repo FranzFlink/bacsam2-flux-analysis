@@ -27,7 +27,6 @@ CC BY 4.0) contains the master tracks
 | `ar/analysis_ready_polar6_legs_metadata.csv` | start and end time of every straight leg |
 | `ar/ec_segment_placement.nc` | segment-placement spread of the EC flux (Appendix A) |
 | `ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv` | window-length experiment (Fig. 3) |
-| `ar/polar6_level_at_segments.nc` | Polar 6 air temperature and height per segment (Fig. 2a), from the nose boom data |
 | `processed/t-bird_unified/noseboom_unified.nc` | 100 Hz T-Bird time series in the leg windows (decision D1) |
 | `processed/polar6_unified/radiation_unified.nc` | KT-19 surface temperature in the leg windows (decision D2) |
 
@@ -38,7 +37,9 @@ temperature and the merged MODIS–AMSR2 sea-ice concentration (`data/observatio
 and the 13 NASA GIBS images that form the
 background of Fig. 5 (`figures_manuscript/_gibs_cache/`).
 
-**D. Not archived.** `data/model_output/` is written by `pixi run precompute` in a few seconds. The two
+**D. Not archived.** `data/model_output/` is written by `pixi run precompute` in a few seconds. The Polar 6
+nose-boom file in `data/observations/processed/polar6_unified/` is cut from PANGAEA 995974 by `pixi run inputs`,
+and `data/observations/ar/polar6_level_at_segments.nc` is computed from it by `pixi run polar6-level`. The two
 `apr13_*_worldview.png` images in `figures_manuscript/_gibs_cache/` are not read by any script.
 
 ## 2. Decisions before the submission

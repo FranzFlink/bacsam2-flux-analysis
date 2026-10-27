@@ -9,6 +9,7 @@ All paths are relative to `data/`. Units are those the code assumes when it read
 |------|---------|
 | `observations/processed/t-bird_unified/noseboom_unified.nc` | 100 Hz T-Bird nose-boom time series, restricted to the time windows of the flux legs. `T` air temperature (°C), `p` static pressure (hPa), `u`, `v`, `w` wind components (m s⁻¹), `tas` true airspeed (m s⁻¹), `h` height (m), `lat`, `lon` (°). `pitch`, `roll`, `gs` and `UTC` are carried along but not used. |
 | `observations/processed/polar6_unified/radiation_unified.nc` | Polar 6 broadband radiation and KT-19 surface brightness temperature for the same windows. `F_*` irradiances (W m⁻²). `KT19` is in °C (the code adds 273.15). |
+| `observations/processed/polar6_unified/noseboom_unified.nc` | 100 Hz Polar 6 nose-boom air temperature `T` (°C), static pressure `p` (hPa) and altitude `h` (m) in the windows around the low-level legs. Cut by `pixi run inputs` (`scripts/prepare_inputs.py`) from the published dataset of Köhler and Hartmann (2026), doi:10.1594/PANGAEA.995974, whose files are expected in `pangaea/995974/`. |
 | `observations/raw/polar6/mastertracks/*.tab` | Polar 6 master tracks of all research flights (flight paths in Fig. 1). |
 | `observations/ar/analysis_ready_polar6_legs_metadata.csv` | Start and end time of every straight flight leg. |
 
@@ -20,7 +21,7 @@ All paths are relative to `data/`. Units are those the code assumes when it read
 | `observations/ar/ec_segment_placement.nc` | Segment-placement spread of the EC flux (5 km window moved in 0.05 km steps), the empirical cross-check of the random error, written by `scripts/ec_segment_placement.py`. |
 | `observations/ar/along_track_inputs.nc` | Values of the gridded products at each of the 90 segments: MODIS ice surface temperature, ERA5 model-level temperature/wind/height, ERA5 skin temperature, surface pressure and surface sensible heat flux, CARRA surface sensible heat flux. Written by `pixi run extract` (`scripts/calc_bulk_and_ec_fluxes.py --extract-only`) from the gridded files below; `pixi run verify-cache` extracts again and compares. With this file present the bulk computation does not open the gridded files. |
 | `observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv` | Result of the EC window-length experiment (Fig. 3), written by `scripts/ec_window_length.py`. |
-| `observations/ar/polar6_level_at_segments.nc` | Polar 6 aircraft-level air temperature `T_polar6` (°C), potential temperature `theta_polar6` (K) and height `z_polar6` (m) per segment, for the profiles of Fig. 2a. Extracted on the raw-data host from the Polar 6 nose-boom archive, which is not shipped. |
+| `observations/ar/polar6_level_at_segments.nc` | Polar 6 aircraft-level air temperature `T_polar6` (°C), potential temperature `theta_polar6` (K) and height `z_polar6` (m) per segment, for the profiles of Fig. 2a: means over the segment's time window, θ from the mean temperature and pressure. Written by `pixi run polar6-level` from the Polar 6 nose-boom file above. |
 
 ## Gridded products (campaign region and period only)
 

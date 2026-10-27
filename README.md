@@ -131,10 +131,6 @@ Two implementation details worth knowing:
 
 ## What cannot be reproduced from this repository
 
-* The Polar 6 aircraft-level temperature and height per segment (Fig. 2a) are shipped in
-  `polar6_level_at_segments.nc`; the Polar 6 nose-boom archive they come from is not part of the
-  repository.
-
 Raw data are available from the authors on request.
 
 ## Citation and license

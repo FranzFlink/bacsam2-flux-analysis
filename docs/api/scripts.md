@@ -561,3 +561,48 @@ pixi run data-manifest            check every listed file (size and checksum)
 pixi run data-manifest --write    recompute size and checksum; new files get the archive
                                   of the first matching rule below, existing rows keep theirs
 ```
+
+(scripts/polar6_level_at_segments.py)=
+### `scripts/polar6_level_at_segments.py`
+
+**Run:** `pixi run polar6-level`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/polar6_level_at_segments.py)
+
+Polar 6 (aircraft-level) air temperature, potential temperature and height per 5 km segment.
+
+Fig. 2a shows the potential-temperature profile surface - T-Bird - Polar 6 of every segment.
+For each segment of the segment file, the Polar 6 nose-boom data (prepared from PANGAEA
+995974 by scripts/prepare_inputs.py) are averaged over the segment's time window; the
+potential temperature is taken from the mean temperature and the mean pressure at the
+aircraft ([`fluxpy.util.potential_temperature`](#fluxpy.util.potential_temperature)).
+
+Reads   data/observations/processed/polar6_unified/noseboom_unified.nc
+
+```text
+data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc
+```
+
+Writes  data/observations/ar/polar6_level_at_segments.nc
+
+Run:  pixi run polar6-level
+
+(scripts/prepare_inputs.py)=
+### `scripts/prepare_inputs.py`
+
+**Run:** `pixi run inputs`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/prepare_inputs.py)
+
+Published PANGAEA data -> the input files of the analysis, cut to the low-level legs.
+
+The measurements are published in the bundle "Observations from the BACSAM II aircraft
+campaign with Polar 6" (Köhler et al., 2026, doi:10.1594/PANGAEA.995979). The netCDF files of
+the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight):
+
+```text
+995974  Polar 6 nose boom, 100 Hz   -> data/observations/processed/polar6_unified/noseboom_unified.nc
+```
+
+Each file is cut to the windows around the legs flown below 150 m (Polar 6 height in
+data/observations/ar/analysis_ready_polar6_legs_metadata.csv), 120 s before and after every
+leg, windows less than 300 s apart merged. Names and units are those the analysis uses
+(T in degC, p in hPa, h in m); the values are the published ones (float64).
+
+Run:  pixi run inputs
