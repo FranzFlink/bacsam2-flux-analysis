@@ -67,7 +67,7 @@ def _add_flux_band(ax, f1=0.1, f2=20.0):
 def _add_minus53_guides(ax, f, anchor_idx=3):
     fa = f[anchor_idx]
     with np.errstate(divide="ignore"):       # f[0] = 0 -> inf, not drawn
-        for k in range(-5, 2):
+        for k in range(-6, 2):
             ax.loglog(f, 10.0 ** k * (f / fa) ** (-5 / 3),
                       ls="--", color="0.6", linewidth=0.5)
 
@@ -85,18 +85,18 @@ def _plot_lines(ax, x_key, y_key, scale=1.0, only_detectable=False):
 # ── Figure: (a-d) power spectra | (e) f-cospectrum, (f) ogive ────────────────
 fig, axs = plt.subplot_mosaic("AABB\nCCDD\nEEFF", figsize=(fs.FULL_W, 15.0 * fs.CM))
 
-for key, p_key, var_label, ylabel in [
-    ("A", "P_theta", r"$\theta$", r"$P_\theta\;(K^2\,s)$"),
-    ("B", "P_w",     r"$w$",      r"$P_w\;(m^2\,s^{-1})$"),
-    ("C", "P_u",     r"$u$",      r"$P_u\;(m^2\,s^{-1})$"),
-    ("D", "P_v",     r"$v$",      r"$P_v\;(m^2\,s^{-1})$"),
+for key, p_key, var_label, ylabel, ymin in [
+    ("A", "P_theta", r"$\theta$", r"$P_\theta\;(K^2\,s)$",      1e-6),
+    ("B", "P_w",     r"$w$",      r"$P_w\;(m^2\,s^{-1})$",      1e-6),
+    ("C", "P_u",     r"$u$",      r"$P_u\;(m^2\,s^{-1})$",      1e-5),
+    ("D", "P_v",     r"$v$",      r"$P_v\;(m^2\,s^{-1})$",      1e-5),
 ]:
     ax = axs[key]
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1e-2, 100.0)
-    ax.set_ylim(1e-5, 1e0)
-    ax.set_yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0])
+    ax.set_ylim(ymin, 1e0)
+    ax.set_yticks(10.0 ** np.arange(np.log10(ymin), 1))
     _add_flux_band(ax)
     _add_minus53_guides(ax, list_of_qcs[0]["f"])
     _plot_lines(ax, "f", p_key)
