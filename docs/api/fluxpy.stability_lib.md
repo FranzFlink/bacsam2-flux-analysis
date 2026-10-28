@@ -47,6 +47,7 @@ serves as the exact reference in `tests/test_most_schemes.py`.
 |---|---|---|
 | [`SCHEMES`](#fluxpy.stability_lib--constants) | constant | the eight stable-branch schemes compared in the paper, by name (filled below) |
 | [`UNSTABLE_SCHEME`](#fluxpy.stability_lib--constants) | constant | Businger-Dyer with the Paulson (1970) unstable forms, used by every scheme when Ri_b < 0 |
+| [`ZETA_MIN_UNSTABLE`](#fluxpy.stability_lib--constants) | constant | lower limit of zeta in the unstable branch; it holds C_h constant in strongly unstable stratification (manuscript Appendix B1; scripts/manuscript_numbers.py prints its effect) |
 | [`MOSTScheme`](#fluxpy.stability_lib.MOSTScheme) | class | One set of stability functions of Monin-Obukhov similarity theory (MOST), with the constants of Table 1 of Gryanik and Lüpkes (2023) that the non-iterative formula needs. |
 | [`zeta_noniterative`](#fluxpy.stability_lib.zeta_noniterative) | function | Stability parameter zeta = z/L from Ri_b without iteration, Eq. (22a-c); stable branch only. |
 | [`zeta_iterative`](#fluxpy.stability_lib.zeta_iterative) | function | Stability parameter zeta from Ri_b by Newton iteration of the exact relation, Eq. (20). |
@@ -63,6 +64,7 @@ serves as the exact reference in `tests/test_most_schemes.py`.
 |---|---|---|
 | `SCHEMES` | `dict` with the keys `BD`, `HB88`, `BH91`, `CB05`, `GAFGP07`, `GLGS20`, `ZE07-I`, `ZE07-II` | the eight stable-branch schemes compared in the paper, by name (filled below) |
 | `UNSTABLE_SCHEME` | `_make_bd_unstable()` | Businger-Dyer with the Paulson (1970) unstable forms, used by every scheme when Ri_b < 0 |
+| `ZETA_MIN_UNSTABLE` | `-20.0` | lower limit of zeta in the unstable branch; it holds C_h constant in strongly unstable stratification (manuscript Appendix B1; scripts/manuscript_numbers.py prints its effect) |
 
 [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py)
 
@@ -179,7 +181,7 @@ Stability parameter zeta from Ri_b by Newton iteration of the exact relation, Eq
 
 Used for the unstable branch (Businger-Dyer psi functions) and as the exact
 reference for the non-iterative stable formula. zeta is kept within
-[-20, 50] (unstable) or >= 0 (stable).
+[ZETA_MIN_UNSTABLE, 50] (unstable) or >= 0 (stable).
 
 **Parameters**
 
@@ -194,9 +196,9 @@ reference for the non-iterative stable formula. zeta is kept within
 
 **Returns** `float`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L266-L309)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L271-L314)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 266–309)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 271–314)
 ````python
 def zeta_iterative(Ri_b: float, eps_m: float, eps_t: float, scheme_name: str,
                    max_iter: int = 80, tol: float = 1e-6) -> float:
@@ -204,7 +206,7 @@ def zeta_iterative(Ri_b: float, eps_m: float, eps_t: float, scheme_name: str,
 
     Used for the unstable branch (Businger-Dyer psi functions) and as the exact
     reference for the non-iterative stable formula. zeta is kept within
-    [-20, 50] (unstable) or >= 0 (stable).
+    [ZETA_MIN_UNSTABLE, 50] (unstable) or >= 0 (stable).
     """
     if Ri_b == 0.0:
         return 0.0
@@ -216,7 +218,7 @@ def zeta_iterative(Ri_b: float, eps_m: float, eps_t: float, scheme_name: str,
         clip = _clip_stable
     else:
         zeta = max(-0.5, -0.1 * abs(Ri_b))
-        clip = lambda z: min(max(z, -20.0), 50.0) if math.isfinite(z) else 0.0   # noqa: E731
+        clip = lambda z: min(max(z, ZETA_MIN_UNSTABLE), 50.0) if math.isfinite(z) else 0.0   # noqa: E731
 
     pref = ((1.0 - 1.0 / eps_m) ** 2) / (1.0 - 1.0 / eps_t)
 
@@ -270,9 +272,9 @@ Normalised transfer coefficients f_m, f_h from zeta, Eq. (7)-(8).
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L316-L322)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L321-L327)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 316–322)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 321–327)
 ````python
 def fm_fh_from_zeta(zeta: float, eps_m: float, eps_t: float, scheme_name: str) -> tuple[float, float]:
     """Normalised transfer coefficients f_m, f_h from zeta, Eq. (7)-(8)."""
@@ -311,9 +313,9 @@ f_m, f_h for the bulk flux: non-iterative when stable, Businger-Dyer iteration w
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L325-L334)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L330-L339)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 325–334)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 330–339)
 ````python
 def fm_fh_noniterative(Ri_b: float, z: float, z0: float, zt: float, scheme_name: str) -> tuple[float, float]:
     """f_m, f_h for the bulk flux: non-iterative when stable, Businger-Dyer iteration when unstable."""
@@ -355,9 +357,9 @@ f_m, f_h with the iterative zeta solution on both branches (reference solution).
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L337-L341)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L342-L346)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 337–341)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 342–346)
 ````python
 def fm_fh_iterative(Ri_b: float, z: float, z0: float, zt: float, scheme_name: str) -> tuple[float, float]:
     """f_m, f_h with the iterative zeta solution on both branches (reference solution)."""
@@ -396,9 +398,9 @@ This is the function the bulk flux calls.
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L351-L358)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L356-L363)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 351–358)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 356–363)
 ````python
 def Cd_Ch_noniterative(Ri_b: float, z: float, z0: float, zt: float, scheme_name: str) -> tuple[float, float]:
     """Transfer coefficients (C_d, C_h) at height ``z`` for roughness lengths ``z0``, ``zt``
@@ -438,9 +440,9 @@ Cd_Ch_iterative(
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L361-L366)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability_lib.py#L366-L371)
 
-:::{dropdown} Source code (fluxpy/stability_lib.py, lines 361–366)
+:::{dropdown} Source code (fluxpy/stability_lib.py, lines 366–371)
 ````python
 def Cd_Ch_iterative(Ri_b: float, z: float, z0: float, zt: float, scheme_name: str) -> tuple[float, float]:
     """(C_d, C_h) with the iterative zeta solution on both branches (test reference)."""

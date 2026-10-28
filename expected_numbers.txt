@@ -112,6 +112,14 @@ BULK RICHARDSON NUMBER OF THE IN-SITU ESTIMATE (Appendix B1)
 |Ri_b| below 16.6 on all segments but one: Ri_b = -18.0 at 17 Apr 15:17 (wind 0.4 m/s, H_S,obs,bulk +3.05 W m-2)
 bounding |Ri_b| at 1, 2.5 or 5 changes bias and RMSE of H_S,obs,bulk by at most 0.08 W m-2 and the slope by at most 0.016
 
+======================================================================================================================
+LOWER LIMIT OF ZETA IN THE UNSTABLE BRANCH (Appendix B1)
+======================================================================================================================
+zeta >= -20 in the unstable branch; lifting the limit (zeta >= -1e4):
+  H_S,obs,bulk  limit binds on 12 of 91 segments; slope 1.23 -> 1.24 (change 0.012), r 0.77 -> 0.77, largest flux change 1.8 W m-2
+  H_S,RS,bulk   limit binds on 19 of 91 segments; slope 0.59 -> 0.60 (change 0.010), r 0.48 -> 0.48, largest flux change 1.7 W m-2
+  H_S,ERA,bulk  limit binds on  6 of 91 segments; slope 0.31 -> 0.31 (change 0.000), r 0.36 -> 0.35, largest flux change 0.1 W m-2
+
 ==============================================================================================================
 1. RATIO-TYPE CRITERIA RESPOND TO THE SIZE OF THE FLUX
 ==============================================================================================================

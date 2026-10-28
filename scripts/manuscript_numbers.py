@@ -22,6 +22,7 @@ Blocks (in the order printed) and where they appear in the manuscript
     sample and flight facts ............. abstract, Sect. 2.1, 3.1, 4 (heights, airspeed, latitude, flux extremes)
     percentages ......................... abstract, Sect. 4.1, Discussion, Conclusions (amplitude, variance, reduction)
     Richardson number ................... Appendix B1 (range of Ri_b, effect of a bound)
+    zeta limit .......................... Appendix B1 (where the unstable-branch limit binds, effect of lifting it)
 
 Framework (Sect. 4.1): amplitude skill is a regression slope and variability skill
 a correlation, because RMSE in this low-flux regime rewards estimates that shrink
@@ -367,6 +368,45 @@ def richardson_number():
     print()
 
 
+def zeta_limit():
+    """Appendix B1: where the lower limit of zeta in the unstable branch binds, and what lifting it changes."""
+    print(RULE)
+    print("LOWER LIMIT OF ZETA IN THE UNSTABLE BRANCH (Appendix B1)")
+    print(RULE)
+    sys.path.insert(0, str(REPO / "scripts"))
+    import logging
+    logging.disable(logging.WARNING)
+    import calc_bulk_and_ec_fluxes as calc
+    from fluxpy import stability_lib
+    from fluxpy.bulk import compute_bulk_shf_obs, compute_bulk_shf_remote, reference_config
+    obs = calc.load_obs()
+    ds_modis, era5_ml, era5_sl, _ = calc._read_cache(obs)
+    column, surface_modis, surface_era5 = calc.era5_forcing(era5_ml, era5_sl, ds_modis, obs)
+    cfg = reference_config()
+
+    def estimates():
+        remote = lambda sfc: np.asarray(compute_bulk_shf_remote(obs, column, sfc, cfg, z_ref=era5_ml["z30"])["H_rs_bulk"])  # noqa: E731
+        return {"H_S,obs,bulk": np.asarray(compute_bulk_shf_obs(obs, cfg)["H_obs_bulk"]),
+                "H_S,RS,bulk": remote(surface_modis), "H_S,ERA,bulk": remote(surface_era5)}
+
+    limited = estimates()
+    default = stability_lib.ZETA_MIN_UNSTABLE
+    stability_lib.ZETA_MIN_UNSTABLE = -1e4
+    try:
+        free = estimates()
+    finally:
+        stability_lib.ZETA_MIN_UNSTABLE = default
+    print(f"zeta >= {default:g} in the unstable branch; lifting the limit (zeta >= -1e4):")
+    for name in limited:
+        binds = np.abs(free[name] - limited[name]) > 1e-6
+        a, b = skill_metrics(EC, limited[name], ""), skill_metrics(EC, free[name], "")
+        print(f"  {name:<13} limit binds on {binds.sum():2d} of {binds.size} segments; slope {a['slope']:.2f} -> {b['slope']:.2f} "
+              f"(change {abs(b['slope'] - a['slope']):.3f}), r {a['r']:.2f} -> {b['r']:.2f}, "
+              f"largest flux change {np.max(np.abs(free[name] - limited[name])):.1f} W m-2")
+    logging.disable(logging.NOTSET)
+    print()
+
+
 if __name__ == "__main__":
     ec_reference()
     reference_configuration()
@@ -380,3 +420,4 @@ if __name__ == "__main__":
     sample_and_flight_facts()
     quoted_percentages()
     richardson_number()
+    zeta_limit()

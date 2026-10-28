@@ -176,6 +176,7 @@ further numbers ..................... input sensitivities (Sect. 4.2), CARRA sub
 sample and flight facts ............. abstract, Sect. 2.1, 3.1, 4 (heights, airspeed, latitude, flux extremes)
 percentages ......................... abstract, Sect. 4.1, Discussion, Conclusions (amplitude, variance, reduction)
 Richardson number ................... Appendix B1 (range of Ri_b, effect of a bound)
+zeta limit .......................... Appendix B1 (where the unstable-branch limit binds, effect of lifting it)
 ```
 
 Framework (Sect. 4.1): amplitude skill is a regression slope and variability skill
@@ -353,12 +354,14 @@ Run:  pixi run python figures_manuscript/fig02_meteo_overview.py
 
 Fig. 3 (fig:ec_leg_length_sensitivity) -- EC flux vs the length of the averaging window.
 
-Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs:
+Manuscript Sect. 3.1: why 5 km. Two stacked panels over the six low-level legs, sharing the
+window-length axis:
 
-* **(a)** mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov
-  (mean, +-1 sigma over the legs whose stretch flux is at least 0.5 W m-2),
-* **(b)** random error sigma_rand of the sub-window fluxes (median, quartiles),
-* **(c)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
+* **(a)** random error sigma_rand of the sub-window fluxes (median, quartiles),
+* **(b)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
+
+The ratio of the mean sub-window flux to the flux of the covered stretch (H_sub/H_cov in the
+data file) is not shown.
 
 Data: scripts/ec_window_length.py -> data/observations/ar/ec_leg_length_sensitivity/
 

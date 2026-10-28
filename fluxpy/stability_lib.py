@@ -40,7 +40,7 @@ from typing import Callable, Dict
 
 from .util import KAPPA
 
-__all__ = ["MOSTScheme", "SCHEMES", "UNSTABLE_SCHEME",
+__all__ = ["MOSTScheme", "SCHEMES", "UNSTABLE_SCHEME", "ZETA_MIN_UNSTABLE",
            "zeta_noniterative", "zeta_iterative", "fm_fh_from_zeta",
            "fm_fh_noniterative", "fm_fh_iterative",
            "Cd_Ch_noniterative", "Cd_Ch_iterative"]
@@ -263,13 +263,18 @@ def _clip_stable(zeta: float) -> float:
     return max(zeta, 0.0) if math.isfinite(zeta) else 0.0
 
 
+#: lower limit of zeta in the unstable branch; it holds C_h constant in strongly unstable
+#: stratification (manuscript Appendix B1; scripts/manuscript_numbers.py prints its effect)
+ZETA_MIN_UNSTABLE = -20.0
+
+
 def zeta_iterative(Ri_b: float, eps_m: float, eps_t: float, scheme_name: str,
                    max_iter: int = 80, tol: float = 1e-6) -> float:
     """Stability parameter zeta from Ri_b by Newton iteration of the exact relation, Eq. (20).
 
     Used for the unstable branch (Businger-Dyer psi functions) and as the exact
     reference for the non-iterative stable formula. zeta is kept within
-    [-20, 50] (unstable) or >= 0 (stable).
+    [ZETA_MIN_UNSTABLE, 50] (unstable) or >= 0 (stable).
     """
     if Ri_b == 0.0:
         return 0.0
@@ -281,7 +286,7 @@ def zeta_iterative(Ri_b: float, eps_m: float, eps_t: float, scheme_name: str,
         clip = _clip_stable
     else:
         zeta = max(-0.5, -0.1 * abs(Ri_b))
-        clip = lambda z: min(max(z, -20.0), 50.0) if math.isfinite(z) else 0.0   # noqa: E731
+        clip = lambda z: min(max(z, ZETA_MIN_UNSTABLE), 50.0) if math.isfinite(z) else 0.0   # noqa: E731
 
     pref = ((1.0 - 1.0 / eps_m) ** 2) / (1.0 - 1.0 / eps_t)
 
