@@ -32,7 +32,7 @@ clean reading copy of the manuscript, annotated with the code that produces each
 
 ## How to run it (no programming knowledge needed)
 
-1. **Get the repository** (about 300 MB). On GitHub: green *Code* button → *Download ZIP*,
+1. **Get the repository** (about 220 MB). On GitHub: green *Code* button → *Download ZIP*,
    then unpack. Or, with git: `git clone https://github.com/FranzFlink/bacsam2-flux-analysis.git`
 2. **Install pixi** (a small program that sets up the exact Python environment used for
    the paper; nothing else on your computer is changed). Follow the one-line instruction
@@ -46,17 +46,19 @@ clean reading copy of the manuscript, annotated with the code that produces each
    pixi run all
    ```
 
-   The first call downloads the Python environment (a few minutes); the run takes about
-   15 minutes. `check` ends with a `RESULT:` line; the run stops with an error if anything
-   does not match.
+   The first call downloads the Python environment (a few minutes) and the published
+   T-Bird, nose-boom and KT-19 measurements from PANGAEA (about 1.5 GB); the run then takes
+   about 15 minutes. `check` ends with a `RESULT:` line; the run stops with an error if
+   anything does not match.
    Figures 1, 4 and 5 download map data on first use, so an internet connection is needed once.
 
 Single steps: `pixi run test`, `pixi run precompute`, `pixi run check`, `pixi run numbers`,
 `pixi run robustness`, `pixi run tables`, `pixi run figures`, `pixi run book`, `pixi run api`,
 `pixi run site`. Without rewriting anything, `pixi run verify-ec` and `pixi run verify-cache`
 show that the shipped EC fluxes and gridded values follow from the input files.
-`pixi run all-from-pangaea` first cuts the T-Bird, nose-boom and KT-19 inputs from the published
-PANGAEA files (downloaded into `data/pangaea/<dataset>/`) and then runs `all`.
+`pixi run all` starts with `pixi run fetch-pangaea`, which downloads the published PANGAEA files
+into `data/pangaea/<dataset>/` and checks their checksums (files already present are only checked),
+and `pixi run inputs`, which cuts them to the low-level legs.
 
 Re-running rewrites the output files with a new time stamp; `git status` will then list
 them as modified although the numbers are identical.

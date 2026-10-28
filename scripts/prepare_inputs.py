@@ -3,7 +3,8 @@
 
 The measurements are published in the bundle "Observations from the BACSAM II aircraft
 campaign with Polar 6" (Köhler et al., 2026, doi:10.1594/PANGAEA.995979). The netCDF files of
-the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight):
+the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight;
+pixi run fetch-pangaea downloads them):
 
     995975  T-Bird, 100 Hz              -> data/observations/processed/t-bird_unified/noseboom_unified.nc
     995974  Polar 6 nose boom, 100 Hz   -> data/observations/processed/polar6_unified/noseboom_unified.nc

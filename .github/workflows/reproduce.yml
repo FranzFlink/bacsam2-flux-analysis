@@ -1,4 +1,5 @@
-# Reproduces the paper's numbers on every push: physics tests, the EC fluxes from the 100 Hz data,
+# Reproduces the paper's numbers on every push: the published PANGAEA measurements cut to the legs,
+# physics tests, the EC fluxes from the 100 Hz data,
 # the colocated inputs from the gridded files, and every printed number against expected_numbers.txt.
 # Figures are not rebuilt here (they need map downloads and a few minutes); `pixi run all` does that locally.
 name: reproduce
@@ -16,6 +17,10 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
           environments: default
+      - name: Published PANGAEA measurements (download, checksums) cut to the legs
+        run: |
+          pixi run fetch-pangaea
+          pixi run inputs
       - name: Physics tests
         run: pixi run test
       - name: EC fluxes follow from the 100 Hz data

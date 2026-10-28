@@ -96,9 +96,11 @@ by any script.
 ## 5. The repository after both publications
 
 1. A script `pixi run fetch-data` downloads dataset B, the master tracks and record C into the
-   paths of `data/manifest.tsv` and checks every checksum, and the published T-Bird, nose-boom and KT-19
-   files into `data/pangaea/` (then `pixi run inputs`). (Master-track files downloaded again from
+   paths of `data/manifest.tsv` and checks every checksum. (Master-track files downloaded again from
    PANGAEA can differ in their header from the shipped ones; compare them by their data lines.)
+   The published T-Bird, nose-boom and KT-19 files already work this way: `pixi run fetch-pangaea`
+   (`scripts/fetch_pangaea.py`) downloads them into `data/pangaea/` and checks their checksums, and
+   `pixi run all` starts with it and with `pixi run inputs`; the cut files are not in git.
 2. `data/` (except `manifest.tsv`) and `figures_manuscript/_gibs_cache/` leave git and go into
    `.gitignore`. `DATA.md`, `README.md`, `docs/reproduce.md`, `.zenodo.json` (the code record no longer
    contains data) and `.github/workflows/reproduce.yml` (fetch the data first) are updated.

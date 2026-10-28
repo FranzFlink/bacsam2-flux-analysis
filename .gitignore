@@ -6,5 +6,9 @@ __pycache__/
 .pytest_cache/
 manuscript/
 .claude/
-# local downloads of the published PANGAEA datasets
+# local downloads of the published PANGAEA datasets (pixi run fetch-pangaea)
 data/pangaea/
+# cut from them by pixi run inputs (the first steps of pixi run all)
+data/observations/processed/t-bird_unified/noseboom_unified.nc
+data/observations/processed/polar6_unified/noseboom_unified.nc
+data/observations/processed/polar6_unified/kt19_unified.nc

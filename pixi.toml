@@ -39,6 +39,7 @@ test          = "pytest tests -q"
 # EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
 verify-ec     = "python scripts/verify_ec_reproduction.py"
 verify-cache  = "python scripts/verify_along_track_cache.py"
+fetch-pangaea = "python scripts/fetch_pangaea.py"             # published PANGAEA files -> data/pangaea/ (1.5 GB)
 inputs        = "python scripts/prepare_inputs.py"            # published PANGAEA files -> leg windows
 ec-segments   = "python scripts/run_ec_aggregation.py"
 polar6-level  = "python scripts/polar6_level_at_segments.py"   # Polar 6 means per segment (Fig. 2a)
@@ -62,12 +63,11 @@ paper         = "python paper/export_clean_manuscript.py"
 api           = "python docs/build_api.py"
 # size and checksum of every data file against data/manifest.tsv (--write recomputes it)
 data-manifest = "python scripts/data_manifest.py"
-# every output from the input files: segments, EC products, Polar 6 level, gridded values at the
-# segments, bulk fluxes, every printed number against expected_numbers.txt, tables, figures (~15 min)
-all           = { depends-on = ["test", "ec-segments", "placement", "window-length", "polar6-level", "extract",
-                                "check", "tables", "figures"] }
-# the same, after cutting the inputs from the published PANGAEA files in data/pangaea/
-all-from-pangaea = { depends-on = ["inputs", "all"] }
+# every output from the published data: PANGAEA download (files already present are only checked),
+# leg windows, segments, EC products, Polar 6 level, gridded values at the segments, bulk fluxes,
+# every printed number against expected_numbers.txt, tables, figures (~15 min plus the download)
+all           = { depends-on = ["fetch-pangaea", "inputs", "test", "ec-segments", "placement", "window-length",
+                                "polar6-level", "extract", "check", "tables", "figures"] }
 
 # ── website: the book and the docs as a static site (MyST / Jupyter Book 2) ──
 # Separate environment so that the analysis environment stays lean. The notebooks are

@@ -2,9 +2,9 @@
 title: Reproduction
 ---
 
-The repository contains the data (about 300 MB) and a locked Python environment. A single command recomputes every
-data-derived number, table and figure of the paper and compares the numbers with the committed reference
-`expected_numbers.txt`.
+The repository contains the gridded data (about 220 MB) and a locked Python environment; the measurements are
+downloaded from PANGAEA by the first step. A single command recomputes every data-derived number, table and figure
+of the paper and compares the numbers with the committed reference `expected_numbers.txt`.
 
 ## Procedure
 
@@ -18,13 +18,15 @@ data-derived number, table and figure of the paper and compares the numbers with
    pixi run all
    ```
 
-   The first run downloads the environment (a few minutes); Figures 1, 4 and 5 download map data once. The run stops
-   with an error if any number differs from the reference.
+   The first run downloads the environment (a few minutes) and the published measurements (about 1.5 GB);
+   Figures 1, 4 and 5 download map data once. The run stops with an error if any number differs from the reference.
 
 ## Steps
 
 | Step | Content | Time |
 |------|---------|------|
+| `fetch-pangaea` | The published T-Bird, nose-boom and KT-19 files (doi:10.1594/PANGAEA.995979) → `data/pangaea/`, checked against their checksums; files already present are only checked | download, then 10 s |
+| `inputs` | These files cut to the windows around the low-level legs → `data/observations/processed/` | 1 min |
 | `test` | The physics against independent references (numerical integration of the stability functions, log-law limit, Parseval, a Monte-Carlo test of the random error, the hydrostatic equation, the ECMWF level table) | 5 s |
 | `ec-segments` | The 5 km segments and their eddy-covariance fluxes from the 100 Hz T-Bird data | 1 min |
 | `placement`, `window-length` | Segment-placement spread and window-length experiment (Fig. 3) | 5 and 2 min |
@@ -40,8 +42,7 @@ Individual steps can be run separately, for example `pixi run numbers` (numbers 
 `pixi run book` (re-execute the chapters of this site), `pixi run api` (regenerate the
 [API reference](api/index.md) and the [figure pages](figures/index.md)) and `pixi run site` (build this site into `_build/html`). Without rewriting anything,
 `pixi run verify-ec` and `pixi run verify-cache` show that the shipped EC fluxes and gridded values follow from the input
-files. `pixi run all-from-pangaea` first cuts the T-Bird, nose-boom and KT-19 inputs from the published PANGAEA files
-(downloaded into `data/pangaea/<dataset>/`) and then runs `all`. The [scripts page](api/scripts.md) describes each step.
+files. The [scripts page](api/scripts.md) describes each step.
 
 ## Data not included
 

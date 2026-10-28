@@ -562,6 +562,30 @@ pixi run data-manifest --write    recompute size and checksum; new files get the
                                   of the first matching rule below, existing rows keep theirs
 ```
 
+(scripts/fetch_pangaea.py)=
+### `scripts/fetch_pangaea.py`
+
+**Run:** `pixi run fetch-pangaea`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/fetch_pangaea.py)
+
+Download the published PANGAEA files the analysis starts from, into data/pangaea/<dataset>/.
+
+The measurements are published in the bundle "Observations from the BACSAM II aircraft
+campaign with Polar 6" (Köhler et al., 2026, doi:10.1594/PANGAEA.995979). This script fetches
+the netCDF files of three of its datasets, one file per research flight, about 1.5 GB:
+
+```text
+995975  T-Bird, 100 Hz
+995974  Polar 6 nose boom, 100 Hz
+995980  KT-19, 50 Hz
+```
+
+Every file is checked against the size and SHA-256 checksum of the file the paper's numbers were
+computed from; a file that is already present and correct is not downloaded again. PANGAEA
+serves some files from tape and then answers HTTP 503 for a while; the script waits and retries.
+scripts/prepare_inputs.py (pixi run inputs) then cuts the files to the low-level legs.
+
+Run:  pixi run fetch-pangaea
+
 (scripts/polar6_level_at_segments.py)=
 ### `scripts/polar6_level_at_segments.py`
 
@@ -594,7 +618,8 @@ Published PANGAEA data -> the input files of the analysis, cut to the low-level 
 
 The measurements are published in the bundle "Observations from the BACSAM II aircraft
 campaign with Polar 6" (Köhler et al., 2026, doi:10.1594/PANGAEA.995979). The netCDF files of
-the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight):
+the datasets below are expected in data/pangaea/<dataset>/ (one file per research flight;
+pixi run fetch-pangaea downloads them):
 
 ```text
 995975  T-Bird, 100 Hz              -> data/observations/processed/t-bird_unified/noseboom_unified.nc
