@@ -12,3 +12,6 @@ data/pangaea/
 data/observations/processed/t-bird_unified/noseboom_unified.nc
 data/observations/processed/polar6_unified/noseboom_unified.nc
 data/observations/processed/polar6_unified/kt19_unified.nc
+
+# files prepared for the Zenodo data record (scripts/fetch_zenodo.py lists them)
+zenodo_upload/

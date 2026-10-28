@@ -9,6 +9,10 @@ the netCDF files of three of its datasets, one file per research flight, about 1
     995974  Polar 6 nose boom, 100 Hz
     995980  KT-19, 50 Hz
 
+It also fetches the 13 Polar 6 master tracks of the campaign (Jurányi et al., 2024,
+doi:10.1594/PANGAEA.971763; one dataset per flight, as PANGAEA text export) into
+data/observations/raw/polar6/mastertracks/, which Fig. 1 reads.
+
 Every file is checked against the size and SHA-256 checksum of the file the paper's numbers were
 computed from; a file that is already present and correct is not downloaded again. PANGAEA
 serves some files from tape and then answers HTTP 503 for a while; the script waits and retries.
@@ -48,6 +52,32 @@ FILES = [
     ("995980", "BACSAM2_20240425_RF09_kt19.nc", 35581450, "53b7587cf07fc91f51895bc9584b2e52a3d39621da88958151f2df59bc1c8e2c"),
 ]
 
+TRACK_URL = "https://doi.pangaea.de/10.1594/PANGAEA.{dataset}?format=textfile"
+TRACKS = REPO / "data" / "observations" / "raw" / "polar6" / "mastertracks"
+MASTERTRACKS = [
+    ("971737", "P6-247_BACSAM2_2024_2404070101_mastertrack.tab", 26262, "c1724a7976c4ffccafd100a6ba8ca7e66e455788186f3c31299c6780a8c504aa"),
+    ("971740", "P6-247_BACSAM2_2024_2404100201_mastertrack.tab", 27713, "1096952779f7044f1103ccec420e6946cde004f1a576a85a23750f1457b8462e"),
+    ("971741", "P6-247_BACSAM2_2024_2404110301_mastertrack.tab", 24598, "ea2e59273d5cbad6f2af7cf7dcbec53ed2f5d16bf1438080d114292f3cff157f"),
+    ("971742", "P6-247_BACSAM2_2024_2404130401_mastertrack.tab", 17562, "c316611dbdbdfa343b57e560ee9ee6b65f4580f9d9a804c92a1007cf4f65953b"),
+    ("971739", "P6-247_BACSAM2_2024_2404130502_mastertrack.tab", 25756, "803e294f669335c0622254512d211d439eae51f2bed30ba398be5d120cb2a6e6"),
+    ("971743", "P6-247_BACSAM2_2024_2404130603_mastertrack.tab", 16073, "eb0fc5eec30e13091601a96e09150b73ec7d100b27f4fbda60c991b4875923e0"),
+    ("971747", "P6-247_BACSAM2_2024_2404150701_mastertrack.tab", 28368, "94bb33389408050676f81bfba0d1e8f4b6e83ecbbdd71e6c5a6656059682a2a5"),
+    ("971735", "P6-247_BACSAM2_2024_2404170801_mastertrack.tab", 29153, "bd348e31a03a8a31fcce5e5462cf4aa90ab35877ebb413f6accda0330742c257"),
+    ("971738", "P6-247_BACSAM2_2024_2404230901_mastertrack.tab", 27124, "44e4c70cc40b5d87f14d7a7a846c0e42a65d2b6f2435bfc8598bb7ac0a424e69"),
+    ("971745", "P6-247_BACSAM2_2024_2404241001_mastertrack.tab", 27841, "e7400fbca62455846025adb27d6f24b2afd265ee9fbffb5217f74c7d77bff695"),
+    ("971736", "P6-247_BACSAM2_2024_2404251101_mastertrack.tab", 25200, "10e271164640032e55ce756bd6411484df6a8b698ec575cad5255baa493ba0bc"),
+    ("971744", "P6-247_BACSAM2_2024_2404261201_mastertrack.tab", 27993, "835d38225b7989e9f0cd3dd92f57bb8f48b433b389c06926bb37c7816fa0f0cd"),
+    ("971746", "P6-247_BACSAM2_2024_2404291301_mastertrack.tab", 19370, "cf8785a0e5282f30521639eca6b42b9a60ef24f0bab35497f1160a07a410f38f"),
+]
+
+
+def entries():
+    """(url, target, label, size, sha256) of every file: measurements first, then master tracks."""
+    for dataset, name, size, checksum in FILES:
+        yield URL.format(dataset=dataset, name=name), PANGAEA / dataset / name, f"{dataset}/{name}", size, checksum
+    for dataset, name, size, checksum in MASTERTRACKS:
+        yield TRACK_URL.format(dataset=dataset), TRACKS / name, f"{dataset}/{name}", size, checksum
+
 
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -84,21 +114,21 @@ def download(url: str, target: Path) -> None:
 
 
 def main() -> int:
-    bad = 0
-    for dataset, name, size, checksum in FILES:
-        target = PANGAEA / dataset / name
+    bad = n = 0
+    for url, target, label, size, checksum in entries():
+        n += 1
         if is_correct(target, size, checksum):
-            print(f"ok          {dataset}/{name}")
+            print(f"ok          {label}")
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
-        print(f"downloading {dataset}/{name} ({size / 1e6:.0f} MB)")
-        download(URL.format(dataset=dataset, name=name), target)
+        print(f"downloading {label} ({size / 1e6:.1f} MB)")
+        download(url, target)
         if is_correct(target, size, checksum):
-            print(f"ok          {dataset}/{name}")
+            print(f"ok          {label}")
         else:
-            print(f"DIFFERENT   {dataset}/{name}: size or checksum differs from the file the paper used")
+            print(f"DIFFERENT   {label}: size or checksum differs from the file the paper used")
             bad += 1
-    print(f"{len(FILES) - bad} of {len(FILES)} files present and correct in {PANGAEA}")
+    print(f"{n - bad} of {n} files present and correct")
     return 1 if bad else 0
 
 

@@ -32,7 +32,7 @@ LOCATIONS = ("data/**/*", "figures_manuscript/_gibs_cache/*")
 RULES = [
     ("data/manifest.tsv", None, None),
     ("data/observations/raw/polar6/mastertracks/*.tab", "pangaea:published",
-     "doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)"),
+     "doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024; pixi run fetch-pangaea)"),
     ("data/observations/processed/t-bird_unified/noseboom_unified.nc", "regenerated",
      "cut from doi:10.1594/PANGAEA.995975 (T-Bird 100 Hz) by pixi run inputs"),
     ("data/observations/processed/polar6_unified/noseboom_unified.nc", "regenerated",
@@ -41,9 +41,11 @@ RULES = [
      "cut from doi:10.1594/PANGAEA.995980 (KT-19 50 Hz) by pixi run inputs"),
     ("data/observations/ar/polar6_level_at_segments.nc", "regenerated",
      "pixi run polar6-level (from the Polar 6 nose boom, doi:10.1594/PANGAEA.995974)"),
-    ("data/observations/ar/along_track_inputs.nc", "zenodo:data",
-     "ERA5, MODIS and CARRA values at the segments (pixi run extract)"),
-    ("data/observations/ar/*", "pangaea:new", "derived from the BACSAM-II measurements"),
+    ("data/observations/ar/along_track_inputs.nc", "regenerated",
+     "pixi run extract (ERA5, MODIS and CARRA values at the segments)"),
+    ("data/observations/ar/analysis_ready_polar6_legs_metadata.csv", "zenodo:data",
+     "leg table, cut once from the Polar 6 archive (preprocessing/flight_segments.py)"),
+    ("data/observations/ar/*", "regenerated", "pixi run ec-segments, placement, window-length"),
     ("data/observations/processed/satellite_unified/*", "zenodo:data", "MODIS / University of Bremen, regridded subset"),
     ("data/reanalysis/*", "zenodo:data", "ERA5 / CARRA (Copernicus), regional subset"),
     ("figures_manuscript/_gibs_cache/*", "zenodo:data", "NASA GIBS / Worldview imagery (background of Fig. 5)"),
@@ -79,7 +81,9 @@ def write() -> None:
                    - {p.relative_to(REPO).as_posix() for p in (REPO / "data" / "pangaea").glob("**/*")})  # downloads
     rows = []
     for path in found:
-        archive, source = (old[path]["archive"], old[path]["source"]) if path in old else rule(path)
+        archive, source = rule(path)
+        if archive == "unassigned" and path in old:
+            archive, source = old[path]["archive"], old[path]["source"]
         if archive is None:
             continue
         p = REPO / path

@@ -587,12 +587,35 @@ the netCDF files of three of its datasets, one file per research flight, about 1
 995980  KT-19, 50 Hz
 ```
 
+It also fetches the 13 Polar 6 master tracks of the campaign (Jurányi et al., 2024,
+doi:10.1594/PANGAEA.971763; one dataset per flight, as PANGAEA text export) into
+data/observations/raw/polar6/mastertracks/, which Fig. 1 reads.
+
 Every file is checked against the size and SHA-256 checksum of the file the paper's numbers were
 computed from; a file that is already present and correct is not downloaded again. PANGAEA
 serves some files from tape and then answers HTTP 503 for a while; the script waits and retries.
 scripts/prepare_inputs.py (pixi run inputs) then cuts the files to the low-level legs.
 
 Run:  pixi run fetch-pangaea
+
+(scripts/fetch_zenodo.py)=
+### `scripts/fetch_zenodo.py`
+
+**Run:** `pixi run fetch-zenodo`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/fetch_zenodo.py)
+
+Download the input files of the Zenodo data record into the places the scripts read them from.
+
+The record holds every input that is neither in this repository nor on PANGAEA, one file per data
+set: the ERA5 and CARRA subsets, the MODIS/Aqua ice surface temperature, the merged MODIS-AMSR2
+sea-ice concentration, the NASA GIBS images behind Fig. 5, and the leg table (start and end of
+every straight leg, cut once from the Polar 6 archive by preprocessing/flight_segments.py).
+The measurements come from PANGAEA (pixi run fetch-pangaea).
+
+Every file is checked against the size and SHA-256 checksum listed in data/manifest.tsv (archive
+"zenodo:data"), i.e. the file the paper's numbers were computed from; a file that is already present
+and correct is not downloaded again.
+
+Run:  pixi run fetch-zenodo
 
 (scripts/polar6_level_at_segments.py)=
 ### `scripts/polar6_level_at_segments.py`
