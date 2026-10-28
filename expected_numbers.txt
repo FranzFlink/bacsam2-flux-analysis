@@ -77,6 +77,7 @@ input sensitivities, median [IQR] over segments (central difference with +-0.5 K
   ERA5-MODIS bulk  dH/d(dtheta) = -1.42 [-4.67, +0.00] W m-2 K-1    dH/dU = -0.00 [-0.86, +2.01] W m-2 (m/s)-1
   T-Bird bulk      slope across the eight stability schemes 1.20-1.23 (within 0.03 of each other)
   ERA5-MODIS bulk  slope across the eight stability schemes 0.47-0.64 (within 0.17 of each other)
+  ERA5-MODIS bulk  uniform z0m (Sect. 3.2): slope 0.59-0.74, up to 0.16 from the reference 0.59; r changes by at most 0.03
 model-diagnosed fluxes on the common CARRA subset (n = 74):
   H_S,ERA,diag: slope 1.17   r 0.58   bias -3.07
   H_S,CAR,diag: slope 1.40   r 0.72   bias -3.36

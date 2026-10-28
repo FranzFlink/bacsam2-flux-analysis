@@ -251,6 +251,13 @@ def further_numbers(split):
         slopes = [skill_metrics(EC, H_all[i], "")["slope"] for i in schemes]
         print(f"  {name:<16} slope across the eight stability schemes {min(slopes):.2f}-{max(slopes):.2f} "
               f"(within {max(slopes) - min(slopes):.2f} of each other)")
+    ref = skill_metrics(EC, H_RS_ALL[RUNS_RS.index("GLGS20_ref")], "")
+    uniform = [skill_metrics(EC, H_RS_ALL[RUNS_RS.index(run)], "") for run in RUNS_RS if run.startswith("GLGS20_z0c")
+               and not run.endswith("era5only")]
+    slopes = [m["slope"] for m in uniform]
+    print(f"  ERA5-MODIS bulk  uniform z0m (Sect. 3.2): slope {min(slopes):.2f}-{max(slopes):.2f}, up to "
+          f"{max(abs(s - ref['slope']) for s in slopes):.2f} from the reference {ref['slope']:.2f}; r changes by at most "
+          f"{max(abs(m['r'] - ref['r']) for m in uniform):.2f}")
 
     car, erad = np.asarray(FIG["H_car_diag"], float), np.asarray(FIG["H_era_diag"], float)
     m = keep & np.isfinite(car)
