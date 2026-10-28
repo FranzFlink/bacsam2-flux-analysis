@@ -531,15 +531,17 @@ cannot correct both.
 '''), ("code", r'''
 groups = {"stability scheme (8 schemes)": S.index.str.endswith("_ref"),
           "alpha_T (1e-4 ... 1e-1)": (S.index.str.contains("ztr") & S.zt_ratio.between(1e-4, 1e-1)) | (S.index == "GLGS20_ref"),
-          "momentum roughness set": S.index.str.contains("mosaic|sheba|nschnier") | (S.index == "GLGS20_ref"),
+          "momentum roughness set": S.index.str.contains("mosaic|nschnier") | (S.index == "GLGS20_ref"),
           "constant momentum roughness": S.index.str.contains("z0c")}
 rng = lambda x: f"{x.min():.2f} - {x.max():.2f}"
 pd.DataFrame({g: {"slope, measured inputs": rng(S[m].obs_slope), "r, measured inputs": rng(S[m].obs_r),
                   "slope, MODIS + ERA5": rng(S[m].rs_slope), "r, MODIS + ERA5": rng(S[m].rs_r)} for g, m in groups.items()}).T
 '''), ("md", r'''
-No choice within the transfer coefficient changes the correlation, and only the roughness lengths change the amplitude
-appreciably. The eight stability schemes are practically indistinguishable: they share the functions for unstable
-stratification and differ only under stable stratification, where the flux is small (Chapter 3).
+No choice within the transfer coefficient changes the correlation much. With the measured inputs, only the roughness
+lengths change the amplitude appreciably, and the eight stability schemes are practically indistinguishable: they share
+the functions for unstable stratification and differ only under stable stratification, where the flux is small
+(Chapter 3). With the MODIS and ERA5 inputs, which are stably stratified on more segments, the stability schemes
+change the amplitude about as much as the roughness choices do.
 
 ## Sensitivity to the inputs
 '''), ("code", r'''
