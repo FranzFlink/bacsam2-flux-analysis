@@ -130,6 +130,7 @@ for L, g in det.groupby("subleg_length_km"):
         "fraction_above_3sigma": (w["ratio"] > 3).mean(),
     })
 out = AR / "ec_leg_length_sensitivity" / "ec_sensitivity_summary.csv"
+out.parent.mkdir(parents=True, exist_ok=True)
 pd.DataFrame(rows).to_csv(out, index=False, lineterminator="\n")
 print(f"\nwritten {out.relative_to(REPO)}")
 print(pd.DataFrame(rows)[["label", "n_legs", "N_bins", "ratio_mean", "ratio_std",
