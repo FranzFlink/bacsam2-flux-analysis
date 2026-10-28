@@ -12,8 +12,8 @@ Stages
     1  load_obs             the 91 low-level segments over sea ice with the EC reference
     2  along-track inputs   MODIS IST, ERA5 level 136 (T, wind, height), ERA5 skin temperature,
                             surface pressure and surface flux, CARRA surface flux, at each segment.
-                            Cached in along_track_inputs.nc so that the bulk computation
-                            runs without the gridded files (pixi run verify-cache re-extracts).
+                            Cached in along_track_inputs.nc (pixi run extract) so that the bulk
+                            computation runs without the gridded files.
     3  sensitivity sweep    every configuration of Table C1, once with the ERA5-MODIS forcing
                             (sweep A) and once with the ERA5-only forcing (sweep B); the in-situ
                             estimate is part of every run

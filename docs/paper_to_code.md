@@ -25,10 +25,7 @@ No number in the paper is transcribed by hand. Every number of the text is print
 scripts, together with that of the robustness checks, is committed as `expected_numbers.txt`; `pixi run check` fails if
 any number deviates from it by more than 0.02.
 
-## Annotated manuscript
+## Checking a statement
 
-[`paper/manuscript_clean.tex`](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/paper/manuscript_clean.tex)
-is the manuscript without comments and template text, with cross-references and citations resolved as in the PDF, and
-with a `% [code]` line after each section, equation, figure and table that names the code producing it.
 [`AGENTS.md`](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/AGENTS.md) describes how to check a
 statement of the paper against the code and lists the conventions of the analysis.

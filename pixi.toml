@@ -36,9 +36,7 @@ PYTHONIOENCODING = "utf-8"
 [tasks]
 # Each step can be run on its own; `pixi run all` runs them in order.
 test          = "pytest tests -q"
-# EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
-verify-ec     = "python scripts/verify_ec_reproduction.py"
-verify-cache  = "python scripts/verify_along_track_cache.py"
+# downloads, then the EC side: 100 Hz data -> segment fluxes, placement uncertainty, window-length experiment
 fetch-pangaea = "python scripts/fetch_pangaea.py"             # published PANGAEA files -> data/pangaea/ (1.5 GB) and master tracks
 fetch-zenodo  = "python scripts/fetch_zenodo.py"              # Zenodo data record: reanalysis, satellite, GIBS images, leg table (0.2 GB)
 inputs        = "python scripts/prepare_inputs.py"            # published PANGAEA files -> leg windows
@@ -58,8 +56,6 @@ tables        = { cmd = "python scripts/make_manuscript_tables.py", depends-on =
 figures       = { cmd = "python figures_manuscript/run_all.py", depends-on = ["precompute"] }
 check         = { cmd = "python scripts/check_expected_numbers.py", depends-on = ["precompute"] }
 book          = { cmd = "python book/build_book.py", depends-on = ["precompute"] }
-# annotated reading copy of the manuscript (needs the LaTeX source next to the repo)
-paper         = "python paper/export_clean_manuscript.py"
 # API reference (docs/api/) and figure pages (docs/figures/) of the website; tests/test_api_docs.py checks them
 api           = "python docs/build_api.py"
 # size and checksum of every data file against data/manifest.tsv (--write recomputes it)

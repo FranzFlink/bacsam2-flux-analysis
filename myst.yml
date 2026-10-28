@@ -24,7 +24,6 @@ project:
     - _build/**
     - .pixi/**
     - preprocessing/**
-    - paper/**
     - data/**
   toc:
     - file: docs/index.md

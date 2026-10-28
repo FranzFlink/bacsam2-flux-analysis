@@ -15,3 +15,10 @@ data/observations/processed/polar6_unified/kt19_unified.nc
 
 # files prepared for the Zenodo data record (scripts/fetch_zenodo.py lists them)
 zenodo_upload/
+
+# no data in git: pixi run fetch-pangaea and fetch-zenodo download them (checksums in data/manifest.tsv)
+data/**
+!data/manifest.tsv
+figures_manuscript/_gibs_cache/
+# outputs, rebuilt by pixi run all
+figures_manuscript/output/

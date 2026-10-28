@@ -1,18 +1,21 @@
 # BACSAM-II sensible-heat-flux analysis
 
-Code and data for **Müller et al., "Evaluation of reanalysis and satellite products of
+Code for **Müller et al., "Evaluation of reanalysis and satellite products of
 sensible heat flux over Arctic sea ice against airborne eddy-covariance measurements"**
 (submitted to *Atmospheric Measurement Techniques*).
 
-The repository reproduces, from the shipped data, every number, table and figure of the
-paper that is derived from data:
+The repository contains no data. It downloads the published measurements from PANGAEA and every
+other input from a Zenodo data record (doi:10.5281/zenodo.23729591), and reproduces from them every number,
+table and figure of the paper that is derived from data:
 
 | Step | What it shows | Time |
 |------|---------------|------|
+| `fetch-pangaea`, `fetch-zenodo` | Download the measurements (PANGAEA) and the reanalysis, satellite and leg-table inputs (Zenodo), with checksums | download |
+| `inputs` | The published 100 Hz files cut to the low-level legs | ~1 min |
 | `ec-segments` | The 5 km segments and their eddy-covariance (EC) fluxes from the 100 Hz T-Bird measurements | ~1 min |
 | `placement`, `window-length` | EC segment-placement uncertainty and the window-length experiment (Fig. 3) | ~5 and ~2 min |
 | `polar6-level` | Polar 6 temperature and height per segment (Fig. 2a) from the nose-boom data | ~10 s |
-| `extract` | MODIS, ERA5 and CARRA values at the segments from the shipped gridded fields | ~5 s |
+| `extract` | MODIS, ERA5 and CARRA values at the segments from the gridded fields | ~5 s |
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
 | `robustness`, `ec-bands` | Robustness of the comparison: dependent segments, zero-flux baseline, the genuine-MODIS subset, stability correction, the frequency band of the EC flux | ~10 s |
@@ -26,13 +29,11 @@ a map from the paper to the code and the API reference of `fluxpy` and the scrip
 published from `.github/workflows/site.yml`. `pixi run api` regenerates the API reference and the
 figure pages from the code.
 
-**Checking the paper against the code** (also with an AI agent): start with [`AGENTS.md`](AGENTS.md); a
-clean reading copy of the manuscript, annotated with the code that produces each part, is in
-[`paper/`](paper/README.md).
+**Checking the paper against the code** (also with an AI agent): start with [`AGENTS.md`](AGENTS.md).
 
 ## How to run it (no programming knowledge needed)
 
-1. **Get the repository** (about 220 MB). On GitHub: green *Code* button → *Download ZIP*,
+1. **Get the repository** (about 2 MB; the data are downloaded by the first step). On GitHub: green *Code* button → *Download ZIP*,
    then unpack. Or, with git: `git clone https://github.com/FranzFlink/bacsam2-flux-analysis.git`
 2. **Install pixi** (a small program that sets up the exact Python environment used for
    the paper; nothing else on your computer is changed). Follow the one-line instruction
@@ -46,22 +47,21 @@ clean reading copy of the manuscript, annotated with the code that produces each
    pixi run all
    ```
 
-   The first call downloads the Python environment (a few minutes) and the published
-   T-Bird, nose-boom and KT-19 measurements from PANGAEA (about 1.5 GB); the run then takes
-   about 15 minutes. `check` ends with a `RESULT:` line; the run stops with an error if
-   anything does not match.
+   The first call downloads the Python environment (a few minutes), the published T-Bird,
+   nose-boom and KT-19 measurements and the Polar 6 master tracks from PANGAEA (about 1.5 GB)
+   and the Zenodo data record (about 0.2 GB); the run then takes about 15 minutes. `check` ends
+   with a `RESULT:` line; the run stops with an error if anything does not match.
    Figures 1, 4 and 5 download map data on first use, so an internet connection is needed once.
 
 Single steps: `pixi run test`, `pixi run precompute`, `pixi run check`, `pixi run numbers`,
 `pixi run robustness`, `pixi run tables`, `pixi run figures`, `pixi run book`, `pixi run api`,
-`pixi run site`. Without rewriting anything, `pixi run verify-ec` and `pixi run verify-cache`
-show that the shipped EC fluxes and gridded values follow from the input files.
-`pixi run all` starts with `pixi run fetch-pangaea`, which downloads the published PANGAEA files
-into `data/pangaea/<dataset>/` and checks their checksums (files already present are only checked),
-and `pixi run inputs`, which cuts them to the low-level legs.
+`pixi run site`. `pixi run all` starts with `pixi run fetch-pangaea` and `pixi run fetch-zenodo`,
+which download the published files and check their sizes and checksums against `data/manifest.tsv`
+(files already present are only checked), and `pixi run inputs`, which cuts the 100 Hz files to the
+low-level legs.
 
-Re-running rewrites the output files with a new time stamp; `git status` will then list
-them as modified although the numbers are identical.
+Data and outputs are not tracked by git (`data/`, `figures_manuscript/output/`); the committed
+references `expected_numbers.txt` and `tables_manuscript/` are, and a re-run leaves them unchanged.
 
 ## Where is what in the paper?
 
@@ -78,8 +78,7 @@ them as modified although the numbers are identical.
 | every number in the text | `scripts/manuscript_numbers.py` and `scripts/ec_quality.py`, whose output is committed as `expected_numbers.txt` |
 | robustness of the comparison | `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` |
 
-Every module starts with a docstring that names the manuscript section it implements;
-`paper/manuscript_clean.tex` carries the same map inside the text of the paper.
+Every module starts with a docstring that names the manuscript section it implements.
 
 ## What is where
 
@@ -89,17 +88,16 @@ Every module starts with a docstring that names the manuscript section it implem
 | `scripts/run_ec_aggregation.py` | 100 Hz data → 5 km EC segments (`fluxpy/aggregate.py`) |
 | `scripts/ec_segment_placement.py`, `scripts/ec_window_length.py` | EC segment-placement spread; EC window-length experiment (Fig. 3) |
 | `scripts/ec_quality.py` | Quality of the EC reference (Appendix A) → `tables_manuscript/table_qc_robustness.tex` |
-| `scripts/verify_ec_reproduction.py` | Recomputes the EC segments and compares with the shipped segment file |
+| `scripts/fetch_pangaea.py`, `scripts/fetch_zenodo.py`, `scripts/prepare_inputs.py` | Download of the published data, checks against `data/manifest.tsv`, and the cut to the legs |
 | `scripts/calc_bulk_and_ec_fluxes.py` | Bulk fluxes + sensitivity sweep → `data/model_output/` |
 | `scripts/manuscript_numbers.py` | Prints the numbers quoted in the text and in the comparison table |
 | `scripts/make_manuscript_tables.py` | Sensitivity tables and the uncertainty-budget table |
 | `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` | Robustness of the comparison |
 | `figures_manuscript/` | One script per manuscript figure (see its README) |
 | `tests/` | Unit tests; `test_most_schemes.py` checks the physics against independent references (numerical integration of the published stability functions, log-law limit, sign convention, integrity threshold of Appendix A, Monte-Carlo check of the random error); `test_constants_and_theta.py` pins the constants to the values stated in the paper |
-| `preprocessing/` | How the shipped data files were produced from the raw archives, including the leg table (documentation; needs the raw data) |
+| `preprocessing/` | How the files of the Zenodo data record were produced from the raw archives, including the leg table (documentation; needs the raw data) |
 | `book/` | Executable chapters on the method (see below) |
 | `docs/`, `myst.yml` | The pages of the website around the book (landing page, reproduction guide, paper-to-code map, glossary); `docs/build_api.py` writes the API reference into `docs/api/` and the figure pages into `docs/figures/` |
-| `paper/` | Annotated reading copy of the manuscript, and the script that writes it |
 | `AGENTS.md` | How to check a claim of the paper against the code; conventions and rules for changes |
 | `DATA.md` | Description, units and origin of every data file |
 
@@ -136,7 +134,9 @@ Two implementation details worth knowing:
 
 ## What cannot be reproduced from this repository
 
-Raw data are available from the authors on request.
+The subsets in the Zenodo data record and the leg table were cut from the raw archives with the
+scripts in `preprocessing/`, which need those archives. Raw data are available from the authors on
+request.
 
 ## Citation and license
 
@@ -144,9 +144,10 @@ Please cite the paper and the archived version of this repository: every release
 Zenodo with its own DOI. `CITATION.cff` has the reference of the paper, `.zenodo.json` the metadata
 of the archive.
 
-The code is released under the [MIT License](LICENSE). The files in `data/` are not covered by it:
-third-party products (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS
-imagery) remain under the licences of their providers, see `DATA.md`. The drawing on the website
+The code is released under the [MIT License](LICENSE). The downloaded data are not covered by it:
+the PANGAEA datasets and the Zenodo data record are released under CC BY 4.0, and the third-party
+products in the record (ERA5, CARRA, MODIS, the merged MODIS–AMSR2 sea-ice concentration, NASA GIBS
+imagery) remain under the terms of their providers, see `DATA.md`. The drawing on the website
 (`docs/images/polar6_tbird.png`, generated with ChatGPT from a photograph by Anna-Maria Jörs) is not
 covered by the MIT License either.
 

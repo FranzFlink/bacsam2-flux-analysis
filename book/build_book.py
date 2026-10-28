@@ -2,7 +2,7 @@
 """Build and execute the notebooks of the didactic book.
 
 The notebooks follow the structure of the manuscript and recompute its central
-numbers from the shipped data, using the same ``fluxpy`` functions
+numbers from the published data, using the same ``fluxpy`` functions
 as the pipeline. They are generated from the cell lists below and executed, so
 every figure and number in them is produced on your machine.
 

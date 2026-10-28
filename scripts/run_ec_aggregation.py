@@ -13,7 +13,6 @@ The physics is in fluxpy.aggregate (segments), fluxpy.eddy_covariance (flux and
 random error) and fluxpy.qc (integrity check); this script only loads the files.
 
 Run:  pixi run ec-segments            (about 30 s)
-      pixi run verify-ec              recomputes into a temporary file and compares
 """
 from __future__ import annotations
 

@@ -13,8 +13,9 @@ autodoc and autosummary do for a Sphinx site:
   website builders): its docstring and the pixi task that runs it;
 * an index page;
 * one page per manuscript figure (``docs/figures/``): the figure, its caption from the
-  reading copy of the manuscript (``paper/manuscript_clean.tex``), the docstring of its
-  script, the fluxpy objects it uses, and the script itself.
+  manuscript (``docs/figures/captions.json``, written here from the reading copy of the
+  manuscript when it lies next to this repository), the docstring of its script, the fluxpy
+  objects it uses, and the script itself.
 
 Docstrings are plain text with a little reStructuredText (````code````, ``:func:``
 roles, underlined headings, numpydoc ``Parameters`` sections, simple tables, ``::``
@@ -33,6 +34,7 @@ import ast
 import importlib
 import inspect
 import io
+import json
 import pkgutil
 import re
 import sys
@@ -53,18 +55,18 @@ import fluxpy  # noqa: E402
 #: script groups of the scripts page, in pipeline order; scripts not listed are appended
 SCRIPT_GROUPS = {
     "Eddy-covariance reference": [
-        "scripts/run_ec_aggregation.py", "scripts/verify_ec_reproduction.py",
+        "scripts/run_ec_aggregation.py",
         "scripts/ec_segment_placement.py", "scripts/ec_window_length.py",
     ],
     "Bulk fluxes, numbers and tables": [
-        "scripts/calc_bulk_and_ec_fluxes.py", "scripts/verify_along_track_cache.py",
+        "scripts/calc_bulk_and_ec_fluxes.py",
         "scripts/manuscript_numbers.py", "scripts/ec_quality.py",
         "scripts/robustness_checks.py", "scripts/ec_band_sensitivity.py",
         "scripts/make_manuscript_tables.py", "scripts/check_expected_numbers.py",
     ],
     "Figures": sorted(p.relative_to(REPO).as_posix() for p in (REPO / "figures_manuscript").glob("*.py")),
     "Documentation": [
-        "book/build_book.py", "paper/export_clean_manuscript.py", "docs/build_api.py",
+        "book/build_book.py", "docs/build_api.py",
     ],
 }
 SCRIPT_GLOBS = ["scripts/*.py", "figures_manuscript/*.py"]
@@ -975,7 +977,7 @@ def render_scripts(index: Index) -> str:
     out = ["---", "title: Scripts", "short_title: Scripts",
            "description: \"What each script of the repository does, what it reads and writes, and the pixi task "
            "that runs it.\"", "---", "", GENERATED, "",
-           "The scripts turn the shipped data into the numbers, tables and figures of the paper, using the "
+           "The scripts turn the downloaded data into the numbers, tables and figures of the paper, using the "
            "physics in [`fluxpy`](index.md). Each one is run through pixi (for example `pixi run numbers`), "
            "or directly with `pixi run python <script>`. The text below is the docstring at the top of each "
            "script. The sequence of the steps is described under [Reproduction](../reproduce.md).", ""]
@@ -1053,7 +1055,10 @@ def render_index(modules: list[Module], index: Index) -> str:
 # ═════════════════════════════════════════════════════════════════════════════
 
 FIG_DIR = REPO / "docs" / "figures"
-MANUSCRIPT_COPY = REPO / "paper" / "manuscript_clean.tex"
+#: reading copy of the manuscript in the (private) manuscript repository next to this one
+MANUSCRIPT_COPY = REPO.parent / "2026_03_12_manuscript" / "paper" / "manuscript_clean.tex"
+#: the figure captions taken from it, committed so that the pages can be rebuilt without the manuscript
+CAPTIONS = FIG_DIR / "captions.json"
 
 #: the figure pages: script (figures_manuscript/<name>.py), number, title, paper section, method chapter
 FIGURES = [
@@ -1104,9 +1109,10 @@ def latex_to_md(tex: str) -> str:
 
 
 def manuscript_captions() -> dict[str, str]:
-    """{figure script name: caption as markdown}, from the reading copy of the manuscript."""
+    """{figure script name: caption as markdown}: from the reading copy of the manuscript when it is
+    available, otherwise from ``docs/figures/captions.json``."""
     if not MANUSCRIPT_COPY.exists():
-        return {}
+        return json.loads(CAPTIONS.read_text(encoding="utf-8")) if CAPTIONS.exists() else {}
     tex = MANUSCRIPT_COPY.read_text(encoding="utf-8")
     captions = {}
     for env in re.findall(r"\\begin\{figure\*?\}(.*?)\\end\{figure\*?\}", tex, flags=re.S):
@@ -1205,7 +1211,8 @@ def figure_pages(index: Index) -> dict[Path, str]:
         raise SystemExit(f"FIGURES in docs/build_api.py out of date: not listed {sorted(scripts - listed)}, "
                          f"no such script {sorted(listed - scripts)}")
     captions = manuscript_captions()
-    pages = {FIG_DIR / "index.md": render_figures_index(captions)}
+    pages = {FIG_DIR / "index.md": render_figures_index(captions),
+             CAPTIONS: json.dumps(captions, indent=1, ensure_ascii=False, sort_keys=True) + "\n"}
     for name, number, title, section, chapter in FIGURES:
         pages[FIG_DIR / f"{name}.md"] = render_figure(name, number, title, section, chapter,
                                                       captions.get(name, ""), index)
@@ -1254,7 +1261,8 @@ OUTPUT_DIRS = (OUT_DIR, FIG_DIR)
 def toc_missing(pages: dict[Path, str]) -> list[str]:
     """Pages that myst.yml does not list in its table of contents."""
     toc = (REPO / "myst.yml").read_text(encoding="utf-8")
-    return [p.relative_to(REPO).as_posix() for p in pages if p.relative_to(REPO).as_posix() not in toc]
+    return [p.relative_to(REPO).as_posix() for p in pages
+            if p.suffix == ".md" and p.relative_to(REPO).as_posix() not in toc]
 
 
 def main(argv: list[str]) -> int:

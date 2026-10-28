@@ -3,22 +3,21 @@
 This repository is the reproducibility package of Müller et al., "Evaluation of reanalysis and
 satellite products of sensible heat flux over Arctic sea ice against airborne eddy-covariance
 measurements" (AMT, submitted). Its job is to show that every number, table and figure of the
-paper follows from the shipped data. Read this file first, then `README.md`.
+paper follows from the published data. Read this file first, then `README.md`.
 
 ## Where the paper is
 
-* `paper/manuscript_clean.tex` is a **reading copy** of the manuscript: comments removed, every
-  `\ref` and `\cite` resolved to what the PDF prints, figures pointing at
-  `figures_manuscript/output/*.png`, and `% [code]` lines after each section, equation, figure and
-  table that name the code producing it. It is a snapshot; its header says of which version.
-* The authoritative LaTeX source is not in this repository. If the snapshot and the code
-  disagree, check `git log`: every change of a printed number is a commit of its own, with the
-  numbers before and after in its message.
+* The manuscript is not part of this repository. `README.md` ("Where is what in the paper?") maps
+  every section, equation, table and figure to the code; every module and script names in its
+  docstring the section it implements; the figure pages of the website (`docs/figures/`) show each
+  figure with its caption from the paper (`docs/figures/captions.json`).
+* If the paper and the code disagree, check `git log`: every change of a printed number is a
+  commit of its own, with the numbers before and after in its message.
 
 ## How to check a claim of the paper
 
-1. Find the passage in `paper/manuscript_clean.tex`; the nearest `% [code]` line above it names
-   the module or script. `README.md` ("Where is what in the paper?") has the same map by section.
+1. Find the section of the passage in `README.md` ("Where is what in the paper?"); it names the
+   module or script, whose docstring quotes the section.
 2. Numbers: every number printed in the paper is printed by one of
    `scripts/manuscript_numbers.py` (text, Table 3), `scripts/ec_quality.py` (Appendix A),
    `scripts/make_manuscript_tables.py` (bodies of Tables 2, 4, C1 in `tables_manuscript/`).
@@ -40,8 +39,9 @@ directly fails on Windows because scipy's DLLs are not on the path):
 ```
 pixi run test         # unit and physics tests, 5 s
 pixi run check        # every number against expected_numbers.txt, ~1 min
-pixi run all          # PANGAEA download (1.5 GB, once), then every output (segments ... figures) + check, ~15 min
-pixi run fetch-pangaea  # only the download into data/pangaea/, with checksums; pixi run inputs cuts the files
+pixi run all          # PANGAEA (1.5 GB) and Zenodo (0.2 GB) downloads, once, then every output (segments ... figures) + check, ~15 min
+pixi run fetch-pangaea  # only the PANGAEA download (measurements, master tracks), with checksums; pixi run inputs cuts the files
+pixi run fetch-zenodo   # only the Zenodo data record (reanalysis, satellite, GIBS images, leg table), with checksums
 pixi run numbers      # print the numbers of the text
 pixi run robustness   # robustness of the comparison (dependence, baselines, MODIS subset, ...)
 pixi run book         # re-execute the didactic notebooks in book/
@@ -76,7 +76,7 @@ pixi run site-deploy  # upload _build/html to Cloudflare behind a password (depl
   in the message; then
   `pixi run python scripts/check_expected_numbers.py --update`.
 * A change of a docstring, signature or `#:` comment in `fluxpy/`, of a script or figure script, or a
-  re-export of `paper/manuscript_clean.tex` (figure captions) needs `pixi run api`: the API reference
+  change of a figure caption in the manuscript needs `pixi run api`: the API reference
   (`docs/api/`) and the figure pages (`docs/figures/`) are generated from them, and `pixi run test`
   fails otherwise.
 * A refactor must leave `pixi run check` green. Converting float32 input to float64 is not

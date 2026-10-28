@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use this code or data, please cite the paper below and the archived version of this repository (Zenodo)."
-title: "BACSAM-II sensible-heat-flux analysis (code and data)"
+message: "If you use this code, please cite the paper below and the archived version of this repository (Zenodo); for the data, cite the PANGAEA datasets and the Zenodo data record (doi:10.5281/zenodo.23729591)."
+title: "BACSAM-II sensible-heat-flux analysis (code)"
 type: software
 version: "1.6.0"
 date-released: "2026-10-27"

@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 MANIFEST = REPO / "data" / "manifest.tsv"
-RECORD = None                 # Zenodo record id of the data record; set once the record is published
+RECORD = 23729591             # Zenodo data record, doi:10.5281/zenodo.23729591
 URL = "https://zenodo.org/records/{record}/files/{name}?download=1"
 RETRIES = 10
 WAIT_S = 30.0

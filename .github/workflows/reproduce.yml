@@ -1,6 +1,7 @@
-# Reproduces the paper's numbers on every push: the published PANGAEA measurements cut to the legs,
-# physics tests, the EC fluxes from the 100 Hz data,
-# the colocated inputs from the gridded files, and every printed number against expected_numbers.txt.
+# Reproduces the paper's numbers on every push from the published data alone: the measurements and master
+# tracks from PANGAEA and the Zenodo data record (both checked against data/manifest.tsv), the cut to the legs,
+# physics tests, the EC segments, placement and window-length experiments, the gridded values at the segments,
+# and every printed number against expected_numbers.txt; the committed table bodies must not change.
 # Figures are not rebuilt here (they need map downloads and a few minutes); `pixi run all` does that locally.
 name: reproduce
 
@@ -17,15 +18,24 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
           environments: default
-      - name: Published PANGAEA measurements (download, checksums) cut to the legs
+      - name: Published data (PANGAEA, Zenodo; checksums) and the cut to the legs
         run: |
           pixi run fetch-pangaea
+          pixi run fetch-zenodo
           pixi run inputs
       - name: Physics tests
         run: pixi run test
-      - name: EC fluxes follow from the 100 Hz data
-        run: pixi run verify-ec
-      - name: Colocated inputs follow from the gridded files
-        run: pixi run verify-cache
+      - name: EC segments, placement spread, window-length experiment, Polar 6 level
+        run: |
+          pixi run ec-segments
+          pixi run placement
+          pixi run window-length
+          pixi run polar6-level
+      - name: Gridded values at the segments
+        run: pixi run extract
       - name: Every printed number equals expected_numbers.txt
         run: pixi run check
+      - name: Table bodies equal the committed ones
+        run: |
+          pixi run tables
+          git diff --exit-code -- expected_numbers.txt tables_manuscript
