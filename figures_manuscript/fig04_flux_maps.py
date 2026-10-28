@@ -47,10 +47,6 @@ sic_pts = (
 low["sic"] = ("start_time",), sic_pts.sic.values
 low["sic"] = low.sic.where(low.sic <= 100)     # mask invalid SIC
 
-# drop the spurious first 13-Apr segment
-first_ts_0413 = low.sel(start_time="2024-04-13").start_time.min().values
-low = low.where(low.start_time != first_ts_0413, drop=True)
-
 # frame colours = campaign-map focus-rectangle colours (batlow over all days)
 frame_colors = dict(zip(low_alt_days,
                         cm_crameri.batlow(np.linspace(0, 1, len(low_alt_days)))))

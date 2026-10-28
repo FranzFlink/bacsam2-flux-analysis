@@ -103,13 +103,10 @@ day_color["2024-04-17"] = DAY_COLOR_0417
 DAY_ZORDER = {"2024-04-17": 1}        # extra zorder: 17 April on top
 analysed_days = [d for d in low_alt_days if d != "2024-04-25"]
 
-# focus regions of the detail panels (a)-(d); as there, the first 13-April
-# segment is dropped before taking the extent
-first_ts_0413 = low.sel(start_time="2024-04-13").start_time.min().values
-low_ext = low.where(low.start_time != first_ts_0413, drop=True)
+# focus regions of the detail panels (a)-(d) of fig04_flux_maps.py
 focus = {}
 for panel, day in zip("abcd", analysed_days):
-    ds_day = low_ext.sel(start_time=day)
+    ds_day = low.sel(start_time=day)
     x, y = ds_day.longitude.values, ds_day.latitude.values
     focus[f"({panel})"] = (day, [np.nanmin(x) - 1.0, np.nanmax(x) + 1.0,
                                  np.nanmin(y) - 0.12, np.nanmax(y) + 0.12])

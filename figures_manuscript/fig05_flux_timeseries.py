@@ -81,34 +81,22 @@ ds_sens_ref = xr.open_dataset(
     REPO / "data" / "model_output" / "sensitivity_figure_data.nc"
 ).sel(run="GLGS20_ref", dT=0, dU=0)
 
-starts_full = pd.DatetimeIndex(ds_turb.start_time.values)
-ends_full = pd.DatetimeIndex(ds_turb["end_time"].values)
-_dur_ns = np.where(~pd.isnull(ends_full), (ends_full.values - starts_full.values).astype("int64"), 0)
-mids_full = pd.DatetimeIndex(starts_full.values.astype("int64") + _dur_ns // 2, dtype="datetime64[ns]")
+starts = pd.DatetimeIndex(ds_turb.start_time.values)
+ends = pd.DatetimeIndex(ds_turb["end_time"].values)
+end_times = ends.values
+_dur_ns = np.where(~pd.isnull(ends), (ends.values - starts.values).astype("int64"), 0)
+mid_times = pd.DatetimeIndex(starts.values.astype("int64") + _dur_ns // 2, dtype="datetime64[ns]")
 
-# Fluxes (sign: positive = upward).
-H_obs_ec_full = ds_turb["sensible_heat_flux"].values.astype(float)
-H_obs_bulk_full = ds_sens_ref["H_obs_bulk"].values.astype(float)
+# Fluxes (sign: positive = upward), every analysed segment.
+H_obs_ec = ds_turb["sensible_heat_flux"].values.astype(float)
+H_obs_bulk = ds_sens_ref["H_obs_bulk"].values.astype(float)
 # H_rs_bulk is the ERA5-MODIS estimate, H_era_bulk the ERA5-only estimate.
-H_rs_bulk_full = ds_sens_ref["H_rs_bulk"].values.astype(float)
-H_era_bulk_full = ds_sens_ref["H_era_bulk"].values.astype(float)
+H_rs_bulk = ds_sens_ref["H_rs_bulk"].values.astype(float)
+H_era_bulk = ds_sens_ref["H_era_bulk"].values.astype(float)
 # H_era_diag / H_car_diag are stored positive-upward (sign flipped ONCE in the
 # precompute, see calc_bulk_and_ec_fluxes.py) — do NOT negate here.
-H_era_diag_full = ds_sens_ref["H_era_diag"].values.astype(float)
-H_car_diag_full = ds_sens_ref["H_car_diag"].values.astype(float)
-
-# Remove the first 2 legs of 13 Apr (artefacts).
-_idx_apr13 = np.where(starts_full.normalize() == pd.Timestamp("2024-04-13"))[0]
-keep = np.ones(len(starts_full), bool)
-keep[_idx_apr13[:2]] = False
-
-starts, end_times, mid_times = starts_full[keep], ends_full.values[keep], mids_full[keep]
-H_obs_ec = H_obs_ec_full[keep]
-H_obs_bulk = H_obs_bulk_full[keep]
-H_rs_bulk = H_rs_bulk_full[keep]
-H_era_bulk = H_era_bulk_full[keep]
-H_era_diag = H_era_diag_full[keep]
-H_car_diag = H_car_diag_full[keep]
+H_era_diag = ds_sens_ref["H_era_diag"].values.astype(float)
+H_car_diag = ds_sens_ref["H_car_diag"].values.astype(float)
 
 # Aircraft position (50 Hz, from the KT-19 file) for the track overlays.
 ds_rad = xr.open_dataset(

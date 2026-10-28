@@ -103,7 +103,7 @@ for key, p_key, var_label, ylabel, ymin in [
     ax.text(0.17, 0.92, var_label, transform=ax.transAxes, fontweight="bold")
     ax.set_ylabel(ylabel)
 
-# (e) frequency-weighted cospectrum (x1000 -> m K s-1)
+# (e) frequency-weighted cospectrum, plotted x1000, i.e. in 1e-3 m K s-1
 ax = axs["E"]
 ax.set_xscale("log")
 ax.set_xlim(1e-2, 100.0)
@@ -111,7 +111,7 @@ _add_flux_band(ax)
 ax.axhline(0, color="0.3", lw=0.7)
 _plot_lines(ax, "f", "f_cospectrum", scale=1000.0)
 ax.set_xlabel("f (Hz)")
-ax.set_ylabel(r"$f\,C_{w\theta}\;(m\,K\,s^{-1})$")
+ax.set_ylabel(r"$f\,C_{w\theta}\;(10^{-3}\,m\,K\,s^{-1})$")
 
 # (f) normalised ogive, detectable fluxes only
 ax = axs["F"]
