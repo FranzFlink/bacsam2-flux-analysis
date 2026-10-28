@@ -3,13 +3,16 @@
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
 (0.5 ... 50 km). For every L the mean EC flux of the sub-windows is compared with
-the EC flux of the stretch they cover (the leg without the remainder shorter than L
-at its end); the random error of the sub-window fluxes and
-the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
-segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
+the EC flux of the stretch they cover (the remainder shorter than L is not part of
+any window). This ratio depends on where the window grid starts, because a window
+edge can cut through a strong flux event, so it is averaged over five grid
+positions (starting 0, L/5, ..., 4L/5 along the leg). The random error of the
+sub-window fluxes and the shares of sub-windows whose flux exceeds 1, 2 and 3 times
+its random error come from the grid that starts at the beginning of the leg. Same
+estimator as the segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
 Output: data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv
-Run:    pixi run window-length      (about 2 minutes)
+Run:    pixi run window-length      (about 10 minutes)
 """
 import sys
 import warnings
@@ -30,7 +33,8 @@ LENGTHS_KM = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.5, 10.0, 12.5, 15.0, 20.
 EXCLUDE = [pd.Timestamp("2024-04-25").date(), pd.Timestamp("2024-04-26").date()]   # open water / no low legs
 FS = 100.0
 MIN_FULL_LEG_SAMPLES = 5000
-MIN_FULL_FLUX = 0.5            # W m-2; ratios are undefined for weaker fluxes of the covered stretch
+MIN_FULL_FLUX = 0.5            # W m-2; ratios are undefined for legs (and stretches) with weaker fluxes
+N_GRID_POSITIONS = 5           # the flux ratio is averaged over grids starting at 0, L/5, ..., 4L/5
 
 AR = REPO / "data" / "observations" / "ar"
 ds_hf = xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
@@ -75,31 +79,39 @@ for i, meta in enumerate(legs.itertuples()):
     print(f"leg {i:02d}: {full_km:5.1f} km, full-leg flux {H_full:+.2f} W m-2")
 
     for L in LENGTHS_KM:
-        H_sub, sig = [], []
-        n_windows = int(np.floor(full_km / L))
-        for j in range(n_windows):
-            sel = (dist >= j * L) & (dist < (j + 1) * L)
-            sub = leg.isel(time=sel).dropna(dim="time", subset=["w", "theta", "T", "p"])
-            if sub.time.size < min_samples(L):
+        ratios, differences, n_first = [], [], 0
+        for k in range(N_GRID_POSITIONS):
+            offset = k * L / N_GRID_POSITIONS
+            n_windows = int(np.floor((full_km - offset) / L))
+            H_sub = []
+            for j in range(n_windows):
+                sel = (dist >= offset + j * L) & (dist < offset + (j + 1) * L)
+                sub = leg.isel(time=sel).dropna(dim="time", subset=["w", "theta", "T", "p"])
+                if sub.time.size < min_samples(L):
+                    continue
+                # lag range of the random error: 10 s, or a quarter of a short window
+                ec = segment_flux(sub, fs=FS, max_lag_s=min(10.0, 0.25 * sub.time.size / FS))
+                H_sub.append(ec.flux)
+                if k == 0:       # random error and fractions above 1/2/3 sigma: grid from the leg start
+                    windows.append({"subleg_length_km": L, "random_error": ec.random_error,
+                                    "ratio": abs(ec.flux) / ec.random_error})
+            if not H_sub:
                 continue
-            # lag range of the random error: 10 s, or a quarter of a short window
-            ec = segment_flux(sub, fs=FS, max_lag_s=min(10.0, 0.25 * sub.time.size / FS))
-            H_sub.append(ec.flux)
-            sig.append(ec.random_error)
-        if not H_sub:
+            if k == 0:
+                n_first = len(H_sub)
+            # reference: the flux of the stretch this grid covers (the remainder shorter than L
+            # is not part of any window, so the full-leg flux would compare different air)
+            covered = leg.isel(time=(dist >= offset) & (dist < offset + n_windows * L))
+            H_cov = flux(covered.dropna(dim="time", subset=["w", "theta", "T", "p"]))
+            differences.append(np.mean(H_sub) - H_cov)
+            if abs(H_cov) >= MIN_FULL_FLUX:
+                ratios.append(np.mean(H_sub) / H_cov)
+        if not differences:
             continue
-        H_sub, sig = np.asarray(H_sub), np.asarray(sig)
-        windows.extend({"subleg_length_km": L, "random_error": e, "ratio": abs(h) / e}
-                       for h, e in zip(H_sub, sig))
-        # reference: the flux of the stretch the windows cover (the remainder shorter than L at the
-        # end of the leg is not part of any window, so the full-leg flux would compare different air)
-        covered = leg.isel(time=dist - dist[0] < n_windows * L).dropna(dim="time", subset=["w", "theta", "T", "p"])
-        H_cov = flux(covered)
-        ok = abs(H_cov) >= MIN_FULL_FLUX
         detailed.append({
-            "leg_id": i, "subleg_length_km": L, "n_sublegs": len(H_sub),
-            "absolute_difference": H_sub.mean() - H_cov,
-            "relative_ratio": H_sub.mean() / H_cov if ok else np.nan,
+            "leg_id": i, "subleg_length_km": L, "n_sublegs": n_first,
+            "absolute_difference": np.mean(differences),
+            "relative_ratio": np.mean(ratios) if abs(H_full) >= MIN_FULL_FLUX and ratios else np.nan,
         })
 
 par, det, win = pd.DataFrame(parents), pd.DataFrame(detailed), pd.DataFrame(windows)

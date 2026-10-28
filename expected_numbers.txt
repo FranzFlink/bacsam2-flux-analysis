@@ -55,9 +55,9 @@ ALPHA_T IS A WEAK, LOGARITHMIC KNOB
 EC WINDOW-LENGTH EXPERIMENT (Fig. 3)  -- scripts/ec_window_length.py
 ======================================================================================================================
 6 low-level legs, median length 70.2 km
-     1 km windows: H_sub/H_cov = 0.99 +- 0.02   random error 1.00 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 73 / 45 / 13 %
-     5 km windows: H_sub/H_cov = 1.07 +- 0.09   random error 0.50 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 80 / 71 / 55 %
-    10 km windows: H_sub/H_cov = 1.03 +- 0.05   random error 0.37 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 80 / 68 / 66 %
+     1 km windows: H_sub/H_cov = 0.97 +- 0.02   random error 1.00 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 73 / 45 / 13 %
+     5 km windows: H_sub/H_cov = 0.99 +- 0.01   random error 0.50 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 80 / 71 / 55 %
+    10 km windows: H_sub/H_cov = 1.00 +- 0.01   random error 0.37 W m-2   fluxes above 1 / 2 / 3 sigma_rand: 80 / 68 / 66 %
 
 ======================================================================================================================
 UNCERTAINTY BUDGET (Table tab:bulk_unc): median [p25-p75] in W m-2

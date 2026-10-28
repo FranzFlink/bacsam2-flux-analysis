@@ -216,7 +216,9 @@ the surface, not a defect of the data, and it limits the correlation attainable 
 
 Short windows under-sample the larger eddies; long windows average over leads and ice. Each of the six low-level legs
 is cut into consecutive sub-windows of different length, and their mean flux is compared with the flux of the stretch
-they cover, i.e. the leg without the remainder shorter than one window at its end (`scripts/ec_window_length.py`).
+they cover, i.e. the leg without the remainder shorter than one window. Where a window edge cuts through a strong flux
+event, the ratio depends on where the grid of windows starts; it is therefore averaged over five grid positions, shifted
+by a fifth of the window length each (`scripts/ec_window_length.py`).
 '''), ("code", r'''
 wl = pd.read_csv(AR / "ec_leg_length_sensitivity/ec_sensitivity_summary.csv").query("length_km >= 1 and label != 'full leg'")
 fig, axs = plt.subplots(1, 2, figsize=(9, 3))
@@ -228,8 +230,9 @@ for ax in axs:
 r5 = wl[wl.length_km == 5].iloc[0]
 print(f"at 5 km: flux ratio {r5.ratio_mean:.2f}, random error {r5.random_error_median:.2f} W m-2, fluxes above 2 sigma {r5.fraction_above_2sigma * 100:.0f} %")
 '''), ("md", r'''
-**Figure 2.3.** Left: mean flux of the sub-windows of a leg relative to the flux of the stretch they cover, as a function
-of the window length (mean and standard deviation over the legs with a stretch flux of at least 0.5 W m$^{-2}$). Right: median random error of the sub-window fluxes. The
+**Figure 2.3.** Left: mean flux of the sub-windows of a leg relative to the flux of the stretch they cover, averaged
+over five grid positions, as a function of the window length (mean and standard deviation over the legs with a flux of
+at least 0.5 W m$^{-2}$). Right: median random error of the sub-window fluxes. The
 dashed line marks the 5 km segments of the analysis.
 '''), ("md", r'''
 ## Uncertainty of the EC flux

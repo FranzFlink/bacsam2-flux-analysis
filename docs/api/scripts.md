@@ -82,13 +82,16 @@ EC window-length experiment (manuscript Fig. 3).
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
 (0.5 ... 50 km). For every L the mean EC flux of the sub-windows is compared with
-the EC flux of the stretch they cover (the leg without the remainder shorter than L
-at its end); the random error of the sub-window fluxes and
-the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
-segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
+the EC flux of the stretch they cover (the remainder shorter than L is not part of
+any window). This ratio depends on where the window grid starts, because a window
+edge can cut through a strong flux event, so it is averaged over five grid
+positions (starting 0, L/5, ..., 4L/5 along the leg). The random error of the
+sub-window fluxes and the shares of sub-windows whose flux exceeds 1, 2 and 3 times
+its random error come from the grid that starts at the beginning of the leg. Same
+estimator as the segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
 Output: data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv
-Run:    pixi run window-length      (about 2 minutes)
+Run:    pixi run window-length      (about 10 minutes)
 
 ## Bulk fluxes, numbers and tables
 
@@ -354,14 +357,14 @@ Run:  pixi run python figures_manuscript/fig02_meteo_overview.py
 
 Fig. 3 (fig:ec_leg_length_sensitivity) -- EC flux vs the length of the averaging window.
 
-Manuscript Sect. 3.1: why 5 km. Two stacked panels over the six low-level legs, sharing the
-window-length axis:
+Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs, sharing the
+window-length axis (labels under (c) only):
 
-* **(a)** random error sigma_rand of the sub-window fluxes (median, quartiles),
-* **(b)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
-
-The ratio of the mean sub-window flux to the flux of the covered stretch (H_sub/H_cov in the
-data file) is not shown.
+* **(a)** mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov,
+  averaged over five positions of the window grid (mean, +-1 sigma over the legs whose flux is
+  at least 0.5 W m-2),
+* **(b)** random error sigma_rand of the sub-window fluxes (median, quartiles),
+* **(c)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
 
 Data: scripts/ec_window_length.py -> data/observations/ar/ec_leg_length_sensitivity/
 

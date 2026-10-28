@@ -1,8 +1,10 @@
 """Fig. 3 (fig:ec_leg_length_sensitivity) -- EC flux vs the length of the averaging window.
 
-Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs:
-(a) mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov
-    (mean, +-1 sigma over the legs whose stretch flux is at least 0.5 W m-2),
+Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs, sharing the
+window-length axis (labels under (c) only):
+(a) mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov,
+    averaged over five positions of the window grid (mean, +-1 sigma over the legs whose flux is
+    at least 0.5 W m-2),
 (b) random error sigma_rand of the sub-window fluxes (median, quartiles),
 (c) fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
 
@@ -38,20 +40,24 @@ C_REF = "goldenrod"      # 5 km reference marker
 
 REF_LENGTH_KM = 5.0
 
-# ── Layout ───────────────────────────────────────────────────────────────────
-fig, axes = fs.figure(width=fs.COL_W, aspect=1.85, nrows=3)
+# ── Layout: three panels on one window-length axis, close together ───────────
+fig, axes = fs.figure(width=fs.COL_W, aspect=1.6, nrows=3, sharex=True)
+fig.get_layout_engine().set(h_pad=0.02, hspace=0.0)
 
 kw_eb = dict(lw=1.0, ms=3.5, mew=0.6, markeredgecolor="k", elinewidth=0.8,
              capsize=2.5, capthick=0.8, zorder=0, alpha=0.5, ecolor="k")
 
 
-def _fmt_xax(ax, xlim=(0.9, 31.0)):
+def _fmt_xax(ax, xlim=(0.9, 31.0), bottom=False):
     ax.set_xscale("log")
     ax.set_xlim(xlim)
     ax.set_xticks([1, 2, 5, 10, 20, 30])
     ax.get_xaxis().set_major_formatter(mticker.FormatStrFormatter("%d"))   # integer labels
     ax.get_xaxis().set_minor_formatter(mticker.NullFormatter())
-    ax.set_xlabel("Averaging window (km)")
+    if bottom:
+        ax.set_xlabel("Averaging window (km)")
+    else:
+        ax.tick_params(axis="x", labelbottom=False)                            # shared axis: labels under (c) only
     ax.axvline(REF_LENGTH_KM, color=C_REF, lw=3.0, ls="--", zorder=-1)
 
 
@@ -103,7 +109,7 @@ for i, k in enumerate((1, 2, 3)):
     valid = df_sub[col].notna()
     ax.plot(df_sub.loc[valid, "length_km"], df_sub.loc[valid, col], marker="o", ms=3, ls="-", color=C_BATLOW[i],
             label=rf"$|H_\mathrm{{S}}| > {k}\,\sigma_\mathrm{{rand}}$")
-_fmt_xax(ax)
+_fmt_xax(ax, bottom=True)
 ax.set_ylim(0, 1)
 ax.set_ylabel("Fraction of sub-windows")
 ax.legend(loc="lower right", handlelength=2.2)
