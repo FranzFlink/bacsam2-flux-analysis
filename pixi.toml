@@ -1,6 +1,6 @@
 [workspace]
 name = "bacsam-ii"
-version = "1.6.0"
+version = "1.0.1"
 license = "MIT"
 description = "BACSAM-II: airborne eddy-covariance and bulk sensible heat flux over Arctic sea ice (Müller et al., AMT)"
 channels = ["conda-forge"]

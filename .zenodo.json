@@ -1,7 +1,7 @@
 {
   "upload_type": "software",
   "title": "BACSAM-II sensible-heat-flux analysis (code)",
-  "version": "1.6.0",
+  "version": "1.0.1",
   "creators": [
     {
       "name": "Müller, Joshua J.",
