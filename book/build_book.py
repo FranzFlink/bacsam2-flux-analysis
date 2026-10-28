@@ -215,21 +215,21 @@ the surface, not a defect of the data, and it limits the correlation attainable 
 ## Segment length (Fig. 3)
 
 Short windows under-sample the larger eddies; long windows average over leads and ice. Each of the six low-level legs
-is cut into sub-windows of different length, and their mean flux is compared with the flux of the complete leg
-(`scripts/ec_window_length.py`).
+is cut into consecutive sub-windows of different length, and their mean flux is compared with the flux of the stretch
+they cover, i.e. the leg without the remainder shorter than one window at its end (`scripts/ec_window_length.py`).
 '''), ("code", r'''
 wl = pd.read_csv(AR / "ec_leg_length_sensitivity/ec_sensitivity_summary.csv").query("length_km >= 1 and label != 'full leg'")
 fig, axs = plt.subplots(1, 2, figsize=(9, 3))
 axs[0].errorbar(wl.length_km, wl.ratio_mean, wl.ratio_std, fmt="o-", color="C1", ecolor="0.5", capsize=2)
-axs[0].axhline(1, color="k", ls="--"); axs[0].set_ylabel("sub-window flux / full-leg flux")
+axs[0].axhline(1, color="k", ls="--"); axs[0].set_ylabel("sub-window flux / stretch flux")
 axs[1].plot(wl.length_km, wl.random_error_median, "s-", color="C4"); axs[1].set_ylabel("random error (W m$^{-2}$)")
 for ax in axs:
     ax.set_xscale("log"); ax.axvline(5, color="goldenrod", lw=3, ls="--"); ax.set_xlabel("window length (km)")
 r5 = wl[wl.length_km == 5].iloc[0]
 print(f"at 5 km: flux ratio {r5.ratio_mean:.2f}, random error {r5.random_error_median:.2f} W m-2, fluxes above 2 sigma {r5.fraction_above_2sigma * 100:.0f} %")
 '''), ("md", r'''
-**Figure 2.3.** Left: mean flux of the sub-windows of a leg relative to the flux of the complete leg, as a function of
-the window length (mean and standard deviation over the legs). Right: median random error of the sub-window fluxes. The
+**Figure 2.3.** Left: mean flux of the sub-windows of a leg relative to the flux of the stretch they cover, as a function
+of the window length (mean and standard deviation over the legs with a stretch flux of at least 0.5 W m$^{-2}$). Right: median random error of the sub-window fluxes. The
 dashed line marks the 5 km segments of the analysis.
 '''), ("md", r'''
 ## Uncertainty of the EC flux

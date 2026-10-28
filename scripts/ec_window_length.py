@@ -2,8 +2,9 @@
 """EC window-length experiment (manuscript Fig. 3).
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
-(0.5 ... 50 km). For every L the EC flux of the sub-windows is compared with
-the EC flux of the complete leg; the random error of the sub-window fluxes and
+(0.5 ... 50 km). For every L the mean EC flux of the sub-windows is compared with
+the EC flux of the stretch they cover (the leg without the remainder shorter than L
+at its end); the random error of the sub-window fluxes and
 the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
@@ -29,7 +30,7 @@ LENGTHS_KM = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.5, 10.0, 12.5, 15.0, 20.
 EXCLUDE = [pd.Timestamp("2024-04-25").date(), pd.Timestamp("2024-04-26").date()]   # open water / no low legs
 FS = 100.0
 MIN_FULL_LEG_SAMPLES = 5000
-MIN_FULL_FLUX = 0.5            # W m-2; ratios are undefined for weaker full-leg fluxes
+MIN_FULL_FLUX = 0.5            # W m-2; ratios are undefined for weaker fluxes of the covered stretch
 
 AR = REPO / "data" / "observations" / "ar"
 ds_hf = xr.open_dataset(REPO / "data/observations/processed/t-bird_unified/noseboom_unified.nc").sortby("time")
@@ -75,7 +76,8 @@ for i, meta in enumerate(legs.itertuples()):
 
     for L in LENGTHS_KM:
         H_sub, sig = [], []
-        for j in range(int(np.floor(full_km / L))):
+        n_windows = int(np.floor(full_km / L))
+        for j in range(n_windows):
             sel = (dist >= j * L) & (dist < (j + 1) * L)
             sub = leg.isel(time=sel).dropna(dim="time", subset=["w", "theta", "T", "p"])
             if sub.time.size < min_samples(L):
@@ -89,11 +91,15 @@ for i, meta in enumerate(legs.itertuples()):
         H_sub, sig = np.asarray(H_sub), np.asarray(sig)
         windows.extend({"subleg_length_km": L, "random_error": e, "ratio": abs(h) / e}
                        for h, e in zip(H_sub, sig))
-        ok = abs(H_full) >= MIN_FULL_FLUX
+        # reference: the flux of the stretch the windows cover (the remainder shorter than L at the
+        # end of the leg is not part of any window, so the full-leg flux would compare different air)
+        covered = leg.isel(time=dist - dist[0] < n_windows * L).dropna(dim="time", subset=["w", "theta", "T", "p"])
+        H_cov = flux(covered)
+        ok = abs(H_cov) >= MIN_FULL_FLUX
         detailed.append({
             "leg_id": i, "subleg_length_km": L, "n_sublegs": len(H_sub),
-            "absolute_difference": H_sub.mean() - H_full,
-            "relative_ratio": H_sub.mean() / H_full if ok else np.nan,
+            "absolute_difference": H_sub.mean() - H_cov,
+            "relative_ratio": H_sub.mean() / H_cov if ok else np.nan,
         })
 
 par, det, win = pd.DataFrame(parents), pd.DataFrame(detailed), pd.DataFrame(windows)

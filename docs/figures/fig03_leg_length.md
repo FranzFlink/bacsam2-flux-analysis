@@ -16,7 +16,8 @@ short_title: "Fig. 3 · Length of the averaging window"
 
 Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs:
 
-* **(a)** sub-window flux relative to the full-leg flux, H_sub/H_full (mean, +-1 sigma),
+* **(a)** mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov
+  (mean, +-1 sigma over the legs whose stretch flux is at least 0.5 W m-2),
 * **(b)** random error sigma_rand of the sub-window fluxes (median, quartiles),
 * **(c)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
 
@@ -35,7 +36,8 @@ The script writes `figures_manuscript/output/fig03_leg_length.pdf` and `.png` at
 """Fig. 3 (fig:ec_leg_length_sensitivity) -- EC flux vs the length of the averaging window.
 
 Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs:
-(a) sub-window flux relative to the full-leg flux, H_sub/H_full (mean, +-1 sigma),
+(a) mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov
+    (mean, +-1 sigma over the legs whose stretch flux is at least 0.5 W m-2),
 (b) random error sigma_rand of the sub-window fluxes (median, quartiles),
 (c) fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
 
@@ -96,7 +98,7 @@ def _panel_label(ax, label):
                 textcoords="offset points", fontweight="bold", ha="left", va="bottom")
 
 
-# ── (a) Flux-capture ratio H_sub / H_full ────────────────────────────────────
+# ── (a) Flux-capture ratio H_sub / H_cov ─────────────────────────────────────
 ax = axes[0]
 valid = df_sub["ratio_mean"].notna() & df_sub["ratio_std"].notna()
 x = df_sub.loc[valid, "length_km"].where(df_sub.loc[valid, "length_km"] <= 30.0)
@@ -106,9 +108,10 @@ yerr = df_sub.loc[valid, "ratio_std"]
 ax.plot(x, y, color=C_RATIO)
 ax.errorbar(x, y, yerr=yerr, color=C_RATIO, fmt="o",
             label=r"mean $\pm1\sigma$", **kw_eb)                    # the y label names the ratio
-ax.axhline(1.0, color="k", lw=1.5, ls="--", alpha=0.6, label="Full-leg = 1")
+ax.axhline(1.0, color="k", lw=1.5, ls="--", alpha=0.6, label="ratio = 1")
 _fmt_xax(ax)
-ax.set_ylabel(r"$H_\mathrm{S,sub}\,/\,H_\mathrm{S,full}$")
+ax.set_ylabel(r"$H_\mathrm{S,sub}\,/\,H_\mathrm{S,cov}$")
+ax.set_ylim(0.8, 1.2)                    # fixed +-20 %: the automatic range magnifies one leg's scatter
 ax.legend(loc="upper left")              # empty corner; lower right is crossed by the 5 km line
 _panel_label(ax, "(a)")
 

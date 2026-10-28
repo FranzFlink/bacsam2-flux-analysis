@@ -4,7 +4,7 @@ data/model_output/sensitivity_summary_table.csv	14482	a37917a7e4188023a9a4bbf3cf
 data/observations/ar/along_track_inputs.nc	20944	4b9c4b079966d9affd4402267a85c098f78cf63000b2a17510a14e35f1064f2a	zenodo:data	ERA5, MODIS and CARRA values at the segments (pixi run extract)
 data/observations/ar/analysis_ready_polar6_legs_metadata.csv	7218	082e924bc69bd6db0d87628f06cd6c751875964dba92e75055b4f5075acdb59b	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc	61185	4616f80aeb9df3759c81f343b73c93b0cc5127272bf8e0cb6c65742fa51411ee	pangaea:new	derived from the BACSAM-II measurements
-data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv	3483	dd9f728b2ecfef3cbb124efafd86bb977414eff220ca289ac44499b88a300981	pangaea:new	derived from the BACSAM-II measurements
+data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv	3465	687cbb7a217b18ecd97e29211952f060ef9633c26320be355d725b474ffaabf7	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/ec_segment_placement.nc	14216	a1a103fb8d3deec26c1c913fc29c81dcf4ab5c4cff6e88d93648e32e4e739be0	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/polar6_level_at_segments.nc	15220	ab18ddd6b415e6c5587cb481ec74495c8d9bf1b9b6cd65f5df50690f430d1c7d	regenerated	pixi run polar6-level (from the Polar 6 nose boom, doi:10.1594/PANGAEA.995974)
 data/observations/processed/polar6_unified/kt19_unified.nc	198310122	107d5f9fd4e45d4b15721dd29c34b6b29019e98ad812a30d34cad4faa761d21e	regenerated	cut from doi:10.1594/PANGAEA.995980 (KT-19 50 Hz) by pixi run inputs

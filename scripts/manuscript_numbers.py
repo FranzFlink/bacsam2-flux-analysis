@@ -215,7 +215,7 @@ def window_length_experiment():
     print(f"{int(wl.loc[0, 'n_legs'])} low-level legs, median length {wl.loc[0, 'length_km']:.1f} km")
     for L in (1.0, 5.0, 10.0):
         w = wl[wl["length_km"] == L].iloc[0]
-        print(f"  {L:4.0f} km windows: H_sub/H_full = {w['ratio_mean']:.2f} +- {w['ratio_std']:.2f}   "
+        print(f"  {L:4.0f} km windows: H_sub/H_cov = {w['ratio_mean']:.2f} +- {w['ratio_std']:.2f}   "
               f"random error {w['random_error_median']:.2f} W m-2   "
               f"fluxes above 1 / 2 / 3 sigma_rand: {w['fraction_above_1sigma'] * 100:.0f} / "
               f"{w['fraction_above_2sigma'] * 100:.0f} / {w['fraction_above_3sigma'] * 100:.0f} %")

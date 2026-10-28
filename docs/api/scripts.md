@@ -81,8 +81,9 @@ Run:    pixi run placement      (about 2 minutes)
 EC window-length experiment (manuscript Fig. 3).
 
 Each low-level T-Bird leg is cut into consecutive sub-windows of length L
-(0.5 ... 50 km). For every L the EC flux of the sub-windows is compared with
-the EC flux of the complete leg; the random error of the sub-window fluxes and
+(0.5 ... 50 km). For every L the mean EC flux of the sub-windows is compared with
+the EC flux of the stretch they cover (the leg without the remainder shorter than L
+at its end); the random error of the sub-window fluxes and
 the shares of sub-windows whose flux exceeds 1, 2 and 3 times its random error are collected. Same estimator as the
 segment fluxes (linear detrend, cospectrum integrated over 0.1-20 Hz).
 
@@ -354,7 +355,8 @@ Fig. 3 (fig:ec_leg_length_sensitivity) -- EC flux vs the length of the averaging
 
 Manuscript Sect. 3.1: why 5 km. Three stacked panels over the six low-level legs:
 
-* **(a)** sub-window flux relative to the full-leg flux, H_sub/H_full (mean, +-1 sigma),
+* **(a)** mean sub-window flux relative to the flux of the leg stretch the windows cover, H_sub/H_cov
+  (mean, +-1 sigma over the legs whose stretch flux is at least 0.5 W m-2),
 * **(b)** random error sigma_rand of the sub-window fluxes (median, quartiles),
 * **(c)** fraction of sub-windows whose flux exceeds 1, 2 and 3 sigma_rand.
 
