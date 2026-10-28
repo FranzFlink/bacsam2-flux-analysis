@@ -9,7 +9,7 @@ short_title: "Fig. 3 · Length of the averaging window"
 
 :::{figure} ../../figures_manuscript/output/fig03_leg_length.png
 :alt: Figure 3 of the paper
-**Figure 3.** Sensitivity of the EC sensible heat flux to the length of the averaging sub-window for the six T-Bird low-level legs during BACSAM-II (median leg length 70.2 km). **(a)** EC fluxes of the sub-windows relative to the EC flux of the complete leg ($H_\mathrm{S,sub}/H_\mathrm{S,full}$). **(b)** Random error $\sigma_\mathrm{rand}$ of the sub-window fluxes (median and quartiles; Appendix A). **(c)** Fraction of sub-windows whose flux magnitude exceeds $1$, $2$, and $3\,\sigma_\mathrm{rand}$. The dashed vertical line marks the 5 km window used in this study.
+**Figure 3.** Sensitivity of the EC sensible heat flux to the length of the averaging sub-window for the six T-Bird low-level legs during BACSAM-II (median leg length 70.2 km). **(a)** Mean EC flux of the sub-windows relative to the EC flux of the stretch they cover ($H_\mathrm{S,sub}/H_\mathrm{S,cov}$), averaged over five positions of the window grid (mean and standard deviation over the legs with a flux of at least $0.5$ W m$^{-2}$). **(b)** Random error $\sigma_\mathrm{rand}$ of the sub-window fluxes (median and quartiles; Appendix A). **(c)** Fraction of sub-windows whose flux magnitude exceeds $1$, $2$, and $3\,\sigma_\mathrm{rand}$. The dashed vertical line marks the 5 km window used in this study.
 :::
 
 ## Construction
