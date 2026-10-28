@@ -31,7 +31,8 @@ requires programming knowledge.
 **To reuse code or data.** The analysis package `fluxpy` (eddy covariance, bulk transfer, stability schemes,
 uncertainty) is documented in the [API reference](api/index.md); the data files and their variables are described under
 [Data files](data.md). The code is released under the MIT License; the subsets of third-party products remain under the
-licences of their providers. Please cite the paper and the archived version of the repository (`CITATION.cff`).
+licences of their providers. Please cite the paper and the archived version of the repository
+([doi:10.5281/zenodo.23731339](https://doi.org/10.5281/zenodo.23731339), `CITATION.cff`).
 
 **To follow the method.** The [Method](../book/01_overview.ipynb) chapters derive the eddy-covariance and the bulk flux
 of a single segment by hand and recompute the central results of the paper; the [Glossary](glossary.md) defines the

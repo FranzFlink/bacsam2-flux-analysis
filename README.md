@@ -141,8 +141,9 @@ request.
 ## Citation and license
 
 Please cite the paper and the archived version of this repository: every release is archived on
-Zenodo with its own DOI. `CITATION.cff` has the reference of the paper, `.zenodo.json` the metadata
-of the archive.
+Zenodo with its own DOI, and doi:10.5281/zenodo.23731339 resolves to the latest one (the version
+cited in the paper is doi:10.5281/zenodo.23731340). `CITATION.cff` has the reference of the paper,
+`.zenodo.json` the metadata of the archive.
 
 The code is released under the [MIT License](LICENSE). The downloaded data are not covered by it:
 the PANGAEA datasets and the Zenodo data record are released under CC BY 4.0, and the third-party
