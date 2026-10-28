@@ -42,14 +42,13 @@ Sensitivity of the bulk fluxes to the configuration, and the skill metrics
 |---|---|---|
 | `ALTERNATIVE_SCHEMES` | `["BD", "HB88", "BH91", "CB05", "GAFGP07", "ZE07-I", "ZE07-II"]` | the seven schemes tested against the reference GLGS20 (Table C1) |
 | `ZT_RATIOS` | `[1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]` | alpha_T values of the sweep (Table C1 lists 1e-7 ... 1e-1; Fig. 7 and Table 3 use 1e-4 ... 1e-1) |
-| `ROUGHNESS_SETS` | `dict` with the keys `mosaic`, `sheba`, `nschnier` | alternative momentum roughness sets (open water, thin ice, snow-covered ice) [m] |
+| `ROUGHNESS_SETS` | `dict` with the keys `mosaic`, `nschnier` | alternative momentum roughness sets (open water, thin ice, snow-covered ice) [m] |
 | `CONSTANT_Z0` | `[1e-4, 2e-4, 4e-4]` | surface-type-independent z0m values [m] |
 
 :::{dropdown} ROUGHNESS_SETS (definition)
 ````python
 ROUGHNESS_SETS = {
     "mosaic":   dict(z0_ocean=3.27e-4, z0_thin_ice=2e-4, z0_thick_ice=3.27e-4),
-    "sheba":    dict(z0_ocean=3.27e-4, z0_thin_ice=2e-4, z0_thick_ice=2.3e-4),
     "nschnier": dict(z0_ocean=1e-4,    z0_thin_ice=1e-4, z0_thick_ice=5e-3),
 }
 ````
@@ -72,9 +71,9 @@ names used in the data files and tables (`GLGS20_ref`, `BD_ref`,
 
 **Returns** `list[BulkConfig]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L48-L66)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L47-L65)
 
-:::{dropdown} Source code (fluxpy/sensitivity.py, lines 48–66)
+:::{dropdown} Source code (fluxpy/sensitivity.py, lines 47–65)
 ````python
 def sensitivity_matrix() -> list[BulkConfig]:
     """All configurations of Table C1, the reference first. Labels are the run
@@ -118,9 +117,9 @@ ordinary-least-squares `slope` of y on x (the paper's amplitude metric),
 
 **Returns** `dict`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L71-L82)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L70-L81)
 
-:::{dropdown} Source code (fluxpy/sensitivity.py, lines 71–82)
+:::{dropdown} Source code (fluxpy/sensitivity.py, lines 70–81)
 ````python
 def amplitude_metrics(x: np.ndarray, y: np.ndarray) -> dict:
     """Amplitude of an estimate ``y`` relative to the EC reference ``x``:
@@ -157,9 +156,9 @@ estimate against the reference, over the pairs where both are finite.
 
 **Returns** `dict`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L85-L102)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L84-L101)
 
-:::{dropdown} Source code (fluxpy/sensitivity.py, lines 85–102)
+:::{dropdown} Source code (fluxpy/sensitivity.py, lines 84–101)
 ````python
 def skill_metrics(H_ref: np.ndarray, H_pred: np.ndarray, label: str = "") -> dict:
     """Slope, intercept, std_ratio, Pearson r, bias, RMSE, centred RMSE and n of an
@@ -209,9 +208,9 @@ Percentile-bootstrap 95 % confidence interval of the regression slope.
 
 **Returns** `tuple[float, float]`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L105-L115)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L104-L114)
 
-:::{dropdown} Source code (fluxpy/sensitivity.py, lines 105–115)
+:::{dropdown} Source code (fluxpy/sensitivity.py, lines 104–114)
 ````python
 def slope_bootstrap_ci(H_ref: np.ndarray, H_pred: np.ndarray, n_boot: int = 5000, seed: int = 42,
                        key: str = "slope") -> tuple[float, float]:
@@ -257,9 +256,9 @@ Evaluate every configuration for both pathways.
 * `stacked`: Dataset with a `sensitivity_run` dimension (select a run with `stacked.sel(sensitivity_run="GLGS20_ref")`).
 * `summary`: one row per run with the skill metrics of `H_obs_bulk` (`obs_*`) and `H_rs_bulk` (`rs_*`) against the EC flux.
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L120-L146)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/sensitivity.py#L119-L145)
 
-:::{dropdown} Source code (fluxpy/sensitivity.py, lines 120–146)
+:::{dropdown} Source code (fluxpy/sensitivity.py, lines 119–145)
 ````python
 def run_sensitivity(ds_obs: xr.Dataset, ds_rs: xr.Dataset, ds_modis: xr.Dataset,
                     configs: Optional[list[BulkConfig]] = None, z_ref_rs=30.0) -> tuple[xr.Dataset, pd.DataFrame]:

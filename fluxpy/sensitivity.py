@@ -38,7 +38,6 @@ ZT_RATIOS = [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
 #: alternative momentum roughness sets (open water, thin ice, snow-covered ice) [m]
 ROUGHNESS_SETS = {
     "mosaic":   dict(z0_ocean=3.27e-4, z0_thin_ice=2e-4, z0_thick_ice=3.27e-4),
-    "sheba":    dict(z0_ocean=3.27e-4, z0_thin_ice=2e-4, z0_thick_ice=2.3e-4),
     "nschnier": dict(z0_ocean=1e-4,    z0_thin_ice=1e-4, z0_thick_ice=5e-3),
 }
 #: surface-type-independent z0m values [m]

@@ -46,7 +46,7 @@ axes = [
     ("Stability scheme (8 schemes)", modis_forcing[modis_forcing.label.str.endswith("_ref")]),
     (r"$\alpha_T$ ($10^{-4}$--$10^{-1}$)", modis_forcing[modis_forcing.label.str.contains("ztr")
                                                           & modis_forcing.zt_ratio.between(1e-4, 1e-1)]),
-    ("Momentum roughness set", modis_forcing[modis_forcing.label.str.contains("mosaic|sheba|nschnier")]),
+    ("Momentum roughness set", modis_forcing[modis_forcing.label.str.contains("mosaic|nschnier")]),
     (r"Constant $z_{0,m}$", modis_forcing[modis_forcing.label.str.contains("z0c")]),
 ]
 table3 = "\n".join(f"{name} & {value_range(rows, 'obs_slope')} & {value_range(rows, 'obs_r')} & "
@@ -64,7 +64,7 @@ GROUPS = [
      ["BD_ref", "HB88_ref", "BH91_ref", "CB05_ref", "GAFGP07_ref", "ZE07-I_ref", "ZE07-II_ref"]),
     ("Scalar roughness ratio $\\alpha_T$ (GLGS20)",
      [f"GLGS20_ztr1e-0{k}" for k in (2, 3, 4, 5, 6, 7) if f"GLGS20_ztr1e-0{k}" != MATCHED]),
-    ("Momentum roughness set (GLGS20)", ["GLGS20_mosaic", "GLGS20_sheba", "GLGS20_nschnier"]),
+    ("Momentum roughness set (GLGS20)", ["GLGS20_mosaic", "GLGS20_nschnier"]),
     ("Constant (surface-type-independent) $z_{0,m}$ (GLGS20)",
      ["GLGS20_z0c1e-04", "GLGS20_z0c2e-04", "GLGS20_z0c4e-04"]),
 ]
@@ -81,7 +81,6 @@ SCHEME_CITATION = {
 ROUGHNESS_COLUMN = {      # z0m of open water / thin ice / snow-covered ice, as printed
     "GLGS20_ref": r"$2{\times}10^{-4}$ / $1{\times}10^{-4}$ / $4{\times}10^{-4}$",
     "GLGS20_mosaic": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $3.3{\times}10^{-4}$",
-    "GLGS20_sheba": r"$3.3{\times}10^{-4}$ / $2{\times}10^{-4}$ / $2.3{\times}10^{-4}$",
     "GLGS20_nschnier": r"$1{\times}10^{-4}$ / $1{\times}10^{-4}$ / $5{\times}10^{-3}$",
 }
 
