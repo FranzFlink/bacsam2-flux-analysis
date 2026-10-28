@@ -1,7 +1,7 @@
 path	bytes	sha256	archive	source
-data/model_output/sensitivity_figure_data.nc	101911	4cace710b559eff8bb0e00f4624db26432a97556a32460bec8548d974a98602c	regenerated	pixi run precompute
-data/model_output/sensitivity_summary_table.csv	15103	322430b484c381aeeb709e68063bfa87af6f4df01aee6ea3e944c12a07bfd423	regenerated	pixi run precompute
-data/observations/ar/along_track_inputs.nc	20944	2b453c6fbd69ac5b2747698662189ddf6c7fe6a7f061ba993208994cc4f82b91	zenodo:data	ERA5, MODIS and CARRA values at the segments (pixi run extract)
+data/model_output/sensitivity_figure_data.nc	101911	0b9eeb0904a0e578b0812f98dbcea7da0334727dd51913d4789e7c22c9c48882	regenerated	pixi run precompute
+data/model_output/sensitivity_summary_table.csv	15099	6c2213b25d9ca39a7ef337a8ff39dc70d12efa8821ae80930b06c41fe2d4d55b	regenerated	pixi run precompute
+data/observations/ar/along_track_inputs.nc	20944	4b9c4b079966d9affd4402267a85c098f78cf63000b2a17510a14e35f1064f2a	zenodo:data	ERA5, MODIS and CARRA values at the segments (pixi run extract)
 data/observations/ar/analysis_ready_polar6_legs_metadata.csv	7218	082e924bc69bd6db0d87628f06cd6c751875964dba92e75055b4f5075acdb59b	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/analysis_ready_polar6_turbulent_fluxes_latest_5km.nc	61185	4616f80aeb9df3759c81f343b73c93b0cc5127272bf8e0cb6c65742fa51411ee	pangaea:new	derived from the BACSAM-II measurements
 data/observations/ar/ec_leg_length_sensitivity/ec_sensitivity_summary.csv	3483	dd9f728b2ecfef3cbb124efafd86bb977414eff220ca289ac44499b88a300981	pangaea:new	derived from the BACSAM-II measurements
@@ -9,7 +9,7 @@ data/observations/ar/ec_segment_placement.nc	14216	a1a103fb8d3deec26c1c913fc29c8
 data/observations/ar/polar6_level_at_segments.nc	15220	ab18ddd6b415e6c5587cb481ec74495c8d9bf1b9b6cd65f5df50690f430d1c7d	regenerated	pixi run polar6-level (from the Polar 6 nose boom, doi:10.1594/PANGAEA.995974)
 data/observations/processed/polar6_unified/kt19_unified.nc	198310122	107d5f9fd4e45d4b15721dd29c34b6b29019e98ad812a30d34cad4faa761d21e	regenerated	cut from doi:10.1594/PANGAEA.995980 (KT-19 50 Hz) by pixi run inputs
 data/observations/processed/polar6_unified/noseboom_unified.nc	28532112	105a8fd99cad5383b98823b0880620f0e2acc1ebc06d9954b4c3947f80886750	regenerated	cut from doi:10.1594/PANGAEA.995974 (Polar 6 nose boom 100 Hz) by pixi run inputs
-data/observations/processed/satellite_unified/MODIS_Aqua_Sea_Ice_Extent_and_IST_Daily_L3_Global_4km_EASE-Grid_Day_V061.nc	1591698	d31fab3481502fbd14ca85e42c6f887528499b32aa082c4c599ae05a73bc7edf	zenodo:data	MODIS / University of Bremen, regridded subset
+data/observations/processed/satellite_unified/MODIS_Aqua_Sea_Ice_Extent_and_IST_Daily_L3_Global_4km_EASE-Grid_Day_V061.nc	1046521	b752c88ec0560f20e8c62c50174888b19a5053b97a3416814ae620770418f51c	zenodo:data	MODIS / University of Bremen, regridded subset
 data/observations/processed/satellite_unified/sic_modis-aqua_amsr2-gcom-w1_merged_nh_1000m_APRIL.nc	5537758	0aa380dc86786900d4075a738191579c7de82eb2d592f0c9433f40bc0a5fe97d	zenodo:data	MODIS / University of Bremen, regridded subset
 data/observations/processed/t-bird_unified/noseboom_unified.nc	114692526	41192cda37353f9de88605c2e228ed4dda3e5eff180cd53e73fe96f25fcfa563	regenerated	cut from doi:10.1594/PANGAEA.995975 (T-Bird 100 Hz) by pixi run inputs
 data/observations/raw/polar6/mastertracks/P6-247_BACSAM2_2024_2404070101_mastertrack.tab	26262	c1724a7976c4ffccafd100a6ba8ca7e66e455788186f3c31299c6780a8c504aa	pangaea:published	doi:10.1594/PANGAEA.971763 (master tracks, Jurányi et al., 2024)

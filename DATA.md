@@ -32,7 +32,7 @@ All paths are relative to `data/`. Units are those the code assumes when it read
 | `reanalysis/carra/carra_east_latlon0p05.nc` | CARRA (Copernicus Arctic Regional Reanalysis, east domain) skin temperature and surface pressure, regridded to 0.05°; used for Fig. 2 only |
 | `reanalysis/carra/height_level/carra_latlon0p05.nc` | CARRA temperature, wind speed and pressure at 30 and 75 m above ground, regridded to 0.05°; used for Fig. 2 only |
 | `reanalysis/carra/carra_east_forecast_sf_latlon0p05.nc` | CARRA forecast surface sensible heat flux `sshf` (hourly accumulation, J m⁻²), regridded to 0.05°, on the flight days 13, 15, 17, 23 and 25 April 2024 within 74–86° N, 20° W–30° E; the model-diagnosed CARRA flux |
-| `observations/processed/satellite_unified/MODIS_Aqua_Sea_Ice_Extent_and_IST_Daily_L3_Global_4km_EASE-Grid_Day_V061.nc` | MODIS/Aqua Sea Ice Extent and IST Daily L3 Global 4 km EASE-Grid Day, version 61 (reference: see the paper) |
+| `observations/processed/satellite_unified/MODIS_Aqua_Sea_Ice_Extent_and_IST_Daily_L3_Global_4km_EASE-Grid_Day_V061.nc` | MODIS/Aqua Sea Ice Extent and IST Daily L3 Global 4 km EASE-Grid Day, version 61 (MYD29E1D; reference: see the paper), one grid per UTC day, 12–24 April 2024, reprojected onto a 0.063° latitude–longitude grid by `preprocessing/build_modis_ist.py` (granule names and checksums in the file attributes). Each segment takes the grid of its own date. |
 | `observations/processed/satellite_unified/sic_modis-aqua_amsr2-gcom-w1_merged_nh_1000m_APRIL.nc` | Merged MODIS–AMSR2 sea-ice concentration, 1 km (Ludwig et al., 2020), provided by the University of Bremen |
 | `../figures_manuscript/_gibs_cache/*.png` | MODIS imagery from NASA GIBS / Worldview (background of Fig. 5) |
 

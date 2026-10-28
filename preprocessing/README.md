@@ -15,7 +15,8 @@ server.
 | `preprocess_polar6_noseboom.ipynb` | *superseded:* unified 100 Hz nose-boom time series (`noseboom_unified.nc`) from the ASCII files |
 | `preprocess_mastertracks.ipynb` | unified master track |
 | `preprocess_sic.ipynb` | merged sea-ice concentration file |
+| `build_modis_ist.py` | MODIS/Aqua ice surface temperature (MYD29E1D) of 12–24 April 2024 from the NSIDC granules; replaces the earlier MODIS file, which was made from Terra granules (MOD29E1D) ordered on 23 April 2024 and lacked 16, 17, 19, 20 and 23 April |
 | `preprocess_carra.ipynb`, `carra_write_subset.py` | CARRA crops |
 | `ERA5_STN_dl.py` | ERA5 download (Copernicus Climate Data Store; needs your own CDS account) |
-| `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region and period shipped here (gridded products); its time-series part (nose boom, radiation) is *superseded* |
+| `make_reviewer_subsets.py` | cuts the raw archives down to the campaign region and period shipped here (gridded products); its time-series part (nose boom, radiation) and its MODIS ice-surface-temperature part are *superseded* |
 | `flight_segments.py` | how the leg table `analysis_ready_polar6_legs_metadata.csv` was cut from the flight-separation file `config/flight_sep_BACSAM-II_MASTER.json` and the full Polar 6 archive |

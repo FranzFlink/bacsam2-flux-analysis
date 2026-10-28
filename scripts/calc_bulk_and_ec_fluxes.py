@@ -100,18 +100,24 @@ def _segment_points(ds_obs: xr.Dataset) -> tuple[xr.DataArray, xr.DataArray, xr.
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Stage 2: along-track inputs (nearest grid cell and time step of each product)
+# Stage 2: along-track inputs (nearest grid cell and time step of each product; for the daily
+# MODIS product the grid of the segment's date)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def load_modis(ds_obs: xr.Dataset) -> xr.Dataset:
-    """MODIS ice surface temperature ``IST`` [K] at the segments; fill, cloud and land values
-    (outside 150-280 K) are masked. No correction is applied to the product."""
+    """MODIS ice surface temperature ``IST`` [K] at the segments: nearest grid cell of the daily
+    grid of the segment's UTC date; fill, cloud and land values (outside 150-280 K) are masked.
+    No correction is applied to the product."""
     t, lat, lon = _segment_points(ds_obs)
     raw = xr.open_dataset(_SAT / "MODIS_Aqua_Sea_Ice_Extent_and_IST_Daily_L3_Global_4km_EASE-Grid_Day_V061.nc")
     if "time" in raw.dims:
         raw = raw.rename({"time": "start_time"})
-    at_segments = raw.sel(lat=lat, lon=lon, start_time=t, method="nearest")
-    ist = at_segments["IST"]
+    cells = raw["IST"].sel(lat=lat, lon=lon, method="nearest")          # (start_time, leg)
+    day = cells.indexes["start_time"].get_indexer(t.dt.floor("D").values)
+    if (day < 0).any():
+        raise RuntimeError("no MODIS grid for the flight days "
+                           f"{sorted(set(pd.DatetimeIndex(t.values[day < 0]).date))}")
+    ist = cells.isel(start_time=xr.DataArray(day, dims="leg"))
     valid = (ist > 150) & (ist < 280)
     log.info("MODIS IST valid at %d of %d segments", int(valid.sum()), ds_obs.sizes["start_time"])
     return xr.Dataset({"IST": ("leg", ist.where(valid).values.astype(float))})
