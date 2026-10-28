@@ -98,8 +98,8 @@ Run:    pixi run window-length      (about 2 minutes)
 
 Bulk fluxes for every forcing, the sensitivity sweep and the input perturbations.
 
-Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 4, Figs. 4-6),
-Sect. 4.2 (sensitivity, Table 3, Fig. 7), Table 2 (uncertainty budget), Appendix C.
+Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 3, Figs. 4-6),
+Sect. 4.2 (sensitivity, Table 4, Fig. 7), Table 2 (uncertainty budget), Appendix C.
 
 Writes
 
@@ -149,7 +149,7 @@ Run:  pixi run verify-cache
 
 **Run:** `pixi run numbers`  ·  [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/scripts/manuscript_numbers.py)
 
-Every number quoted in the manuscript text and in Table 4, printed from the pipeline output.
+Every number quoted in the manuscript text and in Table 3, printed from the pipeline output.
 
 Single source of truth for the printed statistics. Run after any pipeline change
 and copy the numbers from here, never from an older PDF, a notebook or git
@@ -164,8 +164,8 @@ Blocks (in the order printed) and where they appear in the manuscript
 
 ```text
 EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
-reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
-amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-2)
+reference configuration ............. Table 3, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
+amplitude-matched configuration ..... Sect. 4.2, Table C1 (alpha_T = 1e-2)
 alpha_T sweep ....................... Sect. 4.2, Fig. 7, Table C1
 satellite T_s benefit ............... Sect. 4.1, Discussion (heterogeneous vs homogeneous half)
 alpha_T is a weak knob .............. Discussion
@@ -270,7 +270,7 @@ Run:  pixi run ec-bands      (about 30 s)
 The data-derived table bodies of the manuscript, written to tables_manuscript/.
 
 ```text
-table_sensitivity_summary.tex   Table 3  (Sect. 4.2): range of slope and r over each sensitivity axis
+table_sensitivity_summary.tex   Table 4  (Sect. 4.2): range of slope and r over each sensitivity axis
 table_sensitivity_full.tex      Table C1 (Appendix C): every configuration, slope and r of both pathways
 table_uncertainty_budget.tex    Table 2  (Sect. 3.2): flux-uncertainty budget
 ```
@@ -288,7 +288,7 @@ Run:  pixi run tables
 Compare the numbers printed by the number scripts with expected_numbers.txt.
 
 expected_numbers.txt is the committed output of manuscript_numbers.py (text and
-Table 4), ec_quality.py (Appendix A), robustness_checks.py and
+Table 3), ec_quality.py (Appendix A), robustness_checks.py and
 ec_band_sensitivity.py (robustness of the comparison) for this version
 of the repository. Numbers are compared with a tolerance of 0.02 (two
 units in the last digit of a two-decimal statistic) so that harmless

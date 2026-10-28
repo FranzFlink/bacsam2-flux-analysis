@@ -401,7 +401,7 @@ result from the correct amplitude with good correlation or from excess variance 
 interpreted together.
 
 > [!NOTE]
-> **Paper:** Sect. 4.1, Table 4, Figs. 4–6. **Code:** `fluxpy/sensitivity.py` (`skill_metrics`),
+> **Paper:** Sect. 4.1, Table 3, Figs. 4–6. **Code:** `fluxpy/sensitivity.py` (`skill_metrics`),
 > `scripts/manuscript_numbers.py` (every number of Sect. 4.1), `figures_manuscript/fig06_flux_scatter.py`.
 '''), ("code", SETUP + r'''
 from fluxpy.sensitivity import skill_metrics
@@ -434,7 +434,7 @@ table
 estimate in the table except the one with measured inputs: in this weak-flux regime, these error measures reward
 conservative estimates, not skill.
 
-$r_\mathrm{leg}$ is the correlation after removing the mean of each leg from both series (Table 4 of the paper). It
+$r_\mathrm{leg}$ is the correlation after removing the mean of each leg from both series (Table 3 of the paper). It
 measures whether an estimate follows the flux from segment to segment *along* a leg, rather than only the differences
 between flight days. Only the estimate with measured inputs does so clearly.
 
@@ -492,7 +492,7 @@ varies one choice within the transfer coefficient at a time (scalar roughness ra
 momentum roughness) and perturbs the two inputs, temperature difference and wind speed.
 
 > [!NOTE]
-> **Paper:** Sect. 4.2, Table 3, Fig. 7, Appendix C (Table C1), Table 2. **Code:** `fluxpy/sensitivity.py`
+> **Paper:** Sect. 4.2, Table 4, Fig. 7, Appendix C (Table C1), Table 2. **Code:** `fluxpy/sensitivity.py`
 > (the configurations), `scripts/calc_bulk_and_ec_fluxes.py` (stages 3 and 4), `fluxpy/uncertainty.py` (Table 2),
 > `scripts/make_manuscript_tables.py`.
 '''), ("code", SETUP + r'''

@@ -16,7 +16,7 @@ paper that is derived from data:
 | `ec-quality` | Every number of Appendix A: robustness to screening, random-error cross-checks, physical consistency, platform resonance | ~1 min |
 | `precompute` | Bulk fluxes for all forcings + the full sensitivity sweep | ~5 s |
 | `robustness`, `ec-bands` | Robustness of the comparison: dependent segments, zero-flux baseline, the genuine-MODIS subset, stability correction, the frequency band of the EC flux | ~10 s |
-| `check` | Every printed number (text, Table 4, Appendix A, robustness checks) equals the committed reference `expected_numbers.txt` | ~1 min |
+| `check` | Every printed number (text, Table 3, Appendix A, robustness checks) equals the committed reference `expected_numbers.txt` | ~1 min |
 | `tables` | LaTeX bodies of the data-derived tables → `tables_manuscript/` | ~5 s |
 | `figures` | All manuscript figures → `figures_manuscript/output/` | ~3 min |
 
@@ -72,8 +72,8 @@ them as modified although the numbers are identical.
 | Sect. 3.1 window length (Fig. 3), placement spread | `scripts/ec_window_length.py`, `scripts/ec_segment_placement.py` |
 | Sect. 3.2 and Appendix B Bulk method, Eq. (2) | `fluxpy/bulk.py` (B1 Richardson number, B2 roughness, B3 transfer coefficient), `fluxpy/stability.py` (Eq. B2, effective wind), `fluxpy/stability_lib.py` (stability functions) |
 | Table 2 uncertainty budget | `fluxpy/uncertainty.py`, `scripts/make_manuscript_tables.py` |
-| Sect. 4.1 comparison, Table 4, Figs. 4-6 | `scripts/calc_bulk_and_ec_fluxes.py` (all estimates on the segments), `scripts/manuscript_numbers.py`, `figures_manuscript/fig04-06` |
-| Sect. 4.2 sensitivity, Table 3, Fig. 7, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig07_sensitivity.py` |
+| Sect. 4.1 comparison, Table 3, Figs. 4-6 | `scripts/calc_bulk_and_ec_fluxes.py` (all estimates on the segments), `scripts/manuscript_numbers.py`, `figures_manuscript/fig04-06` |
+| Sect. 4.2 sensitivity, Table 4, Fig. 7, Appendix C | `fluxpy/sensitivity.py` (configurations, skill metrics), `scripts/make_manuscript_tables.py`, `figures_manuscript/fig07_sensitivity.py` |
 | Appendix A quality of the EC reference, Fig. A1, Table A1 | `fluxpy/qc.py` (integrity check), `scripts/ec_quality.py`, `figures_manuscript/figA1_spectral_qc.py` |
 | every number in the text | `scripts/manuscript_numbers.py` and `scripts/ec_quality.py`, whose output is committed as `expected_numbers.txt` |
 | robustness of the comparison | `scripts/robustness_checks.py`, `scripts/ec_band_sensitivity.py` |

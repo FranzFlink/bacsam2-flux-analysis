@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bulk fluxes for every forcing, the sensitivity sweep and the input perturbations.
 
-Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 4, Figs. 4-6),
-Sect. 4.2 (sensitivity, Table 3, Fig. 7), Table 2 (uncertainty budget), Appendix C.
+Manuscript: Sect. 3.2 (bulk method), Sect. 4.1 (comparison, Table 3, Figs. 4-6),
+Sect. 4.2 (sensitivity, Table 4, Fig. 7), Table 2 (uncertainty budget), Appendix C.
 
 Writes
     data/model_output/sensitivity_figure_data.nc      every flux estimate on the 91 segments

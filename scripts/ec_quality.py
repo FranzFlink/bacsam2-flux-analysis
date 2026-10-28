@@ -159,7 +159,7 @@ for name, keep in SCREENINGS:
     tex.append(f"{name} & {keep.sum()} & " + " & ".join(f"{b:.2f} & {r:.2f}" for b, r in cells) + r" \\")
 (REPO / "tables_manuscript" / "table_qc_robustness.tex").write_text("\n".join(tex) + "\n", encoding="utf-8", newline="\n")
 
-lo, hi = slope_bootstrap_ci(df["H"].values, df["H_obs_bulk"].values)    # the interval of Table 4 and the Conclusions
+lo, hi = slope_bootstrap_ci(df["H"].values, df["H_obs_bulk"].values)    # the interval quoted in Appendix A and the Conclusions
 print(f"  for scale: 95 % bootstrap interval of the T-Bird bulk slope without screening: [{lo:.2f}, {hi:.2f}]")
 
 

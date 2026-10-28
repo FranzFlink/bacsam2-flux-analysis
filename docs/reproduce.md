@@ -33,7 +33,7 @@ of the paper and compares the numbers with the committed reference `expected_num
 | `polar6-level` | Polar 6 temperature and height per segment (Fig. 2a) | 10 s |
 | `extract` | MODIS, ERA5 and CARRA values at the segments from the shipped gridded fields | 5 s |
 | `precompute` | Bulk fluxes for every forcing and every configuration of the sensitivity analysis | 5 s |
-| `check` | Every printed number equals `expected_numbers.txt` (text, Table 4, Appendix A, robustness checks) | 1 min |
+| `check` | Every printed number equals `expected_numbers.txt` (text, Table 3, Appendix A, robustness checks) | 1 min |
 | `tables` | LaTeX bodies of Tables 2, 3 and C1 → `tables_manuscript/` | 5 s |
 | `figures` | All manuscript figures at print size → `figures_manuscript/output/` | 3 min |
 

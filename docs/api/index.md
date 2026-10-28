@@ -20,7 +20,7 @@ These pages are generated from the docstrings, signatures and `#:` comments of t
 | [`fluxpy.bulk`](fluxpy.bulk.md) | Sect. 3.2 / Appendix B  Bulk method, Eq. (2) | Bulk sensible heat flux (manuscript Sect. 3.2, Eq. 2, and Appendix B) |
 | [`fluxpy.stability`](fluxpy.stability.md) | Appendix B1  Bulk Richardson number, Eq. (B3) | Near-surface stability of the bulk method (manuscript Appendix B1, Eq. B3). |
 | [`fluxpy.stability_lib`](fluxpy.stability_lib.md) | Appendix B3  Transfer coefficient, f_h | Stability functions and transfer coefficients (manuscript Appendix B3). |
-| [`fluxpy.sensitivity`](fluxpy.sensitivity.md) | Sect. 4.2 / Appendix C  Sensitivity | Sensitivity of the bulk fluxes to the configuration, and the skill metrics (manuscript Sect. 4.1, Table 4; Sect. 4.2, Table 3, Fig. 7; Appendix C, Table C1). |
+| [`fluxpy.sensitivity`](fluxpy.sensitivity.md) | Sect. 4.2 / Appendix C  Sensitivity | Sensitivity of the bulk fluxes to the configuration, and the skill metrics (manuscript Sect. 4.1, Table 3; Sect. 4.2, Table 4, Fig. 7; Appendix C, Table C1). |
 | [`fluxpy.uncertainty`](fluxpy.uncertainty.md) | Table 2  Uncertainty budget | Flux-uncertainty budget of manuscript Table 2 (Sect. 3.1 and 3.2). |
 | [`fluxpy.util`](fluxpy.util.md) | constants, theta, rho, surface classes | Physical constants and the small thermodynamic helpers every other module uses. |
 | [`fluxpy.figstyle`](fluxpy.figstyle.md) | figure style and variable names | the single styling module of all manuscript figures. |

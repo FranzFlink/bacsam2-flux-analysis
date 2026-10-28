@@ -13,14 +13,14 @@ the same mapping from the side of the paper; module and script names link to the
 | Sect. 3.1, window length (Fig. 3), placement spread | [`scripts/ec_window_length.py`](#scripts/ec_window_length.py), [`scripts/ec_segment_placement.py`](#scripts/ec_segment_placement.py) |
 | Sect. 3.2 and Appendix B, bulk method, Eq. (2) | [`fluxpy.bulk`](api/fluxpy.bulk.md) (B1 Richardson number, B2 roughness, B3 transfer coefficient), [`fluxpy.stability`](api/fluxpy.stability.md), [`fluxpy.stability_lib`](api/fluxpy.stability_lib.md); constants and pressures in [`fluxpy.util`](api/fluxpy.util.md) |
 | Table 2, uncertainty budget | [`fluxpy.uncertainty`](api/fluxpy.uncertainty.md), [`scripts/make_manuscript_tables.py`](#scripts/make_manuscript_tables.py) |
-| Sect. 4.1, comparison, Table 4, Figs. 4–6 | [`scripts/manuscript_numbers.py`](#scripts/manuscript_numbers.py), [`fluxpy.sensitivity`](api/fluxpy.sensitivity.md) (skill metrics), [figure scripts](api/scripts.md) `fig04`–`fig06` |
-| Sect. 4.2, sensitivity, Table 3, Fig. 7, Appendix C | [`fluxpy.sensitivity`](api/fluxpy.sensitivity.md), [`scripts/make_manuscript_tables.py`](#scripts/make_manuscript_tables.py), [`figures_manuscript/fig07_sensitivity.py`](#figures_manuscript/fig07_sensitivity.py) |
+| Sect. 4.1, comparison, Table 3, Figs. 4–6 | [`scripts/manuscript_numbers.py`](#scripts/manuscript_numbers.py), [`fluxpy.sensitivity`](api/fluxpy.sensitivity.md) (skill metrics), [figure scripts](api/scripts.md) `fig04`–`fig06` |
+| Sect. 4.2, sensitivity, Table 4, Fig. 7, Appendix C | [`fluxpy.sensitivity`](api/fluxpy.sensitivity.md), [`scripts/make_manuscript_tables.py`](#scripts/make_manuscript_tables.py), [`figures_manuscript/fig07_sensitivity.py`](#figures_manuscript/fig07_sensitivity.py) |
 | Appendix A, quality of the EC reference, Fig. A1, Table A1 | [`fluxpy.qc`](api/fluxpy.qc.md), [`scripts/ec_quality.py`](#scripts/ec_quality.py), [`figures_manuscript/figA1_spectral_qc.py`](#figures_manuscript/figA1_spectral_qc.py) |
 
 ## Printed numbers
 
 No number in the paper is transcribed by hand. Every number of the text is printed by `scripts/manuscript_numbers.py`
-(text and Table 4) or `scripts/ec_quality.py` (Appendix A); the bodies of Tables 2, 3, C1 and A1 are written by
+(text and Table 3) or `scripts/ec_quality.py` (Appendix A); the bodies of Tables 2, 4, C1 and A1 are written by
 `scripts/make_manuscript_tables.py` and `scripts/ec_quality.py` into `tables_manuscript/`. The output of the number
 scripts, together with that of the robustness checks, is committed as `expected_numbers.txt`; `pixi run check` fails if
 any number deviates from it by more than 0.02.

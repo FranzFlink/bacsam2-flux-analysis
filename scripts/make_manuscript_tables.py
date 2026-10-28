@@ -1,6 +1,6 @@
 """The data-derived table bodies of the manuscript, written to tables_manuscript/.
 
-    table_sensitivity_summary.tex   Table 3  (Sect. 4.2): range of slope and r over each sensitivity axis
+    table_sensitivity_summary.tex   Table 4  (Sect. 4.2): range of slope and r over each sensitivity axis
     table_sensitivity_full.tex      Table C1 (Appendix C): every configuration, slope and r of both pathways
     table_uncertainty_budget.tex    Table 2  (Sect. 3.2): flux-uncertainty budget
 
@@ -33,7 +33,7 @@ def write(name: str, body: str) -> None:
     (OUT / name).write_text(body + "\n", encoding="utf-8", newline="\n")
 
 
-# ── Table 3: range over each sensitivity axis ─────────────────────────────────
+# ── Table 4: range over each sensitivity axis ─────────────────────────────────
 
 def value_range(rows, column, fmt="{:.2f}"):
     """min--max of a metric across a set of configurations."""
@@ -41,7 +41,7 @@ def value_range(rows, column, fmt="{:.2f}"):
     return f"{fmt.format(v.min())}--{fmt.format(v.max())}"
 
 
-modis_forcing = SUMMARY[~SUMMARY.label.str.contains("era5only")]        # Table 3 uses the ERA5-MODIS runs
+modis_forcing = SUMMARY[~SUMMARY.label.str.contains("era5only")]        # Table 4 uses the ERA5-MODIS runs
 axes = [
     ("Stability scheme (8 schemes)", modis_forcing[modis_forcing.label.str.endswith("_ref")]),
     (r"$\alpha_T$ ($10^{-4}$--$10^{-1}$)", modis_forcing[modis_forcing.label.str.contains("ztr")
@@ -52,7 +52,7 @@ axes = [
 table3 = "\n".join(f"{name} & {value_range(rows, 'obs_slope')} & {value_range(rows, 'obs_r')} & "
                    f"{value_range(rows, 'rs_slope')} & {value_range(rows, 'rs_r')} \\\\" for name, rows in axes)
 write("table_sensitivity_summary.tex", table3)
-print("── Table 3 body ──\n" + table3 + "\n")
+print("── Table 4 body ──\n" + table3 + "\n")
 
 
 # ── Table C1: every configuration ─────────────────────────────────────────────

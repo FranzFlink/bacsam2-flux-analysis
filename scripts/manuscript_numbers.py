@@ -1,4 +1,4 @@
-"""Every number quoted in the manuscript text and in Table 4, printed from the pipeline output.
+"""Every number quoted in the manuscript text and in Table 3, printed from the pipeline output.
 
 Single source of truth for the printed statistics. Run after any pipeline change
 and copy the numbers from here, never from an older PDF, a notebook or git
@@ -11,8 +11,8 @@ as integers.
 
 Blocks (in the order printed) and where they appear in the manuscript
     EC reference ........................ Sect. 3.1, Appendix A2 (n, integrity check, random error, 1/2/3 sigma)
-    reference configuration ............. Table 4, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
-    amplitude-matched configuration ..... Table 4, Sect. 4.2 (alpha_T = 1e-2)
+    reference configuration ............. Table 3, Sect. 4.1 (slope, r, r2, within-leg r, bias, RMSE, CI)
+    amplitude-matched configuration ..... Sect. 4.2, Table C1 (alpha_T = 1e-2)
     alpha_T sweep ....................... Sect. 4.2, Fig. 7, Table C1
     satellite T_s benefit ............... Sect. 4.1, Discussion (heterogeneous vs homogeneous half)
     alpha_T is a weak knob .............. Discussion
@@ -71,7 +71,7 @@ def within_leg_r(h):
 
 
 def line(name, h, ci=False):
-    """One row of Table 4: slope, r, r2, within-leg r, bias, RMSE, centred RMSE, n (+ bootstrap CI of the slope)."""
+    """One row of the comparison (Table 3 and more): slope, r, r2, within-leg r, bias, RMSE, centred RMSE, n (+ bootstrap CI of the slope)."""
     m = skill_metrics(EC, h, name)
     out = (f"{name:<26} {m['slope']:5.2f} {m['r']:6.2f} {m['r'] ** 2:5.2f} "
            f"{within_leg_r(h):8.2f} {m['bias']:+7.2f} {m['rmse']:6.2f} "
@@ -114,7 +114,7 @@ def ec_reference():
 
 
 def reference_configuration():
-    """Table 4 (Sect. 4.1): the five estimates against the EC reference, alpha_T = 1e-1."""
+    """Table 3 (Sect. 4.1): the five estimates against the EC reference, alpha_T = 1e-1."""
     print("\n" + RULE)
     print("REFERENCE CONFIGURATION  alpha_T = 1e-1 (conventional)")
     print(RULE)
@@ -127,7 +127,7 @@ def reference_configuration():
 
 
 def amplitude_matched_configuration():
-    """Table 4, lower part (Sect. 4.2): the amplitude-matched configuration (fluxpy.bulk)."""
+    """Sect. 4.2 and Table C1: the amplitude-matched configuration (fluxpy.bulk)."""
     cfg = amplitude_matched_config()
     print("\n" + RULE)
     print(f"AMPLITUDE-MATCHED CONFIGURATION  alpha_T = {cfg.zt_ratio:.0e}".replace("e-0", "e-"))

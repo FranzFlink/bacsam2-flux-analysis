@@ -2,7 +2,7 @@
 """Compare the numbers printed by the number scripts with expected_numbers.txt.
 
 expected_numbers.txt is the committed output of manuscript_numbers.py (text and
-Table 4), ec_quality.py (Appendix A), robustness_checks.py and
+Table 3), ec_quality.py (Appendix A), robustness_checks.py and
 ec_band_sensitivity.py (robustness of the comparison) for this version
 of the repository. Numbers are compared with a tolerance of 0.02 (two
 units in the last digit of a two-decimal statistic) so that harmless

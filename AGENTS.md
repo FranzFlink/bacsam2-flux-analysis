@@ -20,8 +20,8 @@ paper follows from the shipped data. Read this file first, then `README.md`.
 1. Find the passage in `paper/manuscript_clean.tex`; the nearest `% [code]` line above it names
    the module or script. `README.md` ("Where is what in the paper?") has the same map by section.
 2. Numbers: every number printed in the paper is printed by one of
-   `scripts/manuscript_numbers.py` (text, Table 4), `scripts/ec_quality.py` (Appendix A),
-   `scripts/make_manuscript_tables.py` (bodies of Tables 2, 3, C1 in `tables_manuscript/`).
+   `scripts/manuscript_numbers.py` (text, Table 3), `scripts/ec_quality.py` (Appendix A),
+   `scripts/make_manuscript_tables.py` (bodies of Tables 2, 4, C1 in `tables_manuscript/`).
    Their combined output, plus the robustness checks (`scripts/robustness_checks.py`,
    `scripts/ec_band_sensitivity.py`), is committed as `expected_numbers.txt`.
    `pixi run check` recomputes everything and compares (tolerance 0.02).
