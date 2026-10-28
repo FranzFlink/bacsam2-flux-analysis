@@ -9,7 +9,7 @@ short_title: "Fig. A1 · Spectral diagnostics of the eddy-covariance segments"
 
 :::{figure} ../../figures_manuscript/output/figA1_spectral_qc.png
 :alt: Figure A1 of the paper
-**Figure A1.** Spectral diagnostics of the $90$ T-Bird segments. Blue lines mark segments whose flux exceeds $2\,\sigma_\mathrm{rand}$, grey lines the others, and the black line is the median. **(a–d)** One-sided power spectra of potential temperature, vertical wind speed, and the horizontal wind components. Grey shading marks the 0.1–20 Hz frequency interval used for the EC SHF estimate. Diagonal dashed lines show reference slopes proportional to $f^{-5/3}$. **(e)** Frequency-weighted $w$–$\theta$ cospectra. **(f)** Normalized $w$–$\theta$ ogives, the cumulative covariance from high to low frequencies, for the fluxes above $2\,\sigma_\mathrm{rand}$.
+**Figure A1.** Spectral diagnostics of the $91$ T-Bird segments. Blue lines mark segments whose SHF exceeds $2\,\sigma_\mathrm{rand}$, grey lines the segments below $2\,\sigma_\mathrm{rand}$, and the black line is the median. **(a–d)** One-sided power spectra of potential temperature, vertical wind speed, and the horizontal wind components. Grey shading marks the 0.1–20 Hz frequency interval used for the EC SHF estimate. Diagonal dashed lines show reference slopes proportional to $f^{-5/3}$. **(e)** Frequency-weighted $w$–$\theta$ cospectra. **(f)** Normalized $w$–$\theta$ ogives, the cumulative covariance from high to low frequencies, for the SHF values above $2\,\sigma_\mathrm{rand}$. The spectra in (a)–(e) are Welch estimates with 8 s windows and therefore start at 0.125 Hz, whereas the ogives in (f) are computed from the full segment.
 :::
 
 ## Construction

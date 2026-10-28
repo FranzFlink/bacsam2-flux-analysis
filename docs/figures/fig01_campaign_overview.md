@@ -9,7 +9,7 @@ short_title: "Fig. 1 · Campaign overview"
 
 :::{figure} ../../figures_manuscript/output/fig01_campaign_overview.png
 :alt: Figure 1 of the paper
-**Figure 1.** Overview of the BACSAM-II campaign region. Grey lines show the flight tracks of all Polar 6 research flights, and the coloured lines highlight the flights of the four low-level flight days used in this study. The coloured rectangles outline the corresponding focus regions shown in Fig. 4a–d. The background shows the mean sea-ice concentration for April 2024 from the merged MODIS–AMSR2 product (Ludwig et al., 2020). The star marks the operating base Longyearbyen.
+**Figure 1.** Overview of the BACSAM-II campaign region. Grey lines show the flight tracks of all Polar 6 research flights. The coloured lines highlight the flight paths of the four low-level flights of which data are used in this study. The coloured rectangles (dashed lines) outline the corresponding focus regions shown in Fig. 4a–d. The background shows the mean sea-ice concentration for April 2024 from the merged MODIS–AMSR2 product (Ludwig et al., 2020). The black star marks the operating base Longyearbyen.
 :::
 
 ## Construction

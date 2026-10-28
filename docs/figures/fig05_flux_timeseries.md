@@ -9,7 +9,7 @@ short_title: "Fig. 5 · Flux along the legs and satellite scenes"
 
 :::{figure} ../../figures_manuscript/output/fig05_flux_timeseries.png
 :alt: Figure 5 of the paper
-**Figure 5.** **(a)–(f)** Sensible heat flux (SHF) estimates along low-level flight sections during BACSAM-II, showing along-track SHF time series from the T-Bird bulk method, the ERA5–MODIS bulk method, the ERA5-only bulk method, the model-diagnosed ERA5 and CARRA fluxes, and airborne eddy-covariance (EC) measurements. The dotted grey line marks zero SHF. Positive values denote upward turbulent heat flux from the surface to the atmosphere. **(g)–(l)** Display the corresponding MODIS sea ice-surface temperature $T_\mathrm{s,MOD}$ scenes with the analysed flight sections. White areas indicate missing $T_\mathrm{s,MOD}$ (cloud-obscured pixels). **(m)–(r)** Show MODIS true-colour imagery for the same scenes, with the flight sections coloured by $H_\mathrm{S,obs,EC}$.
+**Figure 5.** **(a)–(f)** Along-track SHF time series of the six low-level flight legs during BACSAM-II from the T-Bird bulk, ERA5–MODIS bulk, and ERA5-only bulk estimates, the ERA5 and CARRA model-diagnosed fluxes, and the EC reference (Table 1). The dotted grey line marks zero SHF. Positive values denote upward turbulent heat flux from the surface to the atmosphere. **(g)–(l)** MODIS/Terra ice-surface temperature (IST) imagery of the same day (NASA Global Imagery Browse Services) with the analysed flight legs. White areas indicate missing values (cloud-obscured pixels). **(m)–(r)** MODIS/Terra true-colour imagery of the same scenes, with the flight legs coloured by $H_\mathrm{S,obs,EC}$.
 :::
 
 ## Construction

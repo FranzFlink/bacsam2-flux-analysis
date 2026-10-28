@@ -9,7 +9,7 @@ short_title: "Fig. 4 · Flux maps of the low-level flights"
 
 :::{figure} ../../figures_manuscript/output/fig04_flux_maps.png
 :alt: Figure 4 of the paper
-**Figure 4.** Low-level flux-segment data collected during BACSAM-II (April 2024). Red/blue colour shading indicates the EC sensible heat flux, white/blue colour shading the sea-ice concentration, and wind barbs denote the mean wind speed and direction. The frame colours correspond to the focus-region rectangles in Fig. 1. **(a)** 13 April 2024: Northernmost flight leg, closely packed sea ice. **(b)** 15 April 2024: Closed sea ice with occasional leads, south-east of Svalbard. **(c)** 17 April 2024: North-east of Svalbard, overflight of the opening Whalers Bay polynya, with mostly thin sea-ice conditions. **(d)** 23 April 2024: Same area as in (c), but with the polynya now exposing the open-water surface.
+**Figure 4.** EC fluxes of the 5 km low-level segments flown during BACSAM-II (April 2024). Red/blue colour shading indicates the EC sensible heat flux, white/blue colour shading the sea-ice concentration, and wind barbs denote the mean wind speed and direction. The frame colours correspond to the focus-region rectangles in Fig. 1. **(a)** 13 April 2024, northernmost flight leg over consolidated pack ice. **(b)** 15 April 2024, compact sea ice with leads east of Svalbard. **(c)** 17 April 2024, overflight of the opening Whalers Bay polynya north of Svalbard over mostly thin sea ice. **(d)** 23 April 2024, same area as in (c), with the polynya now exposing open water.
 :::
 
 ## Construction
