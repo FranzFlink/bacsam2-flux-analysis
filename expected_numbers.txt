@@ -252,11 +252,11 @@ EC FLUX BAND: how much flux lies outside 0.1-20 Hz, and does the comparison depe
 0.1-20 Hz recomputed here vs the shipped EC fluxes: max |difference| 0.000 W m-2
 flux in the band / flux in 0.1-20 Hz for the 47 segments with |H| > 2 W m-2: median [quartiles];  then slope b / r of each bulk estimate against the EC flux of that band (n = 91)
   band                               flux ratio    H_S,obs,bulk     H_S,RS,bulk    H_S,ERA,bulk
-  0.1-20 Hz (this study)     1.00 [1.00, 1.00]     1.2 /   0.8     0.6 /   0.5     0.3 /   0.4
-  0.05-20 Hz                 1.06 [0.98, 1.11]     1.1 /   0.7     0.6 /   0.5     0.3 /   0.4
-  0.2-20 Hz                  0.92 [0.80, 0.95]     1.4 /   0.8     0.6 /   0.5     0.3 /   0.3
-  0.1-10 Hz                  1.00 [0.99, 1.00]     1.2 /   0.8     0.6 /   0.5     0.3 /   0.3
-  0.1-5 Hz                   1.02 [1.01, 1.03]     1.2 /   0.8     0.6 /   0.5     0.3 /   0.3
-  all frequencies            1.15 [0.97, 1.35]     1.0 /   0.8     0.5 /   0.5     0.3 /   0.4
+  0.1-20 Hz (this study)     1.00 [1.00, 1.00]    1.23 /  0.77    0.59 /  0.48    0.31 /  0.36
+  0.05-20 Hz                 1.06 [0.98, 1.11]    1.13 /  0.75    0.56 /  0.49    0.30 /  0.36
+  0.2-20 Hz                  0.92 [0.80, 0.95]    1.37 /  0.75    0.63 /  0.46    0.34 /  0.34
+  0.1-10 Hz                  1.00 [0.99, 1.00]    1.24 /  0.77    0.58 /  0.48    0.31 /  0.35
+  0.1-5 Hz                   1.02 [1.01, 1.03]    1.22 /  0.77    0.57 /  0.48    0.30 /  0.34
+  all frequencies            1.15 [0.97, 1.35]    1.04 /  0.83    0.49 /  0.52    0.27 /  0.40
 flux outside 0.1-20 Hz relative to the flux inside, |H| > 2 W m-2: median +15 % (quartiles -3 to +35 %); rank correlation of the all-frequency and the 0.1-20 Hz flux over all 91 segments: 0.91
 

@@ -67,7 +67,7 @@ for name, _ in BANDS:
     ratio = flux[name][large] / reference[large]
     cells = [slope_r(flux[name], np.asarray(FIG[key], dtype=float)) for key, _ in ESTIMATES]
     print(f"  {name:<24} {np.median(ratio):6.2f} [{np.percentile(ratio, 25):.2f}, {np.percentile(ratio, 75):.2f}]   "
-          + "   ".join(f"{b:5.1f} / {r:5.1f}" for b, r in cells))
+          + "   ".join(f"{b:5.2f} / {r:5.2f}" for b, r in cells))
 below =(flux["all frequencies"] - reference)[large] / reference[large]
 print(f"flux outside 0.1-20 Hz relative to the flux inside, |H| > 2 W m-2: median {np.median(below) * 100:+.0f} % "
       f"(quartiles {np.percentile(below, 25) * 100:+.0f} to {np.percentile(below, 75) * 100:+.0f} %); "
