@@ -32,7 +32,7 @@ in [`fluxpy.stability_lib`](fluxpy.stability_lib.md) and is re-exported here for
 
 | Name | Kind | Summary |
 |---|---|---|
-| [`EPSILON_DEFAULT`](#fluxpy.stability--constants) | constant | shear regularisation eps [m2 s-2] of the in-situ Ri_b (manuscript Appendix B1) |
+| [`EPSILON_DEFAULT`](#fluxpy.stability--constants) | constant | shear regularisation eps [s-2] of the in-situ Ri_b, added to the squared shear (dU/dz)^2 (manuscript Appendix B1) |
 | [`bulk_richardson_2pt`](#fluxpy.stability.bulk_richardson_2pt) | function | Two-point bulk Richardson number (manuscript Eq. B3) |
 | [`effective_wind_speed`](#fluxpy.stability.effective_wind_speed) | function | Effective wind speed $S$ for the reanalysis-driven Ri_b (manuscript Appendix B1). |
 | [`SCHEMES`](#fluxpy.stability_lib--constants) | re-exported | defined in [`fluxpy.stability_lib`](fluxpy.stability_lib.md) |
@@ -45,7 +45,7 @@ in [`fluxpy.stability_lib`](fluxpy.stability_lib.md) and is re-exported here for
 
 | Name | Value | Meaning |
 |---|---|---|
-| `EPSILON_DEFAULT` | `1e-4` | shear regularisation eps [m2 s-2] of the in-situ Ri_b (manuscript Appendix B1) |
+| `EPSILON_DEFAULT` | `1e-4` | shear regularisation eps [s-2] of the in-situ Ri_b, added to the squared shear (dU/dz)^2 (manuscript Appendix B1) |
 
 [Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability.py)
 
@@ -84,16 +84,16 @@ $$ Ri_b = \frac{g}{\bar\theta}\,
 | `du` |  | `None` | wind components at the top level [m s-1] (surface wind = 0, no-slip); shear^2 = (du^2 + dv^2) / dz^2 |
 | `dv` |  | `None` | wind components at the top level [m s-1] (surface wind = 0, no-slip); shear^2 = (du^2 + dv^2) / dz^2 |
 | `theta_ref` |  | `None` | layer-mean potential temperature [K] |
-| `eps_wind2` | `float` | `EPSILON_DEFAULT` (= `0.0001`) | regularisation of the shear denominator [m2 s-2]; 1e-4 for the measured (in-situ) wind, 0 with the effective wind |
+| `eps_wind2` | `float` | `EPSILON_DEFAULT` (= `0.0001`) | regularisation added to the squared shear (Delta U / Delta z)^2 [s-2]; 1e-4 for the measured (in-situ) wind, 0 with the effective wind |
 | `wspd` (keyword) |  | `None` | keyword alternative to `du, dv`: a wind-speed difference [m s-1], shear^2 = (wspd / dz)^2 (used with [`effective_wind_speed`](#fluxpy.stability.effective_wind_speed)) |
 
 **Returns** `np.ndarray`
 
 All inputs broadcast; returns a float64 array.
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability.py#L36-L65)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability.py#L37-L66)
 
-:::{dropdown} Source code (fluxpy/stability.py, lines 36–65)
+:::{dropdown} Source code (fluxpy/stability.py, lines 37–66)
 ````python
 def bulk_richardson_2pt(dtheta, dz, du=None, dv=None, theta_ref=None,
                         eps_wind2: float = EPSILON_DEFAULT, *, wspd=None) -> np.ndarray:
@@ -109,8 +109,8 @@ def bulk_richardson_2pt(dtheta, dz, du=None, dv=None, theta_ref=None,
     du, dv    : wind components at the top level [m s-1] (surface wind = 0, no-slip);
                 shear^2 = (du^2 + dv^2) / dz^2
     theta_ref : layer-mean potential temperature [K]
-    eps_wind2 : regularisation of the shear denominator [m2 s-2]; 1e-4 for the
-                measured (in-situ) wind, 0 with the effective wind
+    eps_wind2 : regularisation added to the squared shear (Delta U / Delta z)^2 [s-2];
+                1e-4 for the measured (in-situ) wind, 0 with the effective wind
     wspd      : keyword alternative to ``du, dv``: a wind-speed difference [m s-1],
                 shear^2 = (wspd / dz)^2 (used with :func:`effective_wind_speed`)
 
@@ -180,9 +180,9 @@ theta_s [K]; `theta_ref` layer-mean theta [K]. Returns $S$ [m/s]
 
 **Returns** `np.ndarray`
 
-[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability.py#L68-L112)
+[Source on GitHub](https://github.com/FranzFlink/bacsam2-flux-analysis/blob/main/fluxpy/stability.py#L69-L113)
 
-:::{dropdown} Source code (fluxpy/stability.py, lines 68–112)
+:::{dropdown} Source code (fluxpy/stability.py, lines 69–113)
 ````python
 def effective_wind_speed(U, dtheta, dz, theta_ref, *, beta: float = 1.25, zi: float = 600.0,
                          z0: float = 2e-4, zt_ratio: float = 1e-3, scheme: str = "GLGS20",

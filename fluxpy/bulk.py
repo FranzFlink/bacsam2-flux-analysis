@@ -70,10 +70,10 @@ class BulkConfig:
     z0_constant: Optional[float] = None   #: when set, one z0m for every segment (sensitivity experiment)
     T_thresh_open: float = -1.8      #: KT-19 T_s above this: open water [degC]     (Table B1)
     T_thresh_thick: float = -20.0    #: KT-19 T_s at or below this: snow-covered ice [degC]
-    ri_eps_wind2: float = 1e-4       #: shear regularisation eps of the in-situ Ri_b [m2 s-2] (App. B1)
+    ri_eps_wind2: float = 1e-4       #: shear regularisation eps of the in-situ Ri_b [s-2], added to (dU/dz)^2 (App. B1)
     ri_clip: float = np.inf          #: |Ri_b| bound; inf = none, as in the paper ("no further limitation").
-                                     #: The flux statistics change by < 0.01 W m-2 for any bound >= 1 (App. B1;
-                                     #: scripts/manuscript_numbers.py block richardson_number).
+                                     #: How little a bound of 1, 2.5 or 5 changes the flux statistics is printed
+                                     #: by scripts/manuscript_numbers.py (block richardson_number, App. B1).
     label: str = "default"
 
     def __post_init__(self):

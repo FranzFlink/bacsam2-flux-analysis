@@ -29,7 +29,8 @@ from .util import G
 __all__ = ["SCHEMES", "MOSTScheme", "Cd_Ch_noniterative", "Cd_Ch_iterative",
            "EPSILON_DEFAULT", "bulk_richardson_2pt", "effective_wind_speed"]
 
-#: shear regularisation eps [m2 s-2] of the in-situ Ri_b (manuscript Appendix B1)
+#: shear regularisation eps [s-2] of the in-situ Ri_b, added to the squared shear (dU/dz)^2
+#: (manuscript Appendix B1)
 EPSILON_DEFAULT = 1e-4
 
 
@@ -47,8 +48,8 @@ def bulk_richardson_2pt(dtheta, dz, du=None, dv=None, theta_ref=None,
     du, dv    : wind components at the top level [m s-1] (surface wind = 0, no-slip);
                 shear^2 = (du^2 + dv^2) / dz^2
     theta_ref : layer-mean potential temperature [K]
-    eps_wind2 : regularisation of the shear denominator [m2 s-2]; 1e-4 for the
-                measured (in-situ) wind, 0 with the effective wind
+    eps_wind2 : regularisation added to the squared shear (Delta U / Delta z)^2 [s-2];
+                1e-4 for the measured (in-situ) wind, 0 with the effective wind
     wspd      : keyword alternative to ``du, dv``: a wind-speed difference [m s-1],
                 shear^2 = (wspd / dz)^2 (used with :func:`effective_wind_speed`)
 
