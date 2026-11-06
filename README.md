@@ -24,8 +24,8 @@ table and figure of the paper that is derived from data:
 | `figures` | All manuscript figures → `figures_manuscript/output/` | ~3 min |
 
 **Website.** The electronic supplement of the paper (the method, the figures, the reproduction guide,
-a map from the paper to the code and the API reference of `fluxpy` and the scripts) is a website:
-`pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live preview); on GitHub it is
+a map from the paper to the code and the API reference of `fluxpy` and the scripts) is a website,
+<https://franzflink.github.io/bacsam2-flux-analysis/>. `pixi run site` builds it into `_build/html` (`pixi run site-serve` for a live preview); on GitHub it is
 published from `.github/workflows/site.yml`. `pixi run api` regenerates the API reference and the
 figure pages from the code.
 
