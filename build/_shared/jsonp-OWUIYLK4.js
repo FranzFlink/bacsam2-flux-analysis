@@ -1,1 +1,1 @@
-import{a}from"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-XACYUPCB.js";import"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-OAPC274K.js";import"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-RAQ24GF6.js";export default a();
+import{a}from"/bacsam2-flux-analysis/build/_shared/chunk-XACYUPCB.js";import"/bacsam2-flux-analysis/build/_shared/chunk-OAPC274K.js";import"/bacsam2-flux-analysis/build/_shared/chunk-RAQ24GF6.js";export default a();

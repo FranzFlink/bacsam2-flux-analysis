@@ -1,4 +1,4 @@
-import{b as e}from"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-DYFJVR7X.js";var l=e(()=>`
+import{b as e}from"/bacsam2-flux-analysis/build/_shared/chunk-DYFJVR7X.js";var l=e(()=>`
   /* Font Awesome icon styling - consolidated */
   .label-icon {
     display: inline-block;

@@ -1,1 +1,1 @@
-import{a as o,b as e}from"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-7H5C5STR.js";import"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-GEZIJWLJ.js";import"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-RAQ24GF6.js";export{o as InfoModule,e as createInfoServices};
+import{a as o,b as e}from"/bacsam2-flux-analysis/build/_shared/chunk-7H5C5STR.js";import"/bacsam2-flux-analysis/build/_shared/chunk-GEZIJWLJ.js";import"/bacsam2-flux-analysis/build/_shared/chunk-RAQ24GF6.js";export{o as InfoModule,e as createInfoServices};

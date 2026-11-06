@@ -1,1 +1,1 @@
-import{b as m,j as o}from"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-DYFJVR7X.js";var g=m((t,e)=>{let n;return e==="sandbox"&&(n=o("#i"+t)),(e==="sandbox"?o(n.nodes()[0].contentDocument.body):o("body")).select(`[id="${t}"]`)},"getDiagramElement");export{g as a};
+import{b as m,j as o}from"/bacsam2-flux-analysis/build/_shared/chunk-DYFJVR7X.js";var g=m((t,e)=>{let n;return e==="sandbox"&&(n=o("#i"+t)),(e==="sandbox"?o(n.nodes()[0].contentDocument.body):o("body")).select(`[id="${t}"]`)},"getDiagramElement");export{g as a};
