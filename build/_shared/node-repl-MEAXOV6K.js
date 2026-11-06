@@ -1,0 +1,1 @@
+import{c as e}from"C:/Program Files/Git/bacsam2-flux-analysis/build/_shared/chunk-RAQ24GF6.js";var s=e((r,a)=>{function n(t){return{name:"Node REPL",contains:[{className:"meta",starts:{end:/ |$/,starts:{end:"$",subLanguage:"javascript"}},variants:[{begin:/^>(?=[ ]|$)/},{begin:/^\.\.\.(?=[ ]|$)/}]}]}}a.exports=n});export default s();
