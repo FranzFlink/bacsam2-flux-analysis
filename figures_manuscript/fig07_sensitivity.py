@@ -62,7 +62,7 @@ ROWS = [
 
 PANELS = [("slope", "Slope $b$", (0.0, 2.4), [0, 1, 2], 1.0),
           ("r", "Corr. $r$", (0.25, 0.80), [0.3, 0.7], None),
-          ("bias", "Bias\n(W$\\,$m$^{-2}$)", (-4.6, 4.6), [-3, 0, 3], 0.0)]
+          ("bias", "Bias\n(W$\\,$m$^{-2}$)", (-4.6, 4.6), [-4, 0, 4], 0.0)]
 DIAG = {k: dict(zip(("slope", "r", "bias"), diag_metrics(k)))
         for k in ("H_era_diag", "H_car_diag")}
 

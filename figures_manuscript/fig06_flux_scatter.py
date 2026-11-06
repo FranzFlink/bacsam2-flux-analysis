@@ -53,9 +53,9 @@ def metrics(x, y):
 
 # ── Layout (single column: ~3 cm panels — sparse major ticks, minors carry
 #    the 10 W m-2 raster; metric annotations reduced to b / r / bias) ─────────
-SC_LIM, SC_TICKS = (-15, 35), [0, 20]
-HI_LIM, HI_TICKS = (-25, 35), [-20, 0, 20]
-HI_BINS = np.arange(-26, 36.1, 2.0)
+SC_LIM, SC_TICKS = (-15, 40), [0, 20, 40]
+HI_LIM, HI_TICKS = (-25, 40), [-20, 0, 20, 40]
+HI_BINS = np.arange(-26, 40.1, 2.0)
 cmap_ri = plt.cm.coolwarm_r
 # diverging, centred on neutral (Ri_b = 0): red = unstable, blue = stable; the
 # +-0.5 range resolves both sides (Ri_b spans about -0.7 to +0.6 between the
